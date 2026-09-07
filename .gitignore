@@ -1,0 +1,103 @@
+# ---------------------------------------------------------------
+# Flutter / Dart
+# ---------------------------------------------------------------
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+pubspec.lock.bak
+
+# Archivos generados por build_runner / codegen
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Cobertura y pruebas
+coverage/
+test/.test_coverage.dart
+*.lcov
+
+# ---------------------------------------------------------------
+# IDE / editores
+# ---------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*~
+
+# ---------------------------------------------------------------
+# Android
+# ---------------------------------------------------------------
+android/.gradle/
+android/captures/
+android/local.properties
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+android/app/google-services.json
+android/.cxx/
+*.apk
+*.aab
+
+# ---------------------------------------------------------------
+# iOS / macOS
+# ---------------------------------------------------------------
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GoogleService-Info.plist
+ios/ServiceDefinitions.json
+*.ipa
+*.dSYM.zip
+**/DerivedData/
+**/xcuserdata/
+
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# ---------------------------------------------------------------
+# Web / Windows / Linux
+# ---------------------------------------------------------------
+web/.dart_tool/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# ---------------------------------------------------------------
+# Secretos y configuracion local
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+secrets.dart
+firebase_options.dart
+
+# ---------------------------------------------------------------
+# Sistema operativo
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------
+# Documentacion
+# ---------------------------------------------------------------
+# /originales guarda los .docx y .pdf entregados a la universidad.
+# Se versionan a proposito: son la fuente de verdad de docs/tesis/.
+# Si prefieres no versionar binarios, descomenta la linea siguiente.
+# originales/
