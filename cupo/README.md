@@ -185,6 +185,141 @@ Ese es el commit inicial.
 
 ---
 
+## Herramientas y extensiones
+
+### Extensiones de VS Code — imprescindibles
+
+Sin estas cuatro no se trabaja cómodo. Las dos primeras son obligatorias.
+
+| Extensión | ID | Para qué |
+|---|---|---|
+| Dart | `Dart-Code.dart-code` | Analizador, autocompletado, formateo, depurador. **Obligatoria.** |
+| Flutter | `Dart-Code.flutter` | Hot reload, selector de dispositivo, DevTools, `flutter create` desde la paleta. **Obligatoria.** |
+| Error Lens | `usernamehw.errorlens` | Muestra el error en la misma línea, sin ir al panel de problemas. Con null safety, ahorra horas. |
+| Awesome Flutter Snippets | `Nash.awesome-flutter-snippets` | `statelessW`, `streamBldr` y demás. Evita escribir el mismo boilerplate cincuenta veces. |
+
+### Extensiones de VS Code — recomendadas
+
+| Extensión | ID | Para qué |
+|---|---|---|
+| Flutter Riverpod Snippets | `robert-brunhage.flutter-riverpod-snippets` | Solo si se elige Riverpod para el manejo de estado. |
+| Pubspec Assist | `jeroen-meijer.pubspec-assist` | Agrega dependencias con la versión correcta sin abrir pub.dev. |
+| Dart Data Class Generator | `hzgood.dart-data-class-generator` | Genera `fromJson`/`toJson`/`copyWith` de los modelos. Mucho tiempo ahorrado en la Fase 3. |
+| Firebase Explorer | `jsayol.firebase-explorer` | Ver colecciones de Firestore sin salir del editor. |
+| Bruno | `bruno-api-client.bruno` | Cliente de API embebido en VS Code (ver abajo). |
+| Better Comments | `aaron-bond.better-comments` | Resalta `TODO:` y `FIXME:`, útil con el plan de fases. |
+| GitLens | `eamodio.gitlens` | Historial y culpa por línea. |
+| Markdown All in One | `yzhang.markdown-all-in-one` | Para la documentación de `docs/`, que es la mitad del trabajo de tesis. |
+
+Instalación en bloque:
+
+```bash
+code --install-extension Dart-Code.dart-code \
+     --install-extension Dart-Code.flutter \
+     --install-extension usernamehw.errorlens \
+     --install-extension Nash.awesome-flutter-snippets \
+     --install-extension jeroen-meijer.pubspec-assist \
+     --install-extension hzgood.dart-data-class-generator \
+     --install-extension eamodio.gitlens
+```
+
+### Configuración recomendada de VS Code
+
+En `.vscode/settings.json` del proyecto:
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.rulers": [80],
+  "dart.previewFlutterUiGuides": true,
+  "dart.lineLength": 80,
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.codeActionsOnSave": { "source.fixAll": "explicit" }
+  }
+}
+```
+
+`formatOnSave` no es cosmético: elimina por completo las discusiones de estilo y
+los diffs sucios en git.
+
+### Bruno — pruebas de endpoints
+
+[Bruno](https://www.usebruno.com) es un cliente de API tipo Postman, pero
+**guarda las colecciones como archivos de texto dentro del repositorio**. Eso
+importa aquí por dos razones: las peticiones se versionan en git junto al código,
+y no hace falta cuenta ni sincronización en la nube.
+
+```bash
+# Windows
+winget install Bruno.Bruno
+# macOS
+brew install bruno
+```
+
+Convención para este proyecto: colección en `api/` (fuera de `lib/`), con
+entornos separados para desarrollo y demostración.
+
+```
+api/
+  environments/
+    dev.bru          # apunta al proyecto Firebase de desarrollo
+    demo.bru         # apunta al de la defensa
+  auth/
+    signup.bru
+    signin.bru
+  firestore/
+    listar-turnos.bru
+```
+
+**Importante:** las claves de API y los tokens van en el archivo de entorno, y
+los entornos **no se comitean**. Agregar a `.gitignore`:
+
+```
+api/environments/*.bru
+!api/environments/*.example.bru
+```
+
+Para qué sirve concretamente en este proyecto:
+
+- Probar la **API REST de Firebase Auth** (registro y login) sin compilar la app.
+- Consultar la **API REST de Firestore** para verificar que un documento quedó
+  como se esperaba, o para poblar datos de prueba.
+- Golpear las **Cloud Functions** cuando existan, sin pasar por la interfaz.
+- Probar **OSRM** o el servicio de rutas que se elija en la Fase 0, y ver la
+  respuesta cruda antes de escribir el parser en Dart.
+
+### Herramientas de línea de comandos
+
+| Herramienta | Instalación | Para qué |
+|---|---|---|
+| **adb** | viene con `platform-tools` | `adb devices`, `adb logcat`, `adb shell dumpsys location`. Indispensable en el Spike 1. |
+| **scrcpy** | `winget install Genymobile.scrcpy` | Espeja la pantalla del teléfono en la PC. Vale oro para grabar la demostración de la defensa. |
+| **Firebase CLI** | `npm i -g firebase-tools` | Emuladores, despliegue de reglas e índices, `firebase deploy`. |
+| **FlutterFire CLI** | `dart pub global activate flutterfire_cli` | Genera `firebase_options.dart` (paso 6). |
+| **Flutter DevTools** | incluido en Flutter | Inspector de widgets, profiler, vista de red. Se abre con `flutter run` en curso. |
+
+### Emuladores de Firebase
+
+```bash
+firebase init emulators      # auth, firestore, database
+firebase emulators:start
+```
+
+Vale la pena montarlos antes de la Iteración 1. Permiten probar las reglas de
+seguridad y las consultas sin gastar cuota, sin conexión y sin ensuciar el
+proyecto de datos reales — que es exactamente lo que hace falta cuando se está
+depurando el mismo flujo veinte veces seguidas.
+
+### Dispositivo de pruebas
+
+Un **teléfono físico**, no el emulador. El emulador de Android simula mal el GPS
+y no reproduce el comportamiento de la batería ni las restricciones del
+fabricante, que son justamente el riesgo del Spike 1. En el teléfono hay que
+activar Opciones de desarrollador y Depuración por USB.
+
+---
+
 ## Qué estudiar antes de tirar código
 
 El orden importa: cada bloque se apoya en el anterior. No hace falta dominar
