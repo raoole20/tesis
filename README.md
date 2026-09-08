@@ -52,7 +52,9 @@ Depende de qué vengas a hacer.
 **Si vienes a programar** → [`cupo/README.md`](cupo/README.md). Ahí está todo:
 requisitos, creación del proyecto, configuración de Android y Firebase,
 extensiones de VS Code, herramientas, qué estudiar antes de escribir código y
-recursos para aprenderlo.
+recursos para aprenderlo. El entorno de esta máquina ya está montado: lo que
+quedó instalado, las desviaciones respecto de ese README y cómo levantar la app
+están más abajo, en **Entorno de desarrollo** y **Cómo levantar la app**.
 
 **Si vienes a escribir la tesis** → [`docs/tesis/PENDIENTES.md`](docs/tesis/PENDIENTES.md).
 Hay 31 pendientes abiertos, 7 de ellos bloqueantes.
@@ -62,8 +64,9 @@ dependencia, no por gusto.
 
 ## Estado actual
 
-El proyecto está en la **Fase 0**: decisiones abiertas. Nada del software
-existe todavía más allá de la documentación de arranque.
+El proyecto está en la **Fase 0**: decisiones abiertas. El entorno de desarrollo
+ya está montado y el esqueleto de la app existe —compila, corre y pasa sus
+pruebas—, pero no implementa todavía ninguna funcionalidad del producto.
 
 Tres cosas bloquean el avance ahora mismo:
 
@@ -99,9 +102,9 @@ Si solo te llevas cuatro cosas de este README, que sean estas.
 
 4. **Dos proyectos de Firebase, siempre: desarrollo y demostración.** Y ningún
    secreto en el repositorio: `google-services.json`, `firebase_options.dart`,
-   los keystores y los `.env` ya están en el [`.gitignore`](.gitignore). Los
-   entornos de Bruno todavía **no**; hay que agregarlos antes de crear la
-   primera colección de API.
+   los keystores y los `.env` ya están en el [`.gitignore`](.gitignore), y los
+   entornos de Bruno en [`cupo/.gitignore`](cupo/.gitignore), donde vivirá la
+   colección.
 
 ## Stack
 
