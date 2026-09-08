@@ -17,7 +17,7 @@ class MainApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text('Cupo')),
         body: const Center(
-          child: Text('Entorno listo pa que tu veas esta verga es arrecha'),
+          child: Text('Futura app lista para el proyecto Cupo'),
         ),
       ),
     );

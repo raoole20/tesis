@@ -71,7 +71,7 @@ verificados en esta máquina.
 
 | Herramienta | Versión | Dónde |
 |---|---|---|
-| Flutter (canal stable) | 3.47.2 · Dart 3.13.2 | `C:\srclutter` |
+| Flutter (canal stable) | 3.47.2 · Dart 3.13.2 | `C:\src\flutter` |
 | JDK Temurin | 17.0.20.1 | `%ProgramFiles%\Eclipse Adoptium` |
 | Android SDK | ver abajo | `%LOCALAPPDATA%\Android\Sdk` |
 | FlutterFire CLI | 1.4.1 | caché de Pub |
@@ -91,8 +91,8 @@ Fijadas a nivel de usuario:
 
 - `JAVA_HOME` → el JDK 17 de la tabla
 - `ANDROID_HOME` y `ANDROID_SDK_ROOT` → `%LOCALAPPDATA%\Android\Sdk`
-- En el `PATH`: `C:\srclutterin`, `platform-tools`,
-  `cmdline-tools\latestin` y `%LOCALAPPDATA%\Pub\Cachein`
+- En el `PATH`: `C:\src\flutter\bin`, `platform-tools`,
+  `cmdline-tools\latest\bin` y `%LOCALAPPDATA%\Pub\Cache\bin`
 
 Después de tocarlas hay que **abrir una terminal nueva**: las ya abiertas
 conservan el `PATH` viejo.
@@ -133,6 +133,17 @@ el código no se contradigan ante el jurado.
    el chequeo de Flutter no sabe leerlo; el build real las acepta sin problema.
    El de Visual Studio es para apps de escritorio de Windows, no de Android.
 
+### Avisos que salen en cada build y no son errores
+
+`flutter run` imprime un warning sobre **Kotlin Gradle Plugin (KGP)** en
+`firebase_auth`, `firebase_core` y `firebase_database`. Es un aviso de
+compatibilidad futura, no un fallo: el build continúa y la app se instala. Se
+resolverá solo cuando esos plugins migren a Built-in Kotlin; hay que vigilarlo
+al actualizar Flutter, porque en alguna versión futura sí romperá el build.
+
+Junto a él aparece el aviso de KGP de Gradle y, en la primera compilación, la
+instalación automática de CMake. Ninguno de los dos requiere acción.
+
 ## Cómo levantar la app
 
 En un **teléfono físico**, no en el emulador. El emulador simula mal el GPS y no
@@ -141,15 +152,21 @@ riesgo del Spike 1.
 
 ### Preparar el teléfono
 
-1. **Ajustes → Acerca del dispositivo → Versión** → tocar siete veces sobre
-   **Número de compilación**. Aparecen las Opciones de desarrollador.
-2. **Ajustes → Ajustes adicionales → Opciones de desarrollador** → activar
-   **Depuración por USB**. En ColorOS (Oppo/Realme) hace falta además
-   **Desactivar monitoreo de permisos**, o se bloquea la instalación del APK.
-3. Conectar el cable y elegir **Transferencia de archivos (MTP)** en la
-   notificación de USB. En "Solo carga" la depuración no funciona.
+El teléfono de pruebas es un **Samsung Galaxy A27 5G (SM-A276B), Android 16**.
+Las rutas de menú son las de One UI; en otras capas cambian de nombre pero no
+de fondo.
+
+1. **Ajustes → Acerca del teléfono → Información de software** → tocar siete
+   veces sobre **Número de compilación**. Aparecen las Opciones de desarrollador.
+2. **Ajustes → Opciones de desarrollador** → activar **Depuración por USB**.
+3. Conectar el cable y elegir **Transferencia de archivos** en la notificación
+   de USB. En "Solo carga" la depuración no funciona.
 4. Aceptar el diálogo *"¿Permitir depuración USB?"* y marcar **Siempre permitir
    desde este equipo**.
+
+En ColorOS (Oppo/Realme) y MIUI (Xiaomi) hay un interruptor extra —"Desactivar
+monitoreo de permisos" o "Instalar vía USB"— sin el cual se bloquea la
+instalación del APK.
 
 ### Ejecutar
 
