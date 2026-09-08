@@ -62,6 +62,129 @@ Hay 31 pendientes abiertos, 7 de ellos bloqueantes.
 **Si no sabes qué sigue** → [`TODO.md`](TODO.md). Las fases están ordenadas por
 dependencia, no por gusto.
 
+## Entorno de desarrollo
+
+Los pasos 1 a 8 de [`cupo/README.md`](cupo/README.md) están ejecutados y
+verificados en esta máquina.
+
+### Qué quedó instalado
+
+| Herramienta | Versión | Dónde |
+|---|---|---|
+| Flutter (canal stable) | 3.47.2 · Dart 3.13.2 | `C:\srclutter` |
+| JDK Temurin | 17.0.20.1 | `%ProgramFiles%\Eclipse Adoptium` |
+| Android SDK | ver abajo | `%LOCALAPPDATA%\Android\Sdk` |
+| FlutterFire CLI | 1.4.1 | caché de Pub |
+| Firebase CLI | 15.29.0 | npm global |
+| scrcpy · Bruno | — | winget |
+
+Del Android SDK: `platforms` 35 y 36, `build-tools` 35.0.0, `platform-tools`
+37.0.1, NDK 28.2.13676358 y CMake 3.22.1. No hay Android Studio y no hace
+falta: bastan los `cmdline-tools`.
+
+Las siete extensiones de VS Code que el README de la app marca como
+imprescindibles y recomendadas también están instaladas.
+
+### Variables de entorno
+
+Fijadas a nivel de usuario:
+
+- `JAVA_HOME` → el JDK 17 de la tabla
+- `ANDROID_HOME` y `ANDROID_SDK_ROOT` → `%LOCALAPPDATA%\Android\Sdk`
+- En el `PATH`: `C:\srclutterin`, `platform-tools`,
+  `cmdline-tools\latestin` y `%LOCALAPPDATA%\Pub\Cachein`
+
+Después de tocarlas hay que **abrir una terminal nueva**: las ya abiertas
+conservan el `PATH` viejo.
+
+### Cómo comprobar que el entorno sigue sano
+
+```powershell
+cd cupo
+flutter analyze          # sin issues
+flutter test             # en verde
+flutter build apk --debug
+```
+
+El último comando es la prueba real: ejercita Gradle, el SDK, el NDK y las
+licencias. El APK resultante declara `com.cupo.app`, `minSdkVersion 26`,
+`targetSdkVersion 35` y los siete permisos del manifest.
+
+### Desviaciones respecto de `cupo/README.md`
+
+Tres cosas de ese README no sobrevivieron al contacto con las versiones
+actuales de las herramientas. Conviene corregirlas allí para que el documento y
+el código no se contradigan ante el jurado.
+
+1. **`compileSdk` es 36, no 35.** No es opcional: `firebase_*`,
+   `sqflite_android` y `package_info_plus` exigen compilar contra 36, y el
+   build falla contra 35. `minSdk = 26` (RNF-01) y `targetSdk = 35` quedan
+   intactos: son independientes de `compileSdk`, que solo habilita APIs nuevas
+   sin cambiar el comportamiento en ejecución.
+
+2. **`sdkmanager "paquete;version"` ya no funciona.** Google lo deprecó y ahora
+   delega en un CLI `android` con otra sintaxis, con `/` en vez de `;`:
+   `android sdk install platforms/android-36`. Por lo mismo hubo que instalar
+   el NDK a mano —el plugin de Gradle intentaba auto-instalarlo por la vía
+   vieja y fallaba.
+
+3. **`flutter doctor` marca dos avisos esperados.** "Android license status
+   unknown" es cosmético: el CLI nuevo acepta las licencias al instalar, pero
+   el chequeo de Flutter no sabe leerlo; el build real las acepta sin problema.
+   El de Visual Studio es para apps de escritorio de Windows, no de Android.
+
+## Cómo levantar la app
+
+En un **teléfono físico**, no en el emulador. El emulador simula mal el GPS y no
+reproduce las restricciones de batería del fabricante, que son justamente el
+riesgo del Spike 1.
+
+### Preparar el teléfono
+
+1. **Ajustes → Acerca del dispositivo → Versión** → tocar siete veces sobre
+   **Número de compilación**. Aparecen las Opciones de desarrollador.
+2. **Ajustes → Ajustes adicionales → Opciones de desarrollador** → activar
+   **Depuración por USB**. En ColorOS (Oppo/Realme) hace falta además
+   **Desactivar monitoreo de permisos**, o se bloquea la instalación del APK.
+3. Conectar el cable y elegir **Transferencia de archivos (MTP)** en la
+   notificación de USB. En "Solo carga" la depuración no funciona.
+4. Aceptar el diálogo *"¿Permitir depuración USB?"* y marcar **Siempre permitir
+   desde este equipo**.
+
+### Ejecutar
+
+```powershell
+cd cupo
+adb devices     # el teléfono debe aparecer como "device"
+flutter run
+```
+
+Desde VS Code es equivalente: **F5**, con el dispositivo elegido en la barra de
+estado.
+
+### Mientras corre
+
+`flutter run` deja la terminal viva:
+
+| Tecla | Qué hace |
+|---|---|
+| `r` | hot reload — aplica los cambios sin perder el estado de pantalla |
+| `R` | hot restart — reinicia la app desde cero |
+| `v` | abre DevTools (inspector de widgets, profiler) |
+| `q` | salir |
+
+### Si el teléfono no aparece
+
+| Síntoma | Causa habitual |
+|---|---|
+| `adb devices` vacío | Depuración por USB sin activar, o cable de solo carga |
+| `unauthorized` | Falta aceptar la huella RSA en la pantalla del teléfono |
+| `offline` | Desconectar y volver a conectar |
+| Windows lo ve, `adb` no | Está en MTP sin depuración: revisar el paso 2 |
+
+`adb kill-server` seguido de `adb start-server` resuelve buena parte de los
+casos raros.
+
 ## Estado actual
 
 El proyecto está en la **Fase 0**: decisiones abiertas. El entorno de desarrollo
