@@ -45,6 +45,18 @@ declarado.
 
 ## Estado
 
-Carpeta creada y vacia de contenido. Los tres documentos base todavia no se han
-escrito; conviene empezar por los hallazgos de campo, que son los que alimentan
-a los otros dos.
+| Documento | Estado |
+|---|---|
+| `hallazgos-de-campo.md` | no escrito — depende de la Fase 1 |
+| `especificacion-funcional.md` | no escrito |
+| [`modelo-de-datos.md`](modelo-de-datos.md) | **borrador parcial** — identidad y ubicacion (usuario, estudiante, conductor, zonas), sobre Supabase |
+
+El orden natural seria empezar por los hallazgos de campo, que alimentan a los
+otros dos. Del modelo de datos se adelanto unicamente la parte de identidad,
+que es la que hace falta para diagramar el login y la Iteracion 1. Las
+entidades de la operacion se agregan cuando cierren la Fase 0 y el campo.
+
+**Atencion:** ese documento ya esta escrito sobre **Supabase (PostgreSQL)**,
+mientras que `../../README.md`, `../../cupo/README.md`, `../../TODO.md` y
+`cupo/pubspec.yaml` todavia describen Firebase. El apartado 10 del modelo
+lista que cambia en cada uno.
