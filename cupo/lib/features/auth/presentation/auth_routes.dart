@@ -1,15 +1,16 @@
 /// Nombres de ruta del primer ingreso.
 ///
-/// Las cuatro pantallas de «Primer ingreso» (L1–L4) y el destino al que se
-/// entra una vez autenticado.
+/// Solo las pantallas de antes de la sesión. Lo que viene después NO tiene
+/// ruta con nombre: lo decide el `AuthGate` a partir del estado de la cuenta
+/// (apartado 6 del modelo de datos). Si el destino se pudiera empujar por
+/// nombre, habría dos fuentes de verdad para lo mismo.
 abstract final class AuthRoutes {
-  /// L1 — Bienvenida.
-  static const String welcome = '/';
-
   /// L2 — Crear cuenta.
   static const String signUp = '/registro';
 
-  /// L3 — Verificar teléfono.
+  /// L3 — Verificar teléfono. **Fuera del flujo por ahora**: la verificación
+  /// por WhatsApp exige un proveedor de SMS pago (Twilio o similar) conectado
+  /// a Supabase Auth. La pantalla queda construida para cuando se contrate.
   static const String verifyPhone = '/verificar';
 
   /// L4 — Iniciar sesión.

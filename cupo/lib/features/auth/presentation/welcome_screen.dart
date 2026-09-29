@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import 'auth_routes.dart';
+import 'auth_scope.dart';
 
 /// L1 — Bienvenida.
 ///
@@ -37,11 +38,11 @@ class WelcomeScreen extends StatelessWidget {
           CupoGoogleButton(
             label: 'Continuar con Google',
             onPressed: () =>
-                Navigator.of(context).pushNamed(AuthRoutes.verifyPhone),
+                AuthScope.de(context).repositorio.entrarConGoogle(),
           ),
           const SizedBox(height: AppSpacing.sm),
           CupoPrimaryButton(
-            label: 'Crear cuenta con mi teléfono',
+            label: 'Crear cuenta con mi correo',
             onPressed: () => Navigator.of(context).pushNamed(AuthRoutes.signUp),
           ),
           const SizedBox(height: AppSpacing.xl),

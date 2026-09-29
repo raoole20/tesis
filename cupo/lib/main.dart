@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'features/auth/presentation/auth_routes.dart';
-import 'features/auth/presentation/sign_in_screen.dart';
-import 'features/auth/presentation/sign_up_screen.dart';
-import 'features/auth/presentation/verify_phone_screen.dart';
-import 'features/auth/presentation/welcome_screen.dart';
+import 'core/config/env.dart';
+import 'features/auth/data/auth_repository.dart';
+import 'features/auth/presentation/auth_gate.dart';
 import 'theme/theme.dart';
 
-void main() {
-  runApp(const MainApp());
+Future<void> main() async {
+  // Antes de tocar nada asíncrono hay que amarrar el motor de Flutter. Sin
+  // esto, Supabase.initialize falla al leer la sesión guardada en el teléfono.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (!Env.estaConfigurado) {
+    // Sin credenciales la app no puede hacer nada, pero tampoco debe arrancar
+    // en blanco: dice qué falta y cómo se pasa.
+    runApp(const SinConfiguracionApp());
+    return;
+  }
+
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+
+  // El AuthGate es la app: construye el MaterialApp y decide qué se ve según
+  // haya sesión y en qué estado esté la cuenta.
+  runApp(AuthGate(repositorio: AuthRepository()));
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+/// Pantalla de arranque cuando faltan `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
+class SinConfiguracionApp extends StatelessWidget {
+  const SinConfiguracionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +35,23 @@ class MainApp extends StatelessWidget {
       title: 'Cupo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: AuthRoutes.welcome,
-      routes: {
-        AuthRoutes.welcome: (_) => const WelcomeScreen(),
-        AuthRoutes.signUp: (_) => const SignUpScreen(),
-        AuthRoutes.verifyPhone: (_) => const VerifyPhoneScreen(),
-        AuthRoutes.signIn: (_) => const SignInScreen(),
-      },
+      home: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Falta configurar Supabase', style: AppTypography.title),
+                const SizedBox(height: AppSpacing.md),
+                Text(Env.ayudaConfiguracion, style: AppTypography.body),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

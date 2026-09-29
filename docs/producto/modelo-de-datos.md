@@ -3,9 +3,11 @@
 Modelo entidad-relación del sistema sobre **Supabase (PostgreSQL)**. Cubre
 el **objetivo específico 3** (diseño lógico y físico).
 
-- Estado: **borrador — identidad y ubicación**
+- Estado: **implementado — identidad y ubicación**
 - Motor: PostgreSQL 15 + PostGIS, vía Supabase
-- Última revisión: 2026-09-14
+- Última revisión: 2026-09-24
+- Migraciones: [`supabase/migrations/`](../../supabase/migrations/) — el SQL de
+  este documento está aplicado ahí, archivo por apartado
 
 ## Alcance de esta versión
 
@@ -372,6 +374,7 @@ create table public.usuarios (
   rol                 rol_usuario   not null,
   estado              estado_cuenta not null default 'perfil_incompleto',
   url_foto            text,
+  motivo_rechazo      text,
   onboarding_completo boolean     not null default false,
   creado_en           timestamptz not null default now(),
   ultimo_acceso       timestamptz
@@ -441,16 +444,34 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  rol_pedido text;
+  rol_final  rol_usuario;
 begin
-  insert into public.usuarios (id, email, rol)
+  rol_pedido := new.raw_user_meta_data ->> 'rol';
+
+  -- Lista blanca explícita: 'administrador' no se concede por esta vía.
+  if rol_pedido in ('estudiante', 'conductor') then
+    rol_final := rol_pedido::rol_usuario;
+  else
+    rol_final := 'estudiante';
+  end if;
+
+  insert into public.usuarios (id, email, rol, nombres, apellidos, telefono)
   values (
-    new.id,
-    new.email,
-    coalesce(
-      (new.raw_user_meta_data ->> 'rol')::rol_usuario,
-      'estudiante'
-    )
+    new.id, new.email, rol_final,
+    coalesce(new.raw_user_meta_data ->> 'nombres', ''),
+    coalesce(new.raw_user_meta_data ->> 'apellidos', ''),
+    nullif(new.raw_user_meta_data ->> 'telefono', '')
   );
+
+  -- La fila del subtipo nace vacía y la llena el formulario de perfil.
+  if rol_final = 'conductor' then
+    insert into public.conductores (id) values (new.id);
+  else
+    insert into public.estudiantes (id) values (new.id);
+  end if;
+
   return new;
 end;
 $$;
@@ -462,8 +483,14 @@ create trigger on_auth_user_created
 
 El rol viaja en el `data` del `signUp` de la app y llega como
 `raw_user_meta_data`. Es metadato del usuario, así que **el usuario lo
-controla**: sirve para elegir entre estudiante y conductor, pero no debe
-aceptarse `administrador` por esa vía. Conviene validarlo en la función.
+controla**: sirve para elegir entre estudiante y conductor, pero no puede
+aceptarse `administrador` por esa vía. De ahí la lista blanca.
+
+La segunda mitad del trigger —crear también la fila del subtipo— no estaba
+en la primera versión de este documento y **hacía falta**: sin la fila de
+`conductores` no hay a qué apuntar desde `conductor_zonas`, cuya llave
+foránea es `conductores.id`. Al hacerlo aquí, dentro de la misma
+transacción, tampoco puede existir una cuenta a medio crear.
 
 ### 8.4 Trigger: detectar la zona del domicilio
 
@@ -536,6 +563,12 @@ create policy estudiantes_ve_el_suyo on public.estudiantes
 create policy estudiantes_edita_el_suyo on public.estudiantes
   for update using (auth.uid() = id) with check (auth.uid() = id);
 
+create policy conductores_ve_el_suyo on public.conductores
+  for select using (auth.uid() = id or public.es_admin());
+
+create policy conductores_edita_el_suyo on public.conductores
+  for update using (auth.uid() = id) with check (auth.uid() = id);
+
 create policy conductor_zonas_las_suyas on public.conductor_zonas
   for all using (auth.uid() = conductor_id)
   with check (auth.uid() = conductor_id);
@@ -572,6 +605,78 @@ grant update (nombres, apellidos, telefono, cedula, url_foto)
 `rol`, `estado` y `onboarding_completo` quedan fuera de la lista: solo los
 cambia el administrador o una función `security definer`. Es la regla más
 importante de todo el módulo.
+
+### 8.7 Funciones que mueven el estado de la cuenta
+
+El apartado anterior le revocó al usuario el `update` sobre `estado` y
+`onboarding_completo`. Eso deja un hueco que hay que cerrar: **nadie
+puede pasar de `perfil_incompleto` a `pendiente`**, y el registro queda
+trancado antes de llegar al administrador.
+
+La salida no es devolver el privilegio, es no exponer la columna. El
+usuario no escribe un estado; **invoca una transición**, y la transición
+valida sus condiciones del lado en que no se puede saltar:
+
+```sql
+create or replace function public.enviar_a_revision()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  u public.usuarios%rowtype;
+begin
+  select * into u from public.usuarios where id = auth.uid();
+
+  if u.estado not in ('perfil_incompleto', 'rechazada') then
+    raise exception 'La cuenta está en estado %, no se puede enviar', u.estado;
+  end if;
+
+  if coalesce(u.nombres, '') = '' or coalesce(u.apellidos, '') = ''
+     or coalesce(u.cedula, '') = '' or coalesce(u.telefono, '') = '' then
+    raise exception 'Faltan datos personales';
+  end if;
+
+  if u.rol = 'conductor' and not exists (
+    select 1 from public.conductores c
+     where c.id = u.id
+       and coalesce(c.licencia_numero, '') <> ''
+       and c.licencia_vence_en is not null
+  ) then
+    raise exception 'Faltan los datos de la licencia';
+  end if;
+
+  update public.usuarios
+     set estado = 'pendiente', motivo_rechazo = null
+   where id = u.id;
+end;
+$$;
+```
+
+`completar_onboarding()` es simétrica y cierra el otro extremo: exige al
+menos una fila en `conductor_zonas` si es conductor, o un `domicilio` no
+nulo si es estudiante — **sin exigir `zona_id`**, porque el pin fuera de
+toda zona no debe trancar el registro (apartado 3.4).
+
+El resultado es que el diagrama de estados del apartado 4 deja de ser un
+dibujo y pasa a ser código: cada flecha es una función, y las que no
+existen no se pueden recorrer.
+
+### 8.8 Realtime sobre `usuarios`
+
+Que la app escuche su propia fila (apartado 5) no sale gratis: la tabla
+tiene que estar en la publicación que lee Supabase Realtime.
+
+```sql
+alter publication supabase_realtime add table public.usuarios;
+alter table public.usuarios replica identity full;
+```
+
+Sin `replica identity full`, un `update` viaja sin las columnas que no
+cambiaron y el filtro por `id` del lado del cliente no encuentra a quién
+aplicarlo. El RLS sigue mandando: por el canal solo pasan las filas que
+`usuarios_ve_el_suyo` deja ver.
 
 ## 9. Consultas que este modelo tiene que responder
 
@@ -621,7 +726,7 @@ El repositorio todavía documenta Firebase. Esto es lo que hay que revisar:
 | Posiciones en vivo | Realtime Database | Supabase Realtime (canal *broadcast*) | `README.md`, `TODO.md` Fase 3 |
 | Reglas de acceso | Security Rules | RLS + `grant` por columna | `TODO.md` Fase 3 |
 | Consultas geográficas | geohash + cálculo en Dart | PostGIS (`ST_Covers`, `ST_DWithin`) | `TODO.md` Fase 2, Spikes 2 y 3 |
-| Paquetes Flutter | `firebase_*` (5) | `supabase_flutter` (1) | `cupo/pubspec.yaml` |
+| Paquetes Flutter | `firebase_*` (5) | `supabase_flutter` (1) | `cupo/pubspec.yaml` ✅ hecho |
 | Notificaciones push | Firebase Cloud Messaging | **sigue siendo FCM** | `README.md` |
 
 Cuatro consecuencias que valen más que el cambio de nombre:

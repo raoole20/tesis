@@ -136,19 +136,154 @@ Quedan fuera por ahora `flutter_background_geolocation` y
 `geoflutterfire_plus`: se agregan cuando lleguen los spikes que los necesitan,
 no antes.
 
-## 6. Firebase
+## 6. Supabase
+
+> El proyecto migró de Firebase a Supabase. Lo único que queda de Firebase es
+> `firebase_messaging`, porque Supabase no tiene equivalente de Cloud
+> Messaging. Ver el apartado 10 de
+> [`docs/producto/modelo-de-datos.md`](../docs/producto/modelo-de-datos.md).
+
+### 6.1 Crear el proyecto
+
+En [supabase.com](https://supabase.com) → **New project**. Región: la más
+cercana (`East US`). Anota la contraseña de la base: no se vuelve a mostrar.
+
+Conviene crear **dos proyectos**: uno de desarrollo y otro para la
+demostración final. No se quiere estar borrando datos de prueba la noche
+antes de la defensa.
+
+### 6.2 Aplicar el esquema
+
+Las migraciones están en [`supabase/migrations/`](../supabase/migrations/),
+numeradas y en orden. Cada archivo corresponde a un apartado del modelo de
+datos.
+
+Con la CLI:
 
 ```bash
-dart pub global activate flutterfire_cli
-flutterfire configure --project=<tu-proyecto-firebase>
+npm install -g supabase
+supabase link --project-ref <ref-del-proyecto>
+supabase db push
 ```
 
-Genera `lib/firebase_options.dart` y `android/app/google-services.json`.
-Ninguno de los dos va al repositorio.
+O a mano: abrir el **SQL Editor** del panel y pegar los ocho archivos **en
+orden**, del `0001` al `0009`. El orden importa: las tablas necesitan los
+tipos, las políticas necesitan las tablas.
 
-Conviene crear **dos proyectos** en la consola de Firebase: uno de desarrollo y
-otro para la demostración final. No se quiere estar borrando datos de prueba la
-noche antes de la defensa.
+### 6.3 Credenciales
+
+En **Project Settings → API** están `Project URL` y la `anon public` key.
+
+```bash
+cp dart_define.example.json dart_define.json   # llénalo con esos dos valores
+flutter run --dart-define-from-file=dart_define.json
+```
+
+`dart_define.json` está en `.gitignore`. La `anon key` es pública por diseño
+—va dentro de la app— y lo que protege los datos es el RLS, no ella. La que
+**nunca** entra al repositorio ni a la app es la `service_role`, que salta el
+RLS entero.
+
+### 6.4 Correo y Google
+
+En **Authentication → Providers**:
+
+- **Email**: para desarrollar, apagar *Confirm email*. Si queda encendido, el
+  registro no abre sesión hasta que la persona abra el correo, y la app lo
+  dice pero no puede seguir.
+- **Google**: pegar el `client id` y el `secret` de Google Cloud.
+
+En **Authentication → URL Configuration**, agregar como *Redirect URL*:
+
+```
+io.supabase.cupo://login-callback/
+```
+
+Ese esquema ya está declarado en `AndroidManifest.xml`.
+
+### 6.5 Crear el primer administrador
+
+El trigger `crear_usuario()` **nunca** concede el rol de administrador: es una
+lista blanca de `estudiante` y `conductor`, y es la defensa contra que
+cualquiera se registre como admin. El primero se marca a mano, una sola vez,
+desde el SQL Editor:
+
+```sql
+update public.usuarios
+   set rol = 'administrador', estado = 'aprobada', onboarding_completo = true
+ where email = 'tu-correo@ejemplo.com';
+```
+
+### 6.6 Probar el enrutamiento sin esperar aprobaciones
+
+La tabla del apartado 6 se recorre entera cambiando una columna:
+
+```sql
+update public.usuarios set estado = 'aprobada'  where email = '...';
+update public.usuarios set estado = 'rechazada',
+       motivo_rechazo = 'La foto de la licencia está borrosa.' where email = '...';
+update public.usuarios set estado = 'suspendida' where email = '...';
+```
+
+Con la app abierta, la pantalla **cambia sola**: está suscrita a su propia fila
+por Realtime.
+
+### 6.7 Supabase desde Claude Code (MCP)
+
+El repositorio trae [`.mcp.json`](../.mcp.json) en la raíz: conecta Claude Code
+con la cuenta de Supabase para crear el proyecto, aplicar migraciones,
+consultar tablas y leer logs sin salir del editor.
+
+**El archivo no contiene la credencial.** Lleva `${SUPABASE_ACCESS_TOKEN}`, que
+se expande desde una variable de entorno, así que se puede versionar sin
+riesgo. El token se guarda una sola vez, en la máquina:
+
+1. Sacarlo en [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
+   → **Generate new token**. Se muestra una sola vez.
+2. Anotarlo en `.env` en la raíz del repositorio —ignorado por git— con el
+   nombre exacto de la variable, que es el que busca `.mcp.json`:
+
+   ```
+   SUPABASE_ACCESS_TOKEN=sbp_el-token-que-copiaste
+   ```
+
+   Hay una plantilla en [`.env.example`](../.env.example).
+
+3. Pasarlo al entorno del usuario. **Claude Code no lee archivos `.env`**: la
+   expansión `${SUPABASE_ACCESS_TOKEN}` de `.mcp.json` sale del entorno del
+   proceso, así que el `.env` por sí solo no alcanza.
+
+   ```powershell
+   $v = ((Get-Content .env | Where-Object { $_ -match '^SUPABASE_ACCESS_TOKEN=' }) -split '=',2)[1].Trim()
+   [Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN', $v, 'User')
+   ```
+
+4. **Cerrar y reabrir VS Code.** La variable solo llega a procesos nuevos.
+5. Claude Code pregunta si se confía en el servidor MCP del proyecto la
+   primera vez. Con `/mcp` se ve el estado de la conexión.
+
+El token vale por **toda la cuenta**, no por un proyecto. Conviene borrarlo del
+panel cuando se termine la tesis.
+
+#### Alcance concedido
+
+| Grupo | Para qué |
+|---|---|
+| `account` | listar y crear proyectos |
+| `database` | aplicar migraciones, consultar tablas, ver el esquema |
+| `development` | leer la URL y la `anon key` (las de `dart_define.json`) |
+| `debugging` | logs y avisos del asesor de seguridad |
+| `docs` | buscar en la documentación de Supabase |
+
+Quedan fuera `branching`, `functions` y `storage`: no hacen falta todavía y
+cada grupo apagado es superficie que no se expone.
+
+**Tiene permiso de escritura**, a propósito: es lo que permite aplicar las
+nueve migraciones desde aquí. Eso implica que un texto malicioso guardado en
+la base podría, en teoría, inducir una escritura no pedida. En una base de
+tesis sin datos de terceros el riesgo es asumible; el día que haya usuarios
+reales, agregar `--read-only` a los argumentos y aplicar los cambios por la
+CLI.
 
 ## 7. Higiene inicial
 

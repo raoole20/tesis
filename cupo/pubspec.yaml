@@ -7,13 +7,19 @@ environment:
   sdk: ^3.13.2
 
 dependencies:
-  cloud_firestore: ^6.9.0
-  firebase_auth: ^6.6.1
-  firebase_core: ^4.14.0
-  firebase_database: ^12.5.0
-  firebase_messaging: ^16.6.0
   flutter:
     sdk: flutter
+
+  # Backend: autenticación, PostgreSQL y Realtime en un solo paquete.
+  # Reemplaza a cloud_firestore, firebase_auth, firebase_core y
+  # firebase_database (ver apartado 10 de docs/producto/modelo-de-datos.md).
+  supabase_flutter: ^2.8.0
+
+  # Se queda: Supabase no tiene equivalente de Cloud Messaging, así que las
+  # notificaciones push de la Iteración 5 siguen siendo FCM.
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
+
   flutter_map: ^8.3.2
   geolocator: ^14.0.3
   google_fonts: ^6.2.1
