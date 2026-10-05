@@ -55,7 +55,7 @@ void main() {
     testWidgets('«Iniciar sesión» lleva al login', (tester) async {
       await pumpApp(tester);
 
-      await tester.tap(find.text('Iniciar sesión'));
+      await tester.tap(find.textContaining('Iniciar sesión'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SignInScreen), findsOneWidget);
@@ -111,7 +111,7 @@ void main() {
       expect(find.byType(CupoOtpBox), findsNWidgets(6));
 
       var boton = tester.widget<CupoPrimaryButton>(
-        find.byType(CupoPrimaryButton),
+        find.widgetWithText(CupoPrimaryButton, 'Verificar'),
       );
       expect(boton.onPressed, isNull, reason: 'sin código no se puede seguir');
 
@@ -122,7 +122,7 @@ void main() {
       expect(find.text('3'), findsOneWidget);
 
       boton = tester.widget<CupoPrimaryButton>(
-        find.byType(CupoPrimaryButton),
+        find.widgetWithText(CupoPrimaryButton, 'Verificar'),
       );
       expect(boton.onPressed, isNotNull);
 
@@ -135,7 +135,7 @@ void main() {
     testWidgets('ofrece Google, teléfono y clave, y la salida al registro',
         (tester) async {
       await pumpApp(tester);
-      await tester.tap(find.text('Iniciar sesión'));
+      await tester.tap(find.textContaining('Iniciar sesión'));
       await tester.pumpAndSettle();
 
       expect(find.text('Entrar con Google'), findsOneWidget);

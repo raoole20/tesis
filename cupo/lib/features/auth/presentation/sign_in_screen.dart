@@ -27,13 +27,27 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _submit() {
-    // Aquí entra el inicio de sesión contra el backend.
+    Navigator.of(context).pushReplacementNamed(AuthRoutes.home);
   }
 
   @override
   Widget build(BuildContext context) {
     return CupoScreen(
       leading: const CupoBackButton(),
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CupoPrimaryButton(label: 'Entrar', onPressed: _submit),
+          const SizedBox(height: AppSpacing.md),
+          CupoInlineLinkText(
+            before: '¿No tienes cuenta? ',
+            linkLabel: 'Créala aquí',
+            onTap: () => Navigator.of(context).pushReplacementNamed(
+              AuthRoutes.signUp,
+            ),
+          ),
+        ],
+      ),
       children: [
         const SizedBox(height: AppSpacing.xl),
         Text('Bienvenida de vuelta', style: AppTypography.title),
@@ -72,20 +86,6 @@ class _SignInScreenState extends State<SignInScreen> {
           child: CupoLink(label: 'Olvidé mi clave', onPressed: () {}),
         ),
       ],
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CupoPrimaryButton(label: 'Entrar', onPressed: _submit),
-          const SizedBox(height: AppSpacing.md),
-          CupoInlineLinkText(
-            before: '¿No tienes cuenta? ',
-            linkLabel: 'Créala aquí',
-            onTap: () => Navigator.of(context).pushReplacementNamed(
-              AuthRoutes.signUp,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

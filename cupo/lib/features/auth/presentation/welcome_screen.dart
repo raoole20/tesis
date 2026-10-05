@@ -15,22 +15,6 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupoScreen(
       topGap: AppSpacing.xxxl,
-      children: [
-        const Center(child: CupoLockup()),
-        const SizedBox(height: AppSpacing.xxxl),
-        Text(
-          'Tu puesto fijo hasta la URBE',
-          style: AppTypography.display,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          'Te conectamos con transportistas que ya hacen tu ruta. '
-          'Crear la cuenta toma menos de dos minutos.',
-          style: AppTypography.body,
-          textAlign: TextAlign.center,
-        ),
-      ],
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -59,6 +43,22 @@ class WelcomeScreen extends StatelessWidget {
           ),
         ],
       ),
+      children: [
+        const Center(child: CupoLockup()),
+        const SizedBox(height: AppSpacing.xxxl),
+        Text(
+          'Tu puesto fijo hasta la URBE',
+          style: AppTypography.display,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Te conectamos con transportistas que ya hacen tu ruta. '
+          'Crear la cuenta toma menos de dos minutos.',
+          style: AppTypography.body,
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

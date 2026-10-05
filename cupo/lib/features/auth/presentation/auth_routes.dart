@@ -14,4 +14,13 @@ abstract final class AuthRoutes {
 
   /// L4 — Iniciar sesión.
   static const String signIn = '/entrar';
+
+  /// 03 — Marcar domicilio (Onboarding).
+  static const String setHome = '/onboarding/domicilio';
+
+  /// 05 — Mis días y turno (Búsqueda).
+  static const String searchFilters = '/buscar';
+
+  /// 10 — Pantalla principal del estudiante (Home).
+  static const String home = '/home';
 }

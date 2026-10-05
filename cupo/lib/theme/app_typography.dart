@@ -89,11 +89,26 @@ abstract final class AppTypography {
     height: 1.2,
   );
 
+  /// Subtítulo de sección o tarjeta.
+  static final TextStyle titleMedium = manrope(
+    size: 18,
+    weight: FontWeight.w700,
+    height: 1.3,
+  );
+
   /// Párrafo explicativo bajo el título.
   static final TextStyle body = manrope(
     size: 16,
     weight: FontWeight.w400,
     height: 1.45,
+    color: AppColors.textSecondary,
+  );
+
+  /// Texto de apoyo pequeño.
+  static final TextStyle bodySmall = manrope(
+    size: 13,
+    weight: FontWeight.w400,
+    height: 1.4,
     color: AppColors.textSecondary,
   );
 

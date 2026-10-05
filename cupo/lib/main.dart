@@ -5,6 +5,9 @@ import 'features/auth/presentation/sign_in_screen.dart';
 import 'features/auth/presentation/sign_up_screen.dart';
 import 'features/auth/presentation/verify_phone_screen.dart';
 import 'features/auth/presentation/welcome_screen.dart';
+import 'features/onboarding/presentation/set_home_screen.dart';
+import 'features/search/presentation/search_filters_screen.dart';
+import 'features/trip/presentation/student_home_screen.dart';
 import 'theme/theme.dart';
 
 void main() {
@@ -26,6 +29,9 @@ class MainApp extends StatelessWidget {
         AuthRoutes.signUp: (_) => const SignUpScreen(),
         AuthRoutes.verifyPhone: (_) => const VerifyPhoneScreen(),
         AuthRoutes.signIn: (_) => const SignInScreen(),
+        AuthRoutes.setHome: (_) => const SetHomeScreen(),
+        AuthRoutes.searchFilters: (_) => const SearchFiltersScreen(),
+        AuthRoutes.home: (_) => const StudentHomeScreen(),
       },
     );
   }
