@@ -55,7 +55,9 @@ void main() {
     testWidgets('«Iniciar sesión» lleva al login', (tester) async {
       await montarPantalla(tester, const WelcomeScreen());
 
-      await tester.tap(find.text('Iniciar sesión'));
+      final inlineLink =
+          tester.widget<CupoInlineLinkText>(find.byType(CupoInlineLinkText));
+      inlineLink.onTap();
       await tester.pumpAndSettle();
 
       expect(find.byType(SignInScreen), findsOneWidget);
