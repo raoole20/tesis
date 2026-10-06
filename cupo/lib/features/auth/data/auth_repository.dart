@@ -233,6 +233,55 @@ class AuthRepository {
     }
   }
 
+  /// Guarda el domicilio del estudiante en PostGIS (WGS-84).
+  ///
+  /// PostGIS acepta formato WKT: 'POINT(longitud latitud)'.
+  /// El trigger `detectar_zona()` en PostgreSQL asignará automáticamente
+  /// la columna `zona_id` mediante `ST_Covers`.
+  Future<void> fijarDomicilioEstudiante({
+    required double latitud,
+    required double longitud,
+    String? direccion,
+    String? referencia,
+  }) async {
+    final id = idUsuarioActual;
+    if (id == null) throw const AuthFallo('No hay sesión abierta.');
+
+    // WKT estándar en PostGIS: 'POINT(longitud latitud)'
+    final wktPoint = 'POINT($longitud $latitud)';
+
+    try {
+      await _db
+          .from('estudiantes')
+          .update({
+            'domicilio': wktPoint,
+            if (direccion != null && direccion.trim().isNotEmpty)
+              'domicilio_direccion': direccion.trim(),
+            if (referencia != null && referencia.trim().isNotEmpty)
+              'domicilio_referencia': referencia.trim(),
+          })
+          .eq('id', id);
+    } on PostgrestException catch (e) {
+      throw AuthFallo(_traducir(e));
+    }
+  }
+
+  /// Guarda el domicilio del estudiante y completa el onboarding en un solo paso.
+  Future<void> fijarDomicilioYCompletarOnboarding({
+    required double latitud,
+    required double longitud,
+    String? direccion,
+    String? referencia,
+  }) async {
+    await fijarDomicilioEstudiante(
+      latitud: latitud,
+      longitud: longitud,
+      direccion: direccion,
+      referencia: referencia,
+    );
+    await completarOnboarding();
+  }
+
   /// Actualiza los datos personales. Estas columnas sí las puede escribir el
   /// propio usuario (ver el `grant update (...)` de la migración 06).
   Future<void> guardarDatosPersonales({
