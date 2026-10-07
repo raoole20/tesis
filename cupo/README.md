@@ -118,14 +118,13 @@ O a mano: abrir el **SQL Editor** del panel y pegar los ocho archivos **en
 orden**, del `0001` al `0009`. El orden importa: las tablas necesitan los
 tipos, las políticas necesitan las tablas.
 
-### Correo y Google
+### Correo
 
 En **Authentication → Providers**:
 
 - **Email**: para desarrollar, apagar *Confirm email*. Si queda encendido, el
   registro no abre sesión hasta que la persona abra el correo, y la app lo
   dice pero no puede seguir.
-- **Google**: pegar el `client id` y el `secret` de Google Cloud.
 
 En **Authentication → URL Configuration**, agregar como *Redirect URL*:
 

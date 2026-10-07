@@ -120,35 +120,6 @@ class AuthRepository {
     }
   }
 
-  /// Entra con Google.
-  ///
-  /// Abre el navegador del sistema y vuelve a la app por un enlace profundo.
-  /// Para que el regreso funcione hacen falta dos cosas fuera de Dart:
-  ///
-  ///  1. Habilitar Google en *Authentication → Providers* del panel de
-  ///     Supabase, con el `client id` y el `secret` de Google Cloud.
-  ///  2. Declarar el esquema `io.supabase.cupo` en `AndroidManifest.xml`
-  ///     (ya está declarado) y registrarlo como *Redirect URL* en Supabase:
-  ///     `io.supabase.cupo://login-callback/`.
-  ///
-  /// No devuelve el usuario: el regreso llega por [cambiosDeSesion], y es el
-  /// `AuthGate` quien reacciona.
-  ///
-  /// Ojo con el rol: por OAuth no viaja `raw_user_meta_data`, así que el
-  /// trigger crea la cuenta como estudiante. El conductor que entre por Google
-  /// queda como estudiante — por eso el registro de conductor va por correo y
-  /// clave hasta que se resuelva (ver TODO.md).
-  Future<void> entrarConGoogle() async {
-    try {
-      await _db.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: 'io.supabase.cupo://login-callback/',
-      );
-    } on AuthException catch (e) {
-      throw AuthFallo(_traducir(e));
-    }
-  }
-
   Future<void> salir() => _db.auth.signOut();
 
   /// Manda el correo de recuperación de clave.

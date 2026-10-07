@@ -12,8 +12,6 @@ import 'auth_scope.dart';
 import 'destino_pantalla.dart';
 import 'estado/cargando_screen.dart';
 import 'estado/falla_screen.dart';
-import 'sign_in_screen.dart';
-import 'sign_up_screen.dart';
 import 'verify_phone_screen.dart';
 import 'welcome_screen.dart';
 
@@ -199,14 +197,12 @@ class _AuthGateState extends State<AuthGate> {
 
       home: _contenido(),
 
-      // Solo las rutas del primer ingreso. Las pantallas de después de la
-      // sesión no se empujan por nombre: las elige la tabla del apartado 6, y
-      // si además se pudieran empujar habría dos fuentes de verdad.
-      routes: {
-        AuthRoutes.signUp: (_) => const SignUpScreen(),
-        AuthRoutes.signIn: (_) => const SignInScreen(),
-        AuthRoutes.verifyPhone: (_) => const VerifyPhoneScreen(),
-      },
+      // Solo las rutas del primer ingreso. Registro e inicio de sesión no
+      // están: viven dentro de la hoja de la bienvenida. Las pantallas de
+      // después de la sesión tampoco se empujan por nombre: las elige la
+      // tabla del apartado 6, y si además se pudieran empujar habría dos
+      // fuentes de verdad.
+      routes: {AuthRoutes.verifyPhone: (_) => const VerifyPhoneScreen()},
 
       // Por encima del Navigator: así el AuthScope alcanza también a las
       // pantallas empujadas.

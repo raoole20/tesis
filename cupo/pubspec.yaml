@@ -30,3 +30,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    # Foto de cabecera del primer ingreso («Cupo Login v2»).
+    - assets/images/hero_primer_ingreso.webp

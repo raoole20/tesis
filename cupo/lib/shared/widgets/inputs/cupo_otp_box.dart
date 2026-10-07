@@ -1,16 +1,18 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../theme/theme.dart';
+import 'cupo_focus_ring.dart';
 
 /// Una casilla del código de verificación.
 ///
-/// Tres estados: vacía, con dígito y activa (la que recibe la próxima tecla).
+/// Tres estados:
+///
+/// - **vacía**: relleno [AppColors.backgroundMuted], sin borde;
+/// - **con dígito**: blanca con borde fino;
+/// - **activa** (la que recibe la próxima tecla): blanca, borde verde lago,
+///   halo de foco y el cursor parpadeando.
 class CupoOtpBox extends StatelessWidget {
-  const CupoOtpBox({
-    super.key,
-    required this.digit,
-    this.isActive = false,
-  });
+  const CupoOtpBox({super.key, required this.digit, this.isActive = false});
 
   /// Dígito escrito, o cadena vacía.
   final String digit;
@@ -20,20 +22,28 @@ class CupoOtpBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: AppSizes.otpBox,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.surface : AppColors.backgroundAlt,
-        borderRadius: AppRadius.mdAll,
-        border: Border.all(
-          color: isActive ? AppColors.primary : AppColors.border,
-          width: isActive ? AppSizes.borderFocused : AppSizes.border,
+    final vacia = digit.isEmpty && !isActive;
+
+    return CupoFocusRing(
+      visible: isActive,
+      radius: AppRadius.sm,
+      child: Container(
+        height: AppSizes.otpBox,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: vacia ? AppColors.backgroundMuted : AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: vacia
+              ? null
+              : Border.all(
+                  color: isActive ? AppColors.primary : AppColors.border,
+                  width: AppSizes.border,
+                ),
         ),
+        child: digit.isNotEmpty
+            ? Text(digit, style: AppTypography.otpDigit)
+            : (isActive ? const _Caret() : null),
       ),
-      child: digit.isNotEmpty
-          ? Text(digit, style: AppTypography.otpDigit)
-          : (isActive ? const _Caret() : null),
     );
   }
 }
@@ -68,9 +78,9 @@ class _CaretState extends State<_Caret> with SingleTickerProviderStateMixin {
         ]),
       ),
       child: Container(
-        width: 2,
-        height: 26,
-        decoration: const BoxDecoration(color: AppColors.ink),
+        width: 1.5,
+        height: 22,
+        decoration: const BoxDecoration(color: AppColors.primary),
       ),
     );
   }

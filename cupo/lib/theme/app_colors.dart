@@ -22,6 +22,12 @@ abstract final class AppColors {
   /// oklch(0.965 0.018 195) — fondo suave de bloques informativos.
   static const Color primarySoft = Color(0xFFE7F4F5);
 
+  /// oklch(0.460 0.09 195 / 0.14) — halo de foco de campos y casillas.
+  ///
+  /// Es [primary] al 14 %: un anillo sin difuminado que marca el control
+  /// activo. Marca un estado, no una elevación (regla 5 de CLAUDE.md).
+  static const Color primaryRing = Color(0x24007C8A);
+
   /// Contenido sobre [primary].
   static const Color onPrimary = Color(0xFFFFFFFF);
 
@@ -46,6 +52,10 @@ abstract final class AppColors {
 
   /// oklch(0.965 0.004 200) — fondo alterno / superficies elevadas.
   static const Color backgroundAlt = Color(0xFFF6F9F9);
+
+  /// oklch(0.94 0.012 195) — relleno apagado sobre [background]: botón
+  /// circular de retroceso y casillas vacías del código.
+  static const Color backgroundMuted = Color(0xFFE3EEEE);
 
   /// Superficie de tarjetas y hojas.
   static const Color surface = Color(0xFFFFFFFF);

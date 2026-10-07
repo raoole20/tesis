@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../theme/theme.dart';
 import 'cupo_text_input.dart';
 
-/// Campo de clave con el enlace «Ver» / «Ocultar» dentro de la caja.
+/// Campo de clave con un ojo dentro de la caja para mostrarla u ocultarla.
 class CupoPasswordInput extends StatefulWidget {
   const CupoPasswordInput({
     super.key,
@@ -49,9 +49,10 @@ class _CupoPasswordInputState extends State<CupoPasswordInput> {
         child: Semantics(
           button: true,
           label: _hidden ? 'Mostrar la clave' : 'Ocultar la clave',
-          child: Text(
-            _hidden ? 'Ver' : 'Ocultar',
-            style: AppTypography.link.copyWith(fontSize: 14),
+          child: Icon(
+            _hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: 18,
+            color: AppColors.textSupport,
           ),
         ),
       ),

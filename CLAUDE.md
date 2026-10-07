@@ -16,12 +16,15 @@ se genere en este repositorio. Todo lo nuevo debe respetar esta identidad.
 
 | Familia | Pesos | Uso |
 | --- | --- | --- |
-| **Manrope** | 400–800 | Toda la UI: títulos, cuerpo, botones, etiquetas |
+| **Teko** | 500–600 | **Solo** titular, títulos de pantalla y rótulos de botón (`AppTypography.display`, `title`, `button`) |
+| **Manrope** | 400–800 | El resto de la UI: cuerpo, campos, etiquetas, enlaces |
 | **Caveat** | 700 | **Solo** el logotipo "Cupo" |
 
 - En Flutter se cargan con `google_fonts` desde `AppTypography`.
 - Caveat solo se usa vía `AppTypography.logo()`. Cualquier otro uso es un error.
-- Nunca introduzcas una tercera familia tipográfica.
+- Teko solo se usa vía `AppTypography.teko()`, en `display`, `title` y
+  `button`. Es la voz deportiva de la marca; no va en párrafos ni campos.
+- Nunca introduzcas una cuarta familia tipográfica.
 
 ### Color
 
@@ -36,6 +39,7 @@ La fuente de verdad es OkLCH; el hex es la expresión en sRGB usada en Dart.
 | `primaryDeep` | `oklch(0.360 0.09 195)` | `#005F6C` | Texto de marca sobre fondo claro |
 | `primaryDarkest` | `oklch(0.240 0.09 195)` | `#003D4B` | Texto de marca de máximo contraste |
 | `primarySoft` | `oklch(0.965 0.018 195)` | `#E7F4F5` | Fondo suave de bloques informativos |
+| `primaryRing` | `oklch(0.460 0.09 195 / 0.14)` | `#24007C8A` | Halo de foco de campos, casillas y opción seleccionada |
 
 **Neutros**
 
@@ -48,6 +52,7 @@ La fuente de verdad es OkLCH; el hex es la expresión en sRGB usada en Dart.
 | `border` | `oklch(0.89 0.006 200)` | `#DDE0E0` | Bordes y divisores |
 | `background` | `oklch(0.975 0.004 200)` | `#F9FCFC` | Fondo base |
 | `backgroundAlt` | `oklch(0.965 0.004 200)` | `#F6F9F9` | Fondo alterno |
+| `backgroundMuted` | `oklch(0.94 0.012 195)` | `#E3EEEE` | Relleno apagado: botón de retroceso, casillas vacías del código |
 | `surface` | — | `#FFFFFF` | Tarjetas y hojas |
 
 **Semánticos**
@@ -77,8 +82,11 @@ La fuente de verdad es OkLCH; el hex es la expresión en sRGB usada en Dart.
    `AppTheme.colorScheme`.
 4. Un tono nuevo se agrega primero como token en `AppColors` (con su OkLCH en el
    comentario) y se documenta en esta tabla; recién entonces se usa.
-5. Radio de esquina estándar: `AppTheme.radius` (12). Elevación por defecto: 0;
-   la jerarquía se expresa con `border` y `backgroundAlt`, no con sombras.
+5. Radio de esquina estándar: `AppTheme.radius` (12). Los botones de acción
+   (`CupoPrimaryButton`, `CupoSecondaryButton`) son píldora; se cambian solo en `CupoButtonShell`. Elevación por defecto: 0;
+   la jerarquía se expresa con `border` y `backgroundAlt`, no con sombras. El
+   halo de foco (`CupoFocusRing`, `primaryRing`) es un borde exterior, no una
+   sombra.
 6. Espaciado en múltiplos de 4; el padding de pantalla es 16–24.
 7. Estados en listas y tarjetas: confirmado → `success` sobre `successSoft`;
    pendiente/vencimiento → `warning` sobre `warningSoft`; error → `danger` sobre
@@ -90,8 +98,8 @@ La fuente de verdad es OkLCH; el hex es la expresión en sRGB usada en Dart.
 ## Reglas al generar material visual y documentos
 
 Mockups, diagramas, presentaciones, capturas y documentos del proyecto usan la
-misma paleta y tipografías: Manrope para todo el texto, Caveat 700 únicamente
-para el logotipo "Cupo", verde lago como color de acento y los neutros de arriba
+misma paleta y tipografías: Teko para titulares y títulos, Manrope para el
+resto del texto, Caveat 700 únicamente para el logotipo "Cupo", verde lago como color de acento y los neutros de arriba
 para fondos y texto.
 
 ## Comandos

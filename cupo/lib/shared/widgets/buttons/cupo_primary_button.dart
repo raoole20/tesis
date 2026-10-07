@@ -5,7 +5,8 @@ import 'cupo_button_shell.dart';
 
 /// Acción principal de una pantalla: «Crear cuenta», «Verificar», «Entrar».
 ///
-/// Verde lago sólido, ancho completo. Nunca debe haber dos en la misma vista.
+/// Píldora verde lago sólida, ancho completo; al presionarla se oscurece a
+/// [AppColors.primaryHover]. Nunca debe haber dos en la misma vista.
 class CupoPrimaryButton extends StatelessWidget {
   const CupoPrimaryButton({
     super.key,
@@ -27,6 +28,7 @@ class CupoPrimaryButton extends StatelessWidget {
       onPressed: onPressed,
       background: AppColors.primary,
       foreground: AppColors.onPrimary,
+      pressedBackground: AppColors.primaryHover,
       leading: leading,
       isLoading: isLoading,
     );

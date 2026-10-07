@@ -14,6 +14,7 @@ class CupoField extends StatelessWidget {
     required this.label,
     required this.child,
     this.helper,
+    this.trailing,
   });
 
   /// Texto de la etiqueta.
@@ -25,12 +26,23 @@ class CupoField extends StatelessWidget {
   /// Aclaración bajo la caja. Si es `null`, no ocupa espacio.
   final String? helper;
 
+  /// Acción pegada a la derecha de la etiqueta, por ejemplo el enlace
+  /// «¿La olvidaste?» sobre la clave.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CupoFieldLabel(label),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Expanded(child: CupoFieldLabel(label)),
+            ?trailing,
+          ],
+        ),
         const SizedBox(height: AppSpacing.xs),
         child,
         if (helper != null) ...[

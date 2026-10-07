@@ -3,15 +3,12 @@ import 'package:cupo/features/auth/domain/estado_cuenta.dart';
 import 'package:cupo/features/auth/domain/rol_usuario.dart';
 import 'package:cupo/features/auth/domain/usuario.dart';
 import 'package:cupo/features/auth/presentation/auth_scope.dart';
-import 'package:cupo/features/auth/presentation/auth_routes.dart';
-import 'package:cupo/features/auth/presentation/sign_in_screen.dart';
-import 'package:cupo/features/auth/presentation/sign_up_screen.dart';
 import 'package:cupo/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Monta una pantalla suelta con todo lo que da por sentado: el tema, un
-/// `Navigator` con las rutas del primer ingreso y un [AuthScope].
+/// `Navigator` y un [AuthScope].
 ///
 /// No se monta la app entera porque `main()` llama a `Supabase.initialize`, y
 /// una prueba de widget no debe necesitar red ni credenciales. El repositorio
@@ -35,10 +32,6 @@ Future<void> montarPantalla(
     MaterialApp(
       theme: AppTheme.light,
       home: pantalla,
-      routes: {
-        AuthRoutes.signUp: (_) => const SignUpScreen(),
-        AuthRoutes.signIn: (_) => const SignInScreen(),
-      },
       // El AuthScope va en `builder` y no envolviendo `home`: así alcanza
       // también a las pantallas que se empujen encima durante la prueba.
       builder: (context, child) =>

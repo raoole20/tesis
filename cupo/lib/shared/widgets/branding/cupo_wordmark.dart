@@ -7,7 +7,11 @@ import '../../../theme/theme.dart';
 /// Es el único lugar de la app donde se usa esa familia; el resto va en
 /// Manrope (ver [AppTypography]).
 class CupoWordmark extends StatelessWidget {
-  const CupoWordmark({super.key, this.fontSize, this.color});
+  const CupoWordmark({super.key, this.style, this.fontSize, this.color});
+
+  /// Estilo base. Por omisión, [AppTypography.wordmark]; sobre la foto se usa
+  /// [AppTypography.wordmarkHero] o [AppTypography.wordmarkHeroCompact].
+  final TextStyle? style;
 
   /// Tamaño en dp. Por omisión, el del diseño (46 dp).
   final double? fontSize;
@@ -19,7 +23,7 @@ class CupoWordmark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'Cupo',
-      style: AppTypography.wordmark.copyWith(
+      style: (style ?? AppTypography.wordmark).copyWith(
         fontSize: fontSize,
         color: color,
       ),

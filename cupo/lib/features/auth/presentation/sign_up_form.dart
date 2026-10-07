@@ -4,10 +4,13 @@ import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../data/auth_repository.dart';
 import '../domain/rol_usuario.dart';
-import 'auth_routes.dart';
 import 'auth_scope.dart';
 
-/// L2 — Crear cuenta.
+/// L2 — Crear cuenta, como contenido de la hoja de la bienvenida.
+///
+/// Igual que `SignInForm`, no es una pantalla aparte: vive dentro de la hoja
+/// de `WelcomeScreen`, y «volver» e «Inicia sesión» se los pide a ella por
+/// [onVolver] y [onIniciarSesion].
 ///
 /// El párrafo de arriba justifica por qué se piden estos datos: el conductor da
 /// crédito, así que necesita saber a quién se lo da. La cédula y el teléfono de
@@ -18,16 +21,27 @@ import 'auth_scope.dart';
 /// subtipo va en `estudiantes` o en `conductores`. Después del registro ya no
 /// se puede cambiar desde la app — los privilegios por columna se lo prohíben
 /// al propio usuario.
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key, this.rolInicial = RolUsuario.estudiante});
+class SignUpForm extends StatefulWidget {
+  const SignUpForm({
+    super.key,
+    required this.onVolver,
+    required this.onIniciarSesion,
+    this.rolInicial = RolUsuario.estudiante,
+  });
+
+  /// Pliega la hoja y vuelve a la bienvenida.
+  final VoidCallback onVolver;
+
+  /// Cambia al formulario de inicio de sesión sin plegar la hoja.
+  final VoidCallback onIniciarSesion;
 
   final RolUsuario rolInicial;
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<SignUpForm> createState() => _SignUpFormState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpFormState extends State<SignUpForm> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _idCard = TextEditingController();
@@ -109,25 +123,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future<void> _conGoogle() async {
-    setState(() => _error = null);
-    try {
-      await AuthScope.de(context).repositorio.entrarConGoogle();
-    } on AuthFallo catch (e) {
-      if (mounted) setState(() => _error = e.mensaje);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final error = _error;
 
-    return CupoScreen(
-      leading: const CupoBackButton(),
+    return CupoSheetBody(
+      title: 'Crear cuenta',
+      onBack: widget.onVolver,
+      footer: CupoInlineLinkText(
+        before: '¿Ya tienes cuenta? ',
+        linkLabel: 'Inicia sesión',
+        onTap: widget.onIniciarSesion,
+      ),
       children: [
         const SizedBox(height: AppSpacing.xl),
         Text('Crea tu cuenta', style: AppTypography.title),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'Los conductores dan crédito: montas primero y pagas después. '
           'Por eso necesitan saber con quién están tratando.',
@@ -214,20 +225,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           label: 'Crear cuenta',
           onPressed: _enviando ? null : _crearCuenta,
           isLoading: _enviando,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        const CupoDividerLabel('o'),
-        const SizedBox(height: AppSpacing.md),
-        CupoGoogleButton(
-          label: 'Continuar con Google',
-          onPressed: _enviando ? null : _conGoogle,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        CupoInlineLinkText(
-          before: '¿Ya tienes cuenta? ',
-          linkLabel: 'Inicia sesión',
-          onTap: () =>
-              Navigator.of(context).pushReplacementNamed(AuthRoutes.signIn),
         ),
       ],
     );

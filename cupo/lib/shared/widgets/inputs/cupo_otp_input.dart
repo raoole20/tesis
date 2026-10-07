@@ -88,12 +88,14 @@ class _CupoOtpInputState extends State<CupoOtpInput> {
   Widget build(BuildContext context) {
     final code = _controller.text;
 
+    // Sin recorte: el halo de la casilla activa sale unos dp por fuera.
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Row(
           children: [
             for (var i = 0; i < widget.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
+              if (i > 0) const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: CupoOtpBox(
                   digit: i < code.length ? code[i] : '',
