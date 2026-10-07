@@ -6,8 +6,7 @@ específicos 3, 4 y 5 (diseño lógico y físico, verificación y manual de usua
 
 - Package: `com.cupo.app`
 - Plataforma: Android únicamente (`minSdk 26`, RNF-01)
-- Backend: **Supabase** (Auth, Postgres, Realtime) + `firebase_messaging` para
-  las notificaciones push, que es lo único que quedó de Firebase
+- Backend: **Supabase** (Auth, Postgres, Realtime). El proyecto no usa Firebase
 - Documentación viva del producto: [`../docs/producto/`](../docs/producto/)
 - Plan de trabajo: [`../TODO.md`](../TODO.md)
 
@@ -198,7 +197,7 @@ flutter create --org com.cupo --project-name cupo \
 
 ```kotlin
 android {
-    compileSdk = 36   // lo exigen firebase_*, sqflite_android y package_info_plus
+    compileSdk = 36   // lo exigen sqflite_android y package_info_plus
     defaultConfig {
         applicationId = "com.cupo.app"
         minSdk = 26        // Android 8.0 — RNF-01
@@ -208,9 +207,7 @@ android {
 ```
 
 El `applicationId` es la identidad definitiva de la app y **no se puede cambiar
-después de publicar**. Hay que fijarlo aquí, antes de conectar el backend: el
-`google-services.json` de Cloud Messaging se genera contra ese identificador y
-si luego no coincide, las notificaciones no llegan.
+después de publicar**, así que hay que fijarlo aquí desde el principio.
 
 `minSdk = 26` no es arbitrario: es el requisito no funcional declarado en la
 tesis. Debe quedar explícito y coherente con el documento.
@@ -265,8 +262,7 @@ evidencia directa para el Objetivo 4.
 ### Dependencias
 
 ```bash
-flutter pub add firebase_core firebase_auth cloud_firestore \
-  firebase_database firebase_messaging
+flutter pub add supabase_flutter
 flutter pub add geolocator flutter_map latlong2 sqflite intl
 flutter pub add --dev flutter_lints test
 ```
@@ -290,7 +286,6 @@ analyzer:
 `.gitignore` (además de lo que genera Flutter):
 
 ```
-android/app/google-services.json
 dart_define.json
 *.jks
 key.properties
@@ -508,35 +503,36 @@ el error que tira no menciona la versión de Java por ningún lado.
 
 ### 2. Flutter
 
-**No está en winget** —ningún paquete oficial— así que es descarga manual:
+**No está en winget** —no hay paquete oficial— así que es descarga manual:
 
 1. Bajar el zip del canal stable de
    [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows).
-2. Descomprimir en **`C:\srclutter`**. No en `Program Files`: la ruta con
-   espacios rompe algunos scripts de build, y el instalador no avisa.
+2. Descomprimir en **`C:\src\flutter`**. No en `Program Files`: la ruta con
+   espacios rompe algunos scripts de build, y nada te avisa.
 
 ### 3. Android SDK, sin Android Studio
 
 1. Bajar **Command line tools only** de
    [developer.android.com/studio](https://developer.android.com/studio#command-line-tools-only)
-   (está al final de la página, no en el botón grande de arriba).
-2. Descomprimir de forma que quede exactamente esta ruta —el `latest` de en
-   medio no es opcional, el CLI se busca a sí mismo ahí:
+   — está al final de la página, no en el botón grande de arriba.
+2. Descomprimir de forma que quede exactamente esta ruta. El `latest` de en
+   medio no es opcional: el CLI se busca a sí mismo ahí.
 
    ```
-   %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest   ```
+   %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest\
+   ```
 
 3. Instalar los paquetes. **Ojo con la sintaxis**: Google deprecó
    `sdkmanager "paquete;version"` y lo delegó en un CLI `android` que usa `/`
    en vez de `;`. Casi todos los tutoriales que vas a encontrar enseñan la
-   forma vieja, que ya no funciona:
+   forma vieja, que ya no funciona.
 
    ```powershell
-   cd $env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latestin
-   .ndroid sdk install platforms/android-36
-   .ndroid sdk install build-tools/35.0.0
-   .ndroid sdk install platform-tools
-   .ndroid sdk install ndk/28.2.13676358
+   cd $env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latest\bin
+   .\android sdk install platforms/android-36
+   .\android sdk install build-tools/35.0.0
+   .\android sdk install platform-tools
+   .\android sdk install ndk/28.2.13676358
    ```
 
    El NDK hay que ponerlo a mano por lo mismo: el plugin de Gradle intenta
@@ -553,19 +549,19 @@ Aquí es donde se tranca todo el mundo. A nivel de **usuario**:
 
 $ruta = [Environment]::GetEnvironmentVariable('PATH', 'User')
 $agregar = @(
-  'C:\srclutterin'
+  'C:\src\flutter\bin'
   "$env:LOCALAPPDATA\Android\Sdk\platform-tools"
-  "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latestin"
-  "$env:LOCALAPPDATA\Pub\Cachein"
+  "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latest\bin"
+  "$env:LOCALAPPDATA\Pub\Cache\bin"
 ) -join ';'
 [Environment]::SetEnvironmentVariable('PATH', "$ruta;$agregar", 'User')
 ```
 
-Ajusta la ruta de `JAVA_HOME` a la versión que te haya instalado winget
-(`Get-ChildItem "$env:ProgramFiles\Eclipse Adoptium"` te la dice).
+Ajusta la ruta de `JAVA_HOME` a la versión que te haya instalado winget;
+`Get-ChildItem "$env:ProgramFiles\Eclipse Adoptium"` te la dice.
 
 **Cierra la terminal y abre una nueva.** Las ya abiertas conservan el `PATH`
-viejo, y esto es la causa del 90% de los "pero si lo acabo de instalar".
+viejo, y eso es la causa del 90% de los "pero si lo acabo de instalar".
 
 ### 5. Comprobar
 

@@ -48,8 +48,6 @@ app.*.map.json
 .widget_preview/
 
 # Cupo — secretos y credenciales (README §7)
-android/app/google-services.json
-lib/firebase_options.dart
 *.jks
 key.properties
 .env

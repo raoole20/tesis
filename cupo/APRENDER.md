@@ -59,8 +59,8 @@ Cambiar de manejo de estado a mitad del proyecto cuesta días.
   hace que la pantalla del usuario cambie sola cuando cambia su estado.
 - Triggers y funciones en PL/pgSQL: `crear_usuario()` y `detectar_zona()` ya
   están escritos; conviene poder leerlos.
-- Cloud Messaging (lo único que queda de Firebase): notificaciones en primer
-  plano vs segundo plano.
+- Notificaciones: Supabase no envía push. Cómo avisar al usuario (Realtime
+  más notificaciones locales, u otro servicio) se decide en la Iteración 5.
 
 ### 5. Android: permisos y ciclo de vida (2 días)
 
