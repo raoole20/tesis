@@ -5,7 +5,7 @@ se genere en este repositorio. Todo lo nuevo debe respetar esta identidad.
 
 ## Estructura
 
-- `cupo/` — app Flutter (Dart, Material 3, Firebase).
+- `cupo/` — app Flutter (Dart, Material 3, Supabase).
 - `cupo/lib/theme/` — sistema de diseño. **Única** fuente de color y tipografía.
 - `docs/producto/` — documentación de producto y modelo de datos.
 - `docs/tesis/` — documentación académica.

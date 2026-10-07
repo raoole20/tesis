@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../../onboarding/presentation/set_home_screen.dart';
 import 'auth_routes.dart';
+import 'auth_scope.dart';
 
 /// L1 — Bienvenida.
 ///
@@ -21,11 +23,11 @@ class WelcomeScreen extends StatelessWidget {
           CupoGoogleButton(
             label: 'Continuar con Google',
             onPressed: () =>
-                Navigator.of(context).pushNamed(AuthRoutes.verifyPhone),
+                AuthScope.de(context).repositorio.entrarConGoogle(),
           ),
           const SizedBox(height: AppSpacing.sm),
           CupoPrimaryButton(
-            label: 'Crear cuenta con mi teléfono',
+            label: 'Crear cuenta con mi correo',
             onPressed: () => Navigator.of(context).pushNamed(AuthRoutes.signUp),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -33,6 +35,14 @@ class WelcomeScreen extends StatelessWidget {
             before: '¿Ya tienes cuenta? ',
             linkLabel: 'Iniciar sesión',
             onTap: () => Navigator.of(context).pushNamed(AuthRoutes.signIn),
+          ),
+          // Recorrido del estudiante con datos de ejemplo, sin crear cuenta:
+          // sirve para la demostración al tutor.
+          CupoLink(
+            label: 'Explorar como invitado',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SetHomeScreen()),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(

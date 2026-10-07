@@ -95,13 +95,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         : AppColors.border,
                     width: 1.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryDarkest.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +112,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: _isAttendingToday
                                 ? AppColors.successSoft
@@ -198,7 +194,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => LiveTrackingScreen(shift: shift),
+                                  builder: (_) =>
+                                      LiveTrackingScreen(shift: shift),
                                 ),
                               );
                             },
@@ -212,7 +209,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       children: [
                         CupoLink(label: 'Ver ruta completa', onPressed: () {}),
                         CupoLink(
-                          label: _isAttendingToday ? 'No voy hoy' : 'Cambiar a: Sí voy',
+                          label: _isAttendingToday
+                              ? 'No voy hoy'
+                              : 'Cambiar a: Sí voy',
                           onPressed: () {
                             setState(() {
                               _isAttendingToday = !_isAttendingToday;
@@ -266,12 +265,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         },
                         borderRadius: AppRadius.smAll,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                          ),
                           decoration: BoxDecoration(
-                            color: goes ? AppColors.primarySoft : AppColors.surface,
+                            color: goes
+                                ? AppColors.primarySoft
+                                : AppColors.surface,
                             borderRadius: AppRadius.smAll,
                             border: Border.all(
-                              color: goes ? AppColors.primary : AppColors.border,
+                              color: goes
+                                  ? AppColors.primary
+                                  : AppColors.border,
                               width: goes ? 1.5 : 1.0,
                             ),
                           ),
@@ -282,7 +287,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                 style: AppTypography.manrope(
                                   size: 13,
                                   weight: FontWeight.w700,
-                                  color: goes ? AppColors.primaryDarkest : AppColors.ink,
+                                  color: goes
+                                      ? AppColors.primaryDarkest
+                                      : AppColors.ink,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -291,7 +298,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                 style: AppTypography.manrope(
                                   size: 11,
                                   weight: FontWeight.w700,
-                                  color: goes ? AppColors.primary : AppColors.textSupportSoft,
+                                  color: goes
+                                      ? AppColors.primary
+                                      : AppColors.textSupportSoft,
                                 ),
                               ),
                             ],
@@ -376,8 +385,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSupport,
         backgroundColor: AppColors.surface,
-        selectedLabelStyle: AppTypography.manrope(size: 12, weight: FontWeight.w700),
-        unselectedLabelStyle: AppTypography.manrope(size: 12, weight: FontWeight.w500),
+        selectedLabelStyle: AppTypography.manrope(
+          size: 12,
+          weight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: AppTypography.manrope(
+          size: 12,
+          weight: FontWeight.w500,
+        ),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_filled),

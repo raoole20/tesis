@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
-import 'auth_routes.dart';
 
 /// L3 — Verificar teléfono.
 ///
@@ -31,17 +30,13 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
   }
 
   void _verify() {
-    Navigator.of(context).pushReplacementNamed(AuthRoutes.setHome);
+    // Aquí entra la verificación contra el backend.
   }
 
   @override
   Widget build(BuildContext context) {
     return CupoScreen(
       leading: const CupoBackButton(),
-      footer: CupoPrimaryButton(
-        label: 'Verificar',
-        onPressed: _complete ? _verify : null,
-      ),
       children: [
         const SizedBox(height: AppSpacing.xl),
         Text('Escribe el código', style: AppTypography.title),
@@ -73,6 +68,10 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
           ),
         ),
       ],
+      footer: CupoPrimaryButton(
+        label: 'Verificar',
+        onPressed: _complete ? _verify : null,
+      ),
     );
   }
 }

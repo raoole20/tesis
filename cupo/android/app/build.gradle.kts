@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.cupo.cupo"
     // El README de la tesis indica 35, pero Flutter 3.47 y los plugins
-    // (firebase_*, sqflite_android, package_info_plus) exigen compilar
+    // (sqflite_android, package_info_plus) exigen compilar
     // contra 36. compileSdk es independiente de targetSdk y minSdk: subirlo
     // solo habilita APIs nuevas, no cambia el comportamiento en ejecucion.
     compileSdk = 36
@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         // Identidad definitiva de la app. No se puede cambiar despues de
-        // publicar, y el google-services.json se genera contra este valor.
+        // publicar.
         applicationId = "com.cupo.app"
         // Android 8.0 - RNF-01 de la tesis.
         minSdk = 26
@@ -31,9 +31,6 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        ndk {
-            abiFilters += listOf("arm64-v8a")
-        }
     }
 
     buildTypes {

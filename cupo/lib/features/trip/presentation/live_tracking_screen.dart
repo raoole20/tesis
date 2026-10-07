@@ -28,7 +28,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CupoPrimaryButton(
-            label: _isAtStop ? 'Ya estoy en la parada ✓' : 'Ya estoy en la parada',
+            label: _isAtStop
+                ? 'Ya estoy en la parada ✓'
+                : 'Ya estoy en la parada',
             onPressed: () => setState(() => _isAtStop = true),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -99,9 +101,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildStopPill('Va por Amparo', isPast: true),
-                  const Icon(Icons.arrow_forward, size: 14, color: AppColors.textSupport),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: AppColors.textSupport,
+                  ),
                   _buildStopPill('Tu parada', isTarget: true),
-                  const Icon(Icons.arrow_forward, size: 14, color: AppColors.textSupport),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: AppColors.textSupport,
+                  ),
                   _buildStopPill('Sede URBE'),
                 ],
               ),
@@ -113,7 +123,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   value: 0.5,
                   minHeight: 6,
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
@@ -149,13 +161,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               color: AppColors.primary.withValues(alpha: 0.4),
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -257,7 +262,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                  size: 20,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -277,15 +286,19 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     );
   }
 
-  Widget _buildStopPill(String label, {bool isPast = false, bool isTarget = false}) {
+  Widget _buildStopPill(
+    String label, {
+    bool isPast = false,
+    bool isTarget = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isTarget
             ? AppColors.primary
             : isPast
-                ? AppColors.primarySoft
-                : AppColors.surface,
+            ? AppColors.primarySoft
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isTarget ? AppColors.primary : AppColors.border,
@@ -299,8 +312,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           color: isTarget
               ? AppColors.onPrimary
               : isPast
-                  ? AppColors.primaryDeep
-                  : AppColors.textSecondary,
+              ? AppColors.primaryDeep
+              : AppColors.textSecondary,
         ),
       ),
     );

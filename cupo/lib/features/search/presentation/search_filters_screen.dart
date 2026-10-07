@@ -32,18 +32,9 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
   ];
 
   static const List<Map<String, String>> _shifts = [
-    {
-      'title': 'Diurno',
-      'hours': 'Entras 7:00 am · sales 12:00 m',
-    },
-    {
-      'title': 'Vespertino',
-      'hours': 'Entras 1:00 pm · sales 5:00 pm',
-    },
-    {
-      'title': 'Nocturno',
-      'hours': 'Entras 6:00 pm · sales 9:30 pm',
-    },
+    {'title': 'Diurno', 'hours': 'Entras 7:00 am · sales 12:00 m'},
+    {'title': 'Vespertino', 'hours': 'Entras 1:00 pm · sales 5:00 pm'},
+    {'title': 'Nocturno', 'hours': 'Entras 6:00 pm · sales 9:30 pm'},
   ];
 
   void _search() {
@@ -70,10 +61,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
         const SizedBox(height: AppSpacing.sm),
         Text('¿Qué días vas a la U?', style: AppTypography.title),
         const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Marca todos los que necesites.',
-          style: AppTypography.body,
-        ),
+        Text('Marca todos los que necesites.', style: AppTypography.body),
         const SizedBox(height: AppSpacing.lg),
 
         // Cuadrícula de 5 días
@@ -98,12 +86,16 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                   },
                   borderRadius: AppRadius.smAll,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primary : AppColors.surface,
                       borderRadius: AppRadius.smAll,
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
                         width: isSelected ? 1.5 : 1.0,
                       ),
                     ),
@@ -114,7 +106,9 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                           style: AppTypography.manrope(
                             size: 19,
                             weight: FontWeight.w800,
-                            color: isSelected ? AppColors.onPrimary : AppColors.ink,
+                            color: isSelected
+                                ? AppColors.onPrimary
+                                : AppColors.ink,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -123,7 +117,9 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                           style: AppTypography.manrope(
                             size: 13,
                             weight: FontWeight.w600,
-                            color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
+                            color: isSelected
+                                ? AppColors.onPrimary
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -139,10 +135,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
 
         Text('¿En cuál turno?', style: AppTypography.titleMedium),
         const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Elige uno solo.',
-          style: AppTypography.bodySmall,
-        ),
+        Text('Elige uno solo.', style: AppTypography.bodySmall),
         const SizedBox(height: AppSpacing.md),
 
         // Opciones de turno
@@ -157,7 +150,9 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primarySoft : AppColors.surface,
+                    color: isSelected
+                        ? AppColors.primarySoft
+                        : AppColors.surface,
                     borderRadius: AppRadius.smAll,
                     border: Border.all(
                       color: isSelected ? AppColors.primary : AppColors.border,
@@ -172,10 +167,12 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : AppColors.textSupport,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textSupport,
                             width: 2,
                           ),
-                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          color: isSelected ? AppColors.primary : null,
                         ),
                         child: isSelected
                             ? const Center(
@@ -197,7 +194,9 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                               style: AppTypography.manrope(
                                 size: 16,
                                 weight: FontWeight.w700,
-                                color: isSelected ? AppColors.primaryDarkest : AppColors.ink,
+                                color: isSelected
+                                    ? AppColors.primaryDarkest
+                                    : AppColors.ink,
                               ),
                             ),
                             const SizedBox(height: 2),

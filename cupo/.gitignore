@@ -48,8 +48,6 @@ app.*.map.json
 .widget_preview/
 
 # Cupo — secretos y credenciales (README §7)
-android/app/google-services.json
-lib/firebase_options.dart
 *.jks
 key.properties
 .env
@@ -57,3 +55,6 @@ key.properties
 # Bruno — los entornos llevan claves de API
 api/environments/*.bru
 !api/environments/*.example.bru
+
+# Credenciales locales de Supabase (--dart-define-from-file)
+dart_define.json

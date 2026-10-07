@@ -62,24 +62,20 @@ class _CupoInlineLinkTextState extends State<CupoInlineLinkText> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      child: Text.rich(
-        TextSpan(
-          style: widget.style ?? AppTypography.linkLead,
-          children: [
-            TextSpan(text: widget.before),
-            TextSpan(
-              text: widget.linkLabel,
-              style: widget.linkStyle ?? AppTypography.link,
-              recognizer: _recognizer,
-            ),
-            if (widget.after.isNotEmpty) TextSpan(text: widget.after),
-          ],
-        ),
-        textAlign: widget.textAlign,
+    return Text.rich(
+      TextSpan(
+        style: widget.style ?? AppTypography.linkLead,
+        children: [
+          TextSpan(text: widget.before),
+          TextSpan(
+            text: widget.linkLabel,
+            style: widget.linkStyle ?? AppTypography.link,
+            recognizer: _recognizer,
+          ),
+          if (widget.after.isNotEmpty) TextSpan(text: widget.after),
+        ],
       ),
+      textAlign: widget.textAlign,
     );
   }
 }

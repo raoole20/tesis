@@ -208,17 +208,26 @@ class SearchResultsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: isLowSeats ? AppColors.warningSoft : AppColors.primarySoft,
+                      color: isLowSeats
+                          ? AppColors.warningSoft
+                          : AppColors.primarySoft,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isLowSeats ? 'Queda 1 asiento' : '${shift.availableSeats} asientos libres',
+                      isLowSeats
+                          ? 'Queda 1 asiento'
+                          : '${shift.availableSeats} asientos libres',
                       style: AppTypography.manrope(
                         size: 12,
                         weight: FontWeight.w700,
-                        color: isLowSeats ? AppColors.warning : AppColors.primaryDeep,
+                        color: isLowSeats
+                            ? AppColors.warning
+                            : AppColors.primaryDeep,
                       ),
                     ),
                   ),
@@ -252,7 +261,9 @@ class SearchResultsScreen extends StatelessWidget {
                 children: [
                   _buildTag(shift.hasAirConditioning ? 'Con aire' : 'Sin aire'),
                   if (shift.isVerified) _buildTag('Verificado'),
-                  _buildTag('${shift.yearsOnRoute} años en la ruta · ${shift.activePassengersCount} pasajeros'),
+                  _buildTag(
+                    '${shift.yearsOnRoute} años en la ruta · ${shift.activePassengersCount} pasajeros',
+                  ),
                   _buildTag(shift.paymentCycleDescription),
                 ],
               ),

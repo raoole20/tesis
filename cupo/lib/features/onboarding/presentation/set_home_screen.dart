@@ -59,7 +59,7 @@ class _SetHomeScreenState extends State<SetHomeScreen> {
           height: 220,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFEAF2F2),
+            color: AppColors.backgroundAlt,
             borderRadius: AppRadius.mdAll,
             border: Border.all(color: AppColors.border),
           ),
@@ -67,11 +67,7 @@ class _SetHomeScreenState extends State<SetHomeScreen> {
             alignment: Alignment.center,
             children: [
               // Cuadrícula sutil que simula calles
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _MapGridPainter(),
-                ),
-              ),
+              Positioned.fill(child: CustomPaint(painter: _MapGridPainter())),
 
               // Píldora de instrucción
               Positioned(
@@ -106,13 +102,6 @@ class _SetHomeScreenState extends State<SetHomeScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryDarkest.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
                     child: const Icon(
                       Icons.home_rounded,
@@ -154,9 +143,7 @@ class _SetHomeScreenState extends State<SetHomeScreen> {
           decoration: BoxDecoration(
             color: AppColors.primarySoft,
             borderRadius: AppRadius.mdAll,
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,18 +204,38 @@ class _MapGridPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     // Calles horizontales
-    canvas.drawLine(Offset(0, size.height * 0.3), Offset(size.width, size.height * 0.3), paint);
-    canvas.drawLine(Offset(0, size.height * 0.7), Offset(size.width, size.height * 0.7), paint);
+    canvas.drawLine(
+      Offset(0, size.height * 0.3),
+      Offset(size.width, size.height * 0.3),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(0, size.height * 0.7),
+      Offset(size.width, size.height * 0.7),
+      paint,
+    );
 
     // Calles verticales
-    canvas.drawLine(Offset(size.width * 0.25, 0), Offset(size.width * 0.25, size.height), paint);
-    canvas.drawLine(Offset(size.width * 0.65, 0), Offset(size.width * 0.65, size.height), paint);
+    canvas.drawLine(
+      Offset(size.width * 0.25, 0),
+      Offset(size.width * 0.25, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.65, 0),
+      Offset(size.width * 0.65, size.height),
+      paint,
+    );
 
     // Avenida diagonal
     final mainRoadPaint = Paint()
-      ..color = const Color(0xFFD3E4E4)
+      ..color = AppColors.border
       ..strokeWidth = 6.0;
-    canvas.drawLine(Offset(0, size.height * 0.85), Offset(size.width, size.height * 0.2), mainRoadPaint);
+    canvas.drawLine(
+      Offset(0, size.height * 0.85),
+      Offset(size.width, size.height * 0.2),
+      mainRoadPaint,
+    );
   }
 
   @override

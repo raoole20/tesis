@@ -9,6 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Backend: autenticación, PostgreSQL y Realtime en un solo paquete.
+  # Reemplaza todo el stack de Firebase (ver apartado 10 de
+  # docs/producto/modelo-de-datos.md).
+  supabase_flutter: ^2.8.0
+
   flutter_map: ^8.3.2
   geolocator: ^14.0.3
   google_fonts: ^6.2.1

@@ -5,7 +5,7 @@ abstract final class AppSizes {
   /// Alto de los botones de acción (primario y secundario).
   static const double button = 60;
 
-  /// Alto de los campos de texto.
+  /// Alto mínimo de los campos de texto; el relleno interno puede crecerlo.
   static const double field = 56;
 
   /// Lado del botón cuadrado de retroceso.

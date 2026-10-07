@@ -113,10 +113,7 @@ class ShiftDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    shift.driverName,
-                    style: AppTypography.titleMedium,
-                  ),
+                  Text(shift.driverName, style: AppTypography.titleMedium),
                   const SizedBox(height: 2),
                   Text(
                     '${shift.vehicleModel} ${shift.vehicleColor} · ${shift.totalSeats} puestos · ${shift.hasAirConditioning ? "Con aire" : "Sin aire"}',
@@ -133,7 +130,11 @@ class ShiftDetailScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.star_rounded, size: 16, color: AppColors.warning),
+                  const Icon(
+                    Icons.star_rounded,
+                    size: 16,
+                    color: AppColors.warning,
+                  ),
                   const SizedBox(width: 2),
                   Text(
                     shift.rating.toString().replaceAll('.', ','),
@@ -323,9 +324,13 @@ class ShiftDetailScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCheckItem('Cédula, licencia y certificado médico verificados'),
+            _buildCheckItem(
+              'Cédula, licencia y certificado médico verificados',
+            ),
             const SizedBox(height: 6),
-            _buildCheckItem('${shift.yearsOnRoute} años haciendo esta ruta · ${shift.activePassengersCount} pasajeros activos'),
+            _buildCheckItem(
+              '${shift.yearsOnRoute} años haciendo esta ruta · ${shift.activePassengersCount} pasajeros activos',
+            ),
           ],
         ),
       ],
@@ -335,7 +340,11 @@ class ShiftDetailScreen extends StatelessWidget {
   Widget _buildCheckItem(String text) {
     return Row(
       children: [
-        const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.success),
+        const Icon(
+          Icons.check_circle_rounded,
+          size: 16,
+          color: AppColors.success,
+        ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(

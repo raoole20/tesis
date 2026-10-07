@@ -51,7 +51,8 @@ class _RequestStatusScreenState extends State<RequestStatusScreen> {
             ),
           ] else ...[
             CupoPrimaryButton(
-              label: 'Ya le pagué a ${widget.shift.driverName.split(" ").first}',
+              label:
+                  'Ya le pagué a ${widget.shift.driverName.split(" ").first}',
               onPressed: _goToHome,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -180,7 +181,10 @@ class _RequestStatusScreenState extends State<RequestStatusScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(4),
@@ -322,15 +326,23 @@ class _RequestStatusScreenState extends State<RequestStatusScreen> {
                 color: isDone
                     ? AppColors.success
                     : isCurrent
-                        ? AppColors.primary
-                        : AppColors.border,
+                    ? AppColors.primary
+                    : AppColors.border,
               ),
               child: Center(
                 child: isDone
-                    ? const Icon(Icons.check, size: 14, color: AppColors.surface)
+                    ? const Icon(
+                        Icons.check,
+                        size: 14,
+                        color: AppColors.surface,
+                      )
                     : isCurrent
-                        ? const Icon(Icons.circle, size: 8, color: AppColors.surface)
-                        : null,
+                    ? const Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: AppColors.surface,
+                      )
+                    : null,
               ),
             ),
             if (!isLast)
@@ -350,7 +362,9 @@ class _RequestStatusScreenState extends State<RequestStatusScreen> {
                 title,
                 style: AppTypography.manrope(
                   size: 14,
-                  weight: isCurrent || isDone ? FontWeight.w700 : FontWeight.w500,
+                  weight: isCurrent || isDone
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                   color: AppColors.ink,
                 ),
               ),
