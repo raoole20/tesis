@@ -6,37 +6,176 @@ específicos 3, 4 y 5 (diseño lógico y físico, verificación y manual de usua
 
 - Package: `com.cupo.app`
 - Plataforma: Android únicamente (`minSdk 26`, RNF-01)
-- Backend: Firebase (Auth, Firestore, Realtime Database, Cloud Messaging)
+- Backend: **Supabase** (Auth, Postgres, Realtime) + `firebase_messaging` para
+  las notificaciones push, que es lo único que quedó de Firebase
 - Documentación viva del producto: [`../docs/producto/`](../docs/producto/)
 - Plan de trabajo: [`../TODO.md`](../TODO.md)
 
-> Esta carpeta contiene por ahora solo este README. El proyecto Flutter se
-> genera dentro de ella con el paso 2; `flutter create` completa una carpeta
-> existente sin borrar lo que ya está.
+---
+
+## Instalación
+
+Son cuatro pasos. El proyecto ya existe en el repositorio: no hay que crearlo
+ni configurar Android a mano — eso ya está hecho y versionado. Lo que sigue
+supone un Supabase ya montado; si vas a crear el tuyo, pasa antes por
+[Montar Supabase desde cero](#montar-supabase-desde-cero).
+
+**1. Requisitos** — tres cosas, nada más:
+
+| Qué | Versión | Cómo comprobarlo |
+|---|---|---|
+| Flutter (canal stable) | 3.47+ · Dart 3.13+ | `flutter --version` |
+| JDK | 17 | `java -version` |
+| Android SDK (`cmdline-tools`) | platform 36, build-tools 35 | `flutter doctor` |
+
+Si no tienes nada de eso instalado, ahí está el trabajo real —no en los otros
+tres pasos—: una tarde, tres descargas y un `PATH` que hay que armar a mano.
+Está todo en el [Apéndice D](#apéndice-d--instalar-los-requisitos-en-windows).
+
+No hace falta Android Studio. Si el SDK ya existe pero está en otra ruta:
+`flutter config --android-sdk /ruta/al/android-sdk`.
+
+`flutter doctor` va a marcar *Android Studio* ausente, *Visual Studio* ausente
+y *Android license status unknown*. Los tres son esperados y no bloquean nada.
+
+**2. Dependencias:**
+
+```bash
+cd cupo
+flutter pub get
+```
+
+**3. Credenciales de Supabase** — en **Project Settings → API** del panel están
+`Project URL` y la `anon public` key:
+
+```bash
+cp dart_define.example.json dart_define.json   # y pega ahí los dos valores
+```
+
+`dart_define.json` está en `.gitignore`. La `anon key` es pública por diseño —va
+dentro de la app— y lo que protege los datos es el RLS, no ella. La que **nunca**
+entra al repositorio ni a la app es la `service_role`, que salta el RLS entero.
+
+**4. Correr**, con el teléfono conectado y la depuración USB activada:
+
+```bash
+flutter run --dart-define-from-file=dart_define.json
+```
+
+Si arranca y llega a la pantalla de login, la instalación está lista.
+
+### Comprobar que todo está sano
+
+```bash
+flutter analyze    # sin issues
+flutter test       # en verde
+```
+
+El detalle de cómo preparar el teléfono, qué teclas acepta `flutter run` y qué
+hacer si `adb` no ve el dispositivo está en el [README raíz](../README.md).
+
+### Opcional
+
+Lo de abajo no hace falta para que la app corra. Está separado a propósito:
+
+- **Extensiones de VS Code y herramientas de línea de comandos** →
+  [Apéndice B](#apéndice-b--herramientas-y-extensiones). De todo eso, solo dos
+  extensiones son obligatorias: Dart y Flutter.
+- **Supabase desde Claude Code (MCP)** → [Apéndice C](#apéndice-c--supabase-desde-claude-code-mcp).
+- **Qué estudiar antes de tirar código y recursos** →
+  [`APRENDER.md`](APRENDER.md).
 
 ---
 
-## 1. Requisitos previos
+## Montar Supabase desde cero
+
+Solo si no tienes un proyecto Supabase al que apuntar. Si ya te pasaron la
+URL y la `anon key`, salta esto: con el paso 3 de la instalación basta.
+
+### Crear el proyecto
+
+En [supabase.com](https://supabase.com) → **New project**. Región: la más
+cercana (`East US`). Anota la contraseña de la base: no se vuelve a mostrar.
+
+Conviene crear **dos proyectos**: uno de desarrollo y otro para la
+demostración final. No se quiere estar borrando datos de prueba la noche
+antes de la defensa.
+
+### Aplicar el esquema
+
+Las migraciones están en [`supabase/migrations/`](../supabase/migrations/),
+numeradas y en orden. Cada archivo corresponde a un apartado del modelo de
+datos.
+
+Con la CLI:
 
 ```bash
-flutter --version        # canal stable actual (~3.47)
-java -version            # JDK 17
-flutter doctor -v
+npm install -g supabase
+supabase link --project-ref <ref-del-proyecto>
+supabase db push
 ```
 
-No hace falta Android Studio. Basta con los `cmdline-tools` del Android SDK y
-apuntar Flutter hacia él:
+O a mano: abrir el **SQL Editor** del panel y pegar los ocho archivos **en
+orden**, del `0001` al `0009`. El orden importa: las tablas necesitan los
+tipos, las políticas necesitan las tablas.
 
-```bash
-flutter config --android-sdk /ruta/al/android-sdk
-sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-sdkmanager --licenses
+### Correo y Google
+
+En **Authentication → Providers**:
+
+- **Email**: para desarrollar, apagar *Confirm email*. Si queda encendido, el
+  registro no abre sesión hasta que la persona abra el correo, y la app lo
+  dice pero no puede seguir.
+- **Google**: pegar el `client id` y el `secret` de Google Cloud.
+
+En **Authentication → URL Configuration**, agregar como *Redirect URL*:
+
+```
+io.supabase.cupo://login-callback/
 ```
 
-`flutter doctor` va a marcar la ausencia de Android Studio. Es esperado y no
-bloquea la compilación.
+Ese esquema ya está declarado en `AndroidManifest.xml`.
 
-## 2. Crear el proyecto
+### Crear el primer administrador
+
+El trigger `crear_usuario()` **nunca** concede el rol de administrador: es una
+lista blanca de `estudiante` y `conductor`, y es la defensa contra que
+cualquiera se registre como admin. El primero se marca a mano, una sola vez,
+desde el SQL Editor:
+
+```sql
+update public.usuarios
+   set rol = 'administrador', estado = 'aprobada', onboarding_completo = true
+ where email = 'tu-correo@ejemplo.com';
+```
+
+### Probar el enrutamiento sin esperar aprobaciones
+
+La tabla del apartado 6 se recorre entera cambiando una columna:
+
+```sql
+update public.usuarios set estado = 'aprobada'  where email = '...';
+update public.usuarios set estado = 'rechazada',
+       motivo_rechazo = 'La foto de la licencia está borrosa.' where email = '...';
+update public.usuarios set estado = 'suspendida' where email = '...';
+```
+
+Con la app abierta, la pantalla **cambia sola**: está suscrita a su propia fila
+por Realtime.
+
+---
+
+# Apéndices
+
+Nada de lo que sigue hace falta para instalar ni para correr la app.
+
+## Apéndice A — Cómo se construyó el proyecto
+
+Queda documentado porque la tesis debe poder explicar cada decisión de
+configuración ante el jurado, no porque haya que repetirlo: todo esto ya
+está hecho y versionado.
+
+### Generar el proyecto Flutter
 
 ```bash
 flutter create --org com.cupo --project-name cupo \
@@ -53,13 +192,13 @@ flutter create --org com.cupo --project-name cupo \
   más adelante con `flutter create --platforms=ios .`.
 - `--empty` entrega un `main.dart` limpio, sin el contador de demostración.
 
-## 3. Configurar Android
+### Configurar Android
 
 `android/app/build.gradle.kts`:
 
 ```kotlin
 android {
-    compileSdk = 35
+    compileSdk = 36   // lo exigen firebase_*, sqflite_android y package_info_plus
     defaultConfig {
         applicationId = "com.cupo.app"
         minSdk = 26        // Android 8.0 — RNF-01
@@ -69,9 +208,9 @@ android {
 ```
 
 El `applicationId` es la identidad definitiva de la app y **no se puede cambiar
-después de publicar**. Hay que fijarlo aquí, antes de conectar Firebase: el
-`google-services.json` se genera contra ese identificador y si luego no coincide,
-la app no autentica.
+después de publicar**. Hay que fijarlo aquí, antes de conectar el backend: el
+`google-services.json` de Cloud Messaging se genera contra ese identificador y
+si luego no coincide, las notificaciones no llegan.
 
 `minSdk = 26` no es arbitrario: es el requisito no funcional declarado en la
 tesis. Debe quedar explícito y coherente con el documento.
@@ -92,7 +231,7 @@ Permisos en `android/app/src/main/AndroidManifest.xml`:
 Android lo solicita en un diálogo aparte, después de conceder el permiso normal
 de ubicación. Es exactamente lo que debe validar el **Spike 1**.
 
-## 4. Estructura de carpetas
+### Estructura de carpetas
 
 Organización por funcionalidad, no por tipo de archivo. Con capas técnicas
 (`models/`, `screens/`, `widgets/`) se termina saltando entre cinco carpetas
@@ -105,7 +244,7 @@ lib/
     config/          constantes, radio peatonal, umbrales
     theme/           tipografía, paleta, colores de estado del cupo
     geo/             punto en polígono, distancia punto-polilínea
-    services/        firebase, notificaciones, ubicación
+    services/        supabase, notificaciones, ubicación
   features/
     auth/
     onboarding/      pin de casa, zona detectada
@@ -119,11 +258,11 @@ lib/
     widgets/
 ```
 
-Los cálculos de `core/geo/` son Dart puro, sin dependencias de Flutter ni de
-Firebase. Eso permite cubrirlos con pruebas unitarias, y esas pruebas son
+Los cálculos de `core/geo/` son Dart puro, sin dependencias de Flutter ni del
+backend. Eso permite cubrirlos con pruebas unitarias, y esas pruebas son
 evidencia directa para el Objetivo 4.
 
-## 5. Dependencias
+### Dependencias
 
 ```bash
 flutter pub add firebase_core firebase_auth cloud_firestore \
@@ -136,156 +275,7 @@ Quedan fuera por ahora `flutter_background_geolocation` y
 `geoflutterfire_plus`: se agregan cuando lleguen los spikes que los necesitan,
 no antes.
 
-## 6. Supabase
-
-> El proyecto migró de Firebase a Supabase. Lo único que queda de Firebase es
-> `firebase_messaging`, porque Supabase no tiene equivalente de Cloud
-> Messaging. Ver el apartado 10 de
-> [`docs/producto/modelo-de-datos.md`](../docs/producto/modelo-de-datos.md).
-
-### 6.1 Crear el proyecto
-
-En [supabase.com](https://supabase.com) → **New project**. Región: la más
-cercana (`East US`). Anota la contraseña de la base: no se vuelve a mostrar.
-
-Conviene crear **dos proyectos**: uno de desarrollo y otro para la
-demostración final. No se quiere estar borrando datos de prueba la noche
-antes de la defensa.
-
-### 6.2 Aplicar el esquema
-
-Las migraciones están en [`supabase/migrations/`](../supabase/migrations/),
-numeradas y en orden. Cada archivo corresponde a un apartado del modelo de
-datos.
-
-Con la CLI:
-
-```bash
-npm install -g supabase
-supabase link --project-ref <ref-del-proyecto>
-supabase db push
-```
-
-O a mano: abrir el **SQL Editor** del panel y pegar los ocho archivos **en
-orden**, del `0001` al `0009`. El orden importa: las tablas necesitan los
-tipos, las políticas necesitan las tablas.
-
-### 6.3 Credenciales
-
-En **Project Settings → API** están `Project URL` y la `anon public` key.
-
-```bash
-cp dart_define.example.json dart_define.json   # llénalo con esos dos valores
-flutter run --dart-define-from-file=dart_define.json
-```
-
-`dart_define.json` está en `.gitignore`. La `anon key` es pública por diseño
-—va dentro de la app— y lo que protege los datos es el RLS, no ella. La que
-**nunca** entra al repositorio ni a la app es la `service_role`, que salta el
-RLS entero.
-
-### 6.4 Correo y Google
-
-En **Authentication → Providers**:
-
-- **Email**: para desarrollar, apagar *Confirm email*. Si queda encendido, el
-  registro no abre sesión hasta que la persona abra el correo, y la app lo
-  dice pero no puede seguir.
-- **Google**: pegar el `client id` y el `secret` de Google Cloud.
-
-En **Authentication → URL Configuration**, agregar como *Redirect URL*:
-
-```
-io.supabase.cupo://login-callback/
-```
-
-Ese esquema ya está declarado en `AndroidManifest.xml`.
-
-### 6.5 Crear el primer administrador
-
-El trigger `crear_usuario()` **nunca** concede el rol de administrador: es una
-lista blanca de `estudiante` y `conductor`, y es la defensa contra que
-cualquiera se registre como admin. El primero se marca a mano, una sola vez,
-desde el SQL Editor:
-
-```sql
-update public.usuarios
-   set rol = 'administrador', estado = 'aprobada', onboarding_completo = true
- where email = 'tu-correo@ejemplo.com';
-```
-
-### 6.6 Probar el enrutamiento sin esperar aprobaciones
-
-La tabla del apartado 6 se recorre entera cambiando una columna:
-
-```sql
-update public.usuarios set estado = 'aprobada'  where email = '...';
-update public.usuarios set estado = 'rechazada',
-       motivo_rechazo = 'La foto de la licencia está borrosa.' where email = '...';
-update public.usuarios set estado = 'suspendida' where email = '...';
-```
-
-Con la app abierta, la pantalla **cambia sola**: está suscrita a su propia fila
-por Realtime.
-
-### 6.7 Supabase desde Claude Code (MCP)
-
-El repositorio trae [`.mcp.json`](../.mcp.json) en la raíz: conecta Claude Code
-con la cuenta de Supabase para crear el proyecto, aplicar migraciones,
-consultar tablas y leer logs sin salir del editor.
-
-**El archivo no contiene la credencial.** Lleva `${SUPABASE_ACCESS_TOKEN}`, que
-se expande desde una variable de entorno, así que se puede versionar sin
-riesgo. El token se guarda una sola vez, en la máquina:
-
-1. Sacarlo en [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
-   → **Generate new token**. Se muestra una sola vez.
-2. Anotarlo en `.env` en la raíz del repositorio —ignorado por git— con el
-   nombre exacto de la variable, que es el que busca `.mcp.json`:
-
-   ```
-   SUPABASE_ACCESS_TOKEN=sbp_el-token-que-copiaste
-   ```
-
-   Hay una plantilla en [`.env.example`](../.env.example).
-
-3. Pasarlo al entorno del usuario. **Claude Code no lee archivos `.env`**: la
-   expansión `${SUPABASE_ACCESS_TOKEN}` de `.mcp.json` sale del entorno del
-   proceso, así que el `.env` por sí solo no alcanza.
-
-   ```powershell
-   $v = ((Get-Content .env | Where-Object { $_ -match '^SUPABASE_ACCESS_TOKEN=' }) -split '=',2)[1].Trim()
-   [Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN', $v, 'User')
-   ```
-
-4. **Cerrar y reabrir VS Code.** La variable solo llega a procesos nuevos.
-5. Claude Code pregunta si se confía en el servidor MCP del proyecto la
-   primera vez. Con `/mcp` se ve el estado de la conexión.
-
-El token vale por **toda la cuenta**, no por un proyecto. Conviene borrarlo del
-panel cuando se termine la tesis.
-
-#### Alcance concedido
-
-| Grupo | Para qué |
-|---|---|
-| `account` | listar y crear proyectos |
-| `database` | aplicar migraciones, consultar tablas, ver el esquema |
-| `development` | leer la URL y la `anon key` (las de `dart_define.json`) |
-| `debugging` | logs y avisos del asesor de seguridad |
-| `docs` | buscar en la documentación de Supabase |
-
-Quedan fuera `branching`, `functions` y `storage`: no hacen falta todavía y
-cada grupo apagado es superficie que no se expone.
-
-**Tiene permiso de escritura**, a propósito: es lo que permite aplicar las
-nueve migraciones desde aquí. Eso implica que un texto malicioso guardado en
-la base podría, en teoría, inducir una escritura no pedida. En una base de
-tesis sin datos de terceros el riesgo es asumible; el día que haya usuarios
-reales, agregar `--read-only` a los argumentos y aplicar los cambios por la
-CLI.
-
-## 7. Higiene inicial
+### Higiene inicial
 
 `analysis_options.yaml`:
 
@@ -301,26 +291,13 @@ analyzer:
 
 ```
 android/app/google-services.json
-lib/firebase_options.dart
+dart_define.json
 *.jks
 key.properties
 .env
 ```
 
-## 8. Verificar antes de escribir código
-
-```bash
-flutter analyze
-flutter test
-flutter run -d <tu-teléfono>
-```
-
-Si la app vacía compila y corre en un teléfono físico, el entorno está listo.
-Ese es el commit inicial.
-
----
-
-## Herramientas y extensiones
+## Apéndice B — Herramientas y extensiones
 
 ### Extensiones de VS Code — imprescindibles
 
@@ -340,7 +317,7 @@ Sin estas cuatro no se trabaja cómodo. Las dos primeras son obligatorias.
 | Flutter Riverpod Snippets | `robert-brunhage.flutter-riverpod-snippets` | Solo si se elige Riverpod para el manejo de estado. |
 | Pubspec Assist | `jeroen-meijer.pubspec-assist` | Agrega dependencias con la versión correcta sin abrir pub.dev. |
 | Dart Data Class Generator | `hzgood.dart-data-class-generator` | Genera `fromJson`/`toJson`/`copyWith` de los modelos. Mucho tiempo ahorrado en la Fase 3. |
-| Firebase Explorer | `jsayol.firebase-explorer` | Ver colecciones de Firestore sin salir del editor. |
+| PostgreSQL | `ms-ossdata.vscode-pgsql` | Consultar las tablas de Supabase sin salir del editor. |
 | Bruno | `bruno-api-client.bruno` | Cliente de API embebido en VS Code (ver abajo). |
 | Better Comments | `aaron-bond.better-comments` | Resalta `TODO:` y `FIXME:`, útil con el plan de fases. |
 | GitLens | `eamodio.gitlens` | Historial y culpa por línea. |
@@ -398,12 +375,12 @@ entornos separados para desarrollo y demostración.
 ```
 api/
   environments/
-    dev.bru          # apunta al proyecto Firebase de desarrollo
+    dev.bru          # apunta al proyecto Supabase de desarrollo
     demo.bru         # apunta al de la defensa
   auth/
     signup.bru
     signin.bru
-  firestore/
+  rest/
     listar-turnos.bru
 ```
 
@@ -417,10 +394,11 @@ api/environments/*.bru
 
 Para qué sirve concretamente en este proyecto:
 
-- Probar la **API REST de Firebase Auth** (registro y login) sin compilar la app.
-- Consultar la **API REST de Firestore** para verificar que un documento quedó
-  como se esperaba, o para poblar datos de prueba.
-- Golpear las **Cloud Functions** cuando existan, sin pasar por la interfaz.
+- Probar la **API de Auth de Supabase** (registro y login) sin compilar la app.
+- Consultar la **API REST de PostgREST** para verificar que una fila quedó como
+  se esperaba, o para poblar datos de prueba.
+- Comprobar que el **RLS** bloquea lo que debe: la misma consulta con la `anon
+  key` y con una sesión distinta.
 - Probar **OSRM** o el servicio de rutas que se elija en la Fase 0, y ver la
   respuesta cruda antes de escribir el parser en Dart.
 
@@ -430,21 +408,20 @@ Para qué sirve concretamente en este proyecto:
 |---|---|---|
 | **adb** | viene con `platform-tools` | `adb devices`, `adb logcat`, `adb shell dumpsys location`. Indispensable en el Spike 1. |
 | **scrcpy** | `winget install Genymobile.scrcpy` | Espeja la pantalla del teléfono en la PC. Vale oro para grabar la demostración de la defensa. |
-| **Firebase CLI** | `npm i -g firebase-tools` | Emuladores, despliegue de reglas e índices, `firebase deploy`. |
-| **FlutterFire CLI** | `dart pub global activate flutterfire_cli` | Genera `firebase_options.dart` (paso 6). |
+| **Supabase CLI** | `npm i -g supabase` | `supabase db push` para aplicar las migraciones, `supabase start` para el stack local. |
 | **Flutter DevTools** | incluido en Flutter | Inspector de widgets, profiler, vista de red. Se abre con `flutter run` en curso. |
 
-### Emuladores de Firebase
+### Stack local de Supabase
 
 ```bash
-firebase init emulators      # auth, firestore, database
-firebase emulators:start
+supabase start      # Postgres, Auth y Realtime en Docker
+supabase db push    # aplica las migraciones de supabase/migrations/
 ```
 
-Vale la pena montarlos antes de la Iteración 1. Permiten probar las reglas de
-seguridad y las consultas sin gastar cuota, sin conexión y sin ensuciar el
-proyecto de datos reales — que es exactamente lo que hace falta cuando se está
-depurando el mismo flujo veinte veces seguidas.
+Vale la pena montarlo antes de la Iteración 1. Permite probar las políticas de
+RLS y las consultas sin conexión y sin ensuciar el proyecto de datos reales —
+que es exactamente lo que hace falta cuando se está depurando el mismo flujo
+veinte veces seguidas. Requiere Docker.
 
 ### Dispositivo de pruebas
 
@@ -455,176 +432,147 @@ activar Opciones de desarrollador y Depuración por USB.
 
 ---
 
-## Qué estudiar antes de tirar código
+## Apéndice C — Supabase desde Claude Code (MCP)
 
-El orden importa: cada bloque se apoya en el anterior. No hace falta dominar
-todo, sí reconocer los conceptos cuando aparezcan en un error.
+El repositorio trae [`.mcp.json`](../.mcp.json) en la raíz: conecta Claude Code
+con la cuenta de Supabase para crear el proyecto, aplicar migraciones,
+consultar tablas y leer logs sin salir del editor.
 
-### 1. Dart (2–3 días)
+**El archivo no contiene la credencial.** Lleva `${SUPABASE_ACCESS_TOKEN}`, que
+se expande desde una variable de entorno, así que se puede versionar sin
+riesgo. El token se guarda una sola vez, en la máquina:
 
-Sin esto, todo lo demás se lee como magia.
+1. Sacarlo en [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
+   → **Generate new token**. Se muestra una sola vez.
+2. Anotarlo en `.env` en la raíz del repositorio —ignorado por git— con el
+   nombre exacto de la variable, que es el que busca `.mcp.json`:
 
-- Tipado sano: `late`, `final` vs `const`, genéricos.
-- **Null safety**: `?`, `!`, `??`, `?.`. Es la fuente número uno de errores de
-  compilación al empezar.
-- Asincronía: `Future`, `async`/`await`, `Stream`, `StreamBuilder`. Firestore y
-  la ubicación son streams; sin entender streams no se avanza.
-- Clases: constructores nombrados, `factory`, `copyWith`, `fromJson`/`toJson`.
+   ```
+   SUPABASE_ACCESS_TOKEN=sbp_el-token-que-copiaste
+   ```
 
-### 2. Flutter — fundamentos (3–5 días)
+   Hay una plantilla en [`.env.example`](../.env.example).
 
-- **Todo es un widget**, y la diferencia entre `StatelessWidget` y
-  `StatefulWidget`.
-- El árbol de widgets y por qué `build` se vuelve a ejecutar.
-- Layout: `Column`, `Row`, `Expanded`, `Flexible`, `Stack`, `Padding`,
-  `SizedBox`. Vale la pena entender **cómo funcionan las restricciones**
-  (constraints go down, sizes go up): evita la mitad de los errores de layout.
-- Listas: `ListView.builder`, `ListView.separated`, scroll.
-- Navegación: rutas nombradas o `go_router`, y paso de argumentos.
-- `Theme`, `TextTheme`, `ColorScheme`: la base del sistema de diseño de la
-  Fase 4.
-- Formularios: `Form`, `TextFormField`, validación.
+3. Pasarlo al entorno del usuario. **Claude Code no lee archivos `.env`**: la
+   expansión `${SUPABASE_ACCESS_TOKEN}` de `.mcp.json` sale del entorno del
+   proceso, así que el `.env` por sí solo no alcanza.
 
-### 3. Manejo de estado (2 días)
+   ```powershell
+   $v = ((Get-Content .env | Where-Object { $_ -match '^SUPABASE_ACCESS_TOKEN=' }) -split '=',2)[1].Trim()
+   [Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN', $v, 'User')
+   ```
 
-Antes de elegir librería, entender **por qué** hace falta: `setState` no
-alcanza cuando dos pantallas comparten datos.
+4. **Cerrar y reabrir VS Code.** La variable solo llega a procesos nuevos.
+5. Claude Code pregunta si se confía en el servidor MCP del proyecto la
+   primera vez. Con `/mcp` se ve el estado de la conexión.
 
-- `setState` y sus límites.
-- `InheritedWidget` en concepto (no hay que escribirlo a mano).
-- Elegir **una** solución y quedarse con ella: `provider` o `riverpod` son
-  suficientes para este proyecto. No hace falta BLoC.
+El token vale por **toda la cuenta**, no por un proyecto. Conviene borrarlo del
+panel cuando se termine la tesis.
 
-Decidirlo antes de la Iteración 1 y dejarlo escrito en `docs/producto/`.
-Cambiar de manejo de estado a mitad del proyecto cuesta días.
+### Alcance concedido
 
-### 4. Firebase (3–4 días)
-
-- Modelo de datos de **Firestore**: colecciones, documentos, subcolecciones. No
-  es SQL; la desnormalización es normal y esperada.
-- Consultas y sus límites: índices compuestos, por qué no existe el `JOIN`, por
-  qué algunas queries fallan hasta crear el índice.
-- **Reglas de seguridad**. Es lo que un jurado puede preguntar y lo que casi
-  nadie estudia.
-- `firebase_auth`: registro, sesión, estado de autenticación como stream.
-- Diferencia entre **Firestore** (datos persistentes) y **Realtime Database**
-  (posiciones en vivo). Aquí se usan las dos, cada una para lo suyo.
-- Cloud Messaging: notificaciones en primer plano vs segundo plano.
-
-### 5. Android: permisos y ciclo de vida (2 días)
-
-Es donde el proyecto puede romperse, así que no conviene improvisarlo.
-
-- Permisos en tiempo de ejecución y el flujo de dos pasos de la ubicación en
-  segundo plano.
-- **Foreground services** y por qué son obligatorios para rastrear ubicación con
-  la pantalla apagada.
-- Optimización de batería y restricciones por fabricante (Xiaomi, Huawei y
-  Samsung matan servicios en segundo plano de forma agresiva). Esto puede
-  aparecer como una limitación legítima en el capítulo de resultados.
-
-### 6. Geo (2 días)
-
-- Coordenadas, latitud/longitud, la fórmula de Haversine.
-- **Geohash**: qué es y por qué permite consultas por radio en Firestore.
-- Algoritmo de **punto en polígono** (ray casting).
-- Distancia de un punto a una polilínea (proyección sobre segmento).
-
-Estos cuatro son el Spike 3 y son Dart puro: se pueden estudiar y probar sin
-tocar la interfaz.
-
-### 7. Pruebas (1 día)
-
-- `test` para lógica pura (los cálculos de `core/geo/`).
-- `flutter_test` con `testWidgets` para lo visual.
-- Escribir primero las pruebas de geometría: son el mejor ejemplo de TDD del
-  proyecto y evidencia lista para el Objetivo 4.
-
-### Lo que conviene NO estudiar todavía
-
-Animaciones avanzadas, `CustomPainter`, código nativo con platform channels,
-CI/CD, publicación en Play Store, arquitectura limpia con tres capas y cuatro
-abstracciones. Nada de eso está en el alcance y consume el tiempo que hace falta
-en los spikes.
-
----
-
-## Recursos
-
-### Dart
-
-| Recurso | Por qué |
+| Grupo | Para qué |
 |---|---|
-| [Dart Language Tour](https://dart.dev/language) | La referencia oficial. Se lee de corrido en unas horas. |
-| [Dart Cheatsheet interactivo](https://dart.dev/codelabs/dart-cheatsheet) | Ejercicios en el navegador, sin instalar nada. |
-| [Understanding null safety](https://dart.dev/null-safety/understanding-null-safety) | El mejor texto sobre el tema. |
-| [Async programming: futures, async, await](https://dart.dev/codelabs/async-await) | Codelab oficial de asincronía. |
+| `account` | listar y crear proyectos |
+| `database` | aplicar migraciones, consultar tablas, ver el esquema |
+| `development` | leer la URL y la `anon key` (las de `dart_define.json`) |
+| `debugging` | logs y avisos del asesor de seguridad |
+| `docs` | buscar en la documentación de Supabase |
 
-### Flutter
+Quedan fuera `branching`, `functions` y `storage`: no hacen falta todavía y
+cada grupo apagado es superficie que no se expone.
 
-| Recurso | Por qué |
-|---|---|
-| [Flutter — Get started codelab](https://docs.flutter.dev/get-started/codelab) | Primera app guiada. |
-| [Flutter Widget of the Week (YouTube)](https://www.youtube.com/playlist?list=PLjxrf2q8roU23XGwz3Km7sQZFTdB996iG) | Videos de 1–3 min por widget. Ideal para ratos muertos. |
-| [Layouts in Flutter](https://docs.flutter.dev/ui/layout) | Guía visual de layout. |
-| [Understanding constraints](https://docs.flutter.dev/ui/layout/constraints) | Explica el 80 % de los errores de layout. |
-| [Flutter Cookbook](https://docs.flutter.dev/cookbook) | Recetas cortas: formularios, listas, navegación, red. |
-| [Material 3 en Flutter](https://docs.flutter.dev/ui/design/material) | Base del sistema de diseño de la Fase 4. |
-| [DartPad](https://dartpad.dev) | Probar ideas sin crear proyecto. |
+**Tiene permiso de escritura**, a propósito: es lo que permite aplicar las
+nueve migraciones desde aquí. Eso implica que un texto malicioso guardado en
+la base podría, en teoría, inducir una escritura no pedida. En una base de
+tesis sin datos de terceros el riesgo es asumible; el día que haya usuarios
+reales, agregar `--read-only` a los argumentos y aplicar los cambios por la
+CLI.
 
-### Manejo de estado
+## Apéndice D — Instalar los requisitos en Windows
 
-| Recurso | Por qué |
-|---|---|
-| [State management — docs oficiales](https://docs.flutter.dev/data-and-backend/state-mgmt/intro) | Explica el problema antes que las librerías. |
-| [Simple app state management (provider)](https://docs.flutter.dev/data-and-backend/state-mgmt/simple) | Suficiente para este proyecto. |
-| [Riverpod](https://riverpod.dev) | Alternativa, si se prefiere sobre provider. |
+Si ya tienes Flutter, el JDK 17 y el Android SDK funcionando, sáltate esto.
 
-### Firebase
+Lo que sigue es lo que se hizo en esta máquina, en este orden. Toma una tarde la
+primera vez, casi toda en descargas. Nada de esto es difícil: es tedioso, y el
+único punto donde se tranca la gente es el `PATH`.
 
-| Recurso | Por qué |
-|---|---|
-| [FlutterFire](https://firebase.flutter.dev) | Configuración e integración por paquete. |
-| [Get to know Cloud Firestore (YouTube)](https://www.youtube.com/playlist?list=PLl-K7zZEsYLluG5MCVEzXAQ7ACZBCuZgZ) | La mejor explicación del modelo de datos NoSQL. |
-| [Firestore data model](https://firebase.google.com/docs/firestore/data-model) | Referencia de colecciones y documentos. |
-| [Firestore security rules](https://firebase.google.com/docs/firestore/security/get-started) | Obligatorio antes de la Fase 3. |
-| [Structure your data (Realtime DB)](https://firebase.google.com/docs/database/web/structure-data) | Para decidir qué va en RTDB. |
-| [Firebase Local Emulator Suite](https://firebase.google.com/docs/emulator-suite) | Probar reglas y consultas sin gastar cuota ni ensuciar datos. |
+### 1. JDK 17
 
-### Android, ubicación y permisos
+```powershell
+winget install EclipseAdoptium.Temurin.17.JDK
+```
 
-| Recurso | Por qué |
-|---|---|
-| [Request location permissions](https://developer.android.com/develop/sensors-and-location/location/permissions) | El flujo de dos pasos del permiso en segundo plano. |
-| [Foreground services](https://developer.android.com/develop/background-work/services/foreground-services) | Requisito para el rastreo con pantalla apagada. |
-| [geolocator — pub.dev](https://pub.dev/packages/geolocator) | El README del paquete es la mejor documentación práctica. |
-| [dontkillmyapp.com](https://dontkillmyapp.com) | Qué hace cada fabricante contra los servicios en segundo plano. |
+Tiene que ser **17**. Con el 21 o el 25 el plugin de Gradle de Android falla, y
+el error que tira no menciona la versión de Java por ningún lado.
 
-### Geo
+### 2. Flutter
 
-| Recurso | Por qué |
-|---|---|
-| [Movable Type — cálculos con lat/long](https://www.movable-type.co.uk/scripts/latlong.html) | Haversine y afines, con fórmulas y código. |
-| [Geoqueries en Firestore](https://firebase.google.com/docs/firestore/solutions/geoqueries) | Consultas por radio con geohash, explicado por Google. |
-| [Point in polygon (W. R. Franklin)](https://wrfranklin.org/Research/Short_Notes/pnpoly.html) | Ray casting en su versión canónica. |
-| [flutter_map](https://docs.fleaflet.dev) | Mapas con OSM, si se descarta Google Maps SDK. |
+**No está en winget** —ningún paquete oficial— así que es descarga manual:
 
-### Para dudas del día a día
+1. Bajar el zip del canal stable de
+   [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows).
+2. Descomprimir en **`C:\srclutter`**. No en `Program Files`: la ruta con
+   espacios rompe algunos scripts de build, y el instalador no avisa.
 
-- Flutter Community en Discord y r/FlutterDev.
-- [Stack Overflow — tag `flutter`](https://stackoverflow.com/questions/tagged/flutter).
-- `pub.dev`: antes de instalar un paquete, mirar fecha de última publicación,
-  likes y si soporta la versión de Flutter en uso.
+### 3. Android SDK, sin Android Studio
 
----
+1. Bajar **Command line tools only** de
+   [developer.android.com/studio](https://developer.android.com/studio#command-line-tools-only)
+   (está al final de la página, no en el botón grande de arriba).
+2. Descomprimir de forma que quede exactamente esta ruta —el `latest` de en
+   medio no es opcional, el CLI se busca a sí mismo ahí:
 
-## Orden sugerido de arranque
+   ```
+   %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest   ```
 
-1. Estudiar Dart y los fundamentos de Flutter (bloques 1 y 2).
-2. Montar el entorno y llegar al commit inicial (pasos 1 a 8).
-3. **Spike 1** — ubicación en segundo plano. Es el que puede tumbar la
-   arquitectura; hacerlo temprano.
-4. Estudiar Firestore y hacer los Spikes 2 y 3.
-5. Recién ahí, empezar la Iteración 1.
+3. Instalar los paquetes. **Ojo con la sintaxis**: Google deprecó
+   `sdkmanager "paquete;version"` y lo delegó en un CLI `android` que usa `/`
+   en vez de `;`. Casi todos los tutoriales que vas a encontrar enseñan la
+   forma vieja, que ya no funciona:
 
-El detalle de fases y entregables está en [`../TODO.md`](../TODO.md).
+   ```powershell
+   cd $env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latestin
+   .ndroid sdk install platforms/android-36
+   .ndroid sdk install build-tools/35.0.0
+   .ndroid sdk install platform-tools
+   .ndroid sdk install ndk/28.2.13676358
+   ```
+
+   El NDK hay que ponerlo a mano por lo mismo: el plugin de Gradle intenta
+   auto-instalarlo por la vía vieja y falla.
+
+### 4. Variables de entorno
+
+Aquí es donde se tranca todo el mundo. A nivel de **usuario**:
+
+```powershell
+[Environment]::SetEnvironmentVariable('JAVA_HOME', "$env:ProgramFiles\Eclipse Adoptium\jdk-17.0.20.101-hotspot", 'User')
+[Environment]::SetEnvironmentVariable('ANDROID_HOME', "$env:LOCALAPPDATA\Android\Sdk", 'User')
+[Environment]::SetEnvironmentVariable('ANDROID_SDK_ROOT', "$env:LOCALAPPDATA\Android\Sdk", 'User')
+
+$ruta = [Environment]::GetEnvironmentVariable('PATH', 'User')
+$agregar = @(
+  'C:\srclutterin'
+  "$env:LOCALAPPDATA\Android\Sdk\platform-tools"
+  "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latestin"
+  "$env:LOCALAPPDATA\Pub\Cachein"
+) -join ';'
+[Environment]::SetEnvironmentVariable('PATH', "$ruta;$agregar", 'User')
+```
+
+Ajusta la ruta de `JAVA_HOME` a la versión que te haya instalado winget
+(`Get-ChildItem "$env:ProgramFiles\Eclipse Adoptium"` te la dice).
+
+**Cierra la terminal y abre una nueva.** Las ya abiertas conservan el `PATH`
+viejo, y esto es la causa del 90% de los "pero si lo acabo de instalar".
+
+### 5. Comprobar
+
+```powershell
+flutter doctor -v
+```
+
+Los tres avisos esperados —Android Studio, Visual Studio y *Android license
+status unknown*— están explicados en el [paso 1 de la instalación](#instalación).
+Cualquier otra cosa en rojo sí hay que resolverla antes de seguir.
