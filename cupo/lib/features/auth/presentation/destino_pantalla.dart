@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
-import '../../onboarding/presentation/set_home_screen.dart';
+import '../../onboarding/presentation/onboarding_estudiante_screen.dart';
 import '../../trip/presentation/student_home_screen.dart';
 import '../domain/destino_auth.dart';
 import 'auth_scope.dart';
@@ -39,9 +39,9 @@ Widget destinoPantalla(DestinoAuth destino) {
       titulo: 'Elige tus zonas de trabajo',
       paso: 'Selección de zonas con vista previa en mapa',
     ),
-    // Prototipo con datos de ejemplo: todavía no guarda el pin ni marca el
-    // onboarding como completo.
-    DestinoAuth.onboardingEstudiante => const SetHomeScreen(),
+    // Fija el domicilio en PostGIS y completa el onboarding; el stream del
+    // AuthGate lleva entonces a inicioEstudiante.
+    DestinoAuth.onboardingEstudiante => const OnboardingEstudianteScreen(),
     DestinoAuth.inicioConductor => const EnConstruccionScreen(
       titulo: 'Inicio del conductor',
       paso: 'Rutas, turnos y cupos — Iteración 2',
