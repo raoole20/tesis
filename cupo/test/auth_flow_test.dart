@@ -55,7 +55,7 @@ void main() {
     testWidgets('«Iniciar sesión» lleva al login', (tester) async {
       await montarPantalla(tester, const WelcomeScreen());
 
-      await tester.tap(find.text('Iniciar sesión'));
+      await tester.tapOnText(find.textRange.ofSubstring('Iniciar sesión'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SignInScreen), findsOneWidget);
@@ -183,10 +183,7 @@ void main() {
       );
 
       expect(find.text('Tu registro necesita correcciones'), findsOneWidget);
-      expect(
-        find.text('La foto de la licencia está borrosa.'),
-        findsOneWidget,
-      );
+      expect(find.text('La foto de la licencia está borrosa.'), findsOneWidget);
       expect(find.text('Volver a enviar'), findsOneWidget);
     });
 
@@ -199,10 +196,7 @@ void main() {
         usuario: usuarioDePrueba(estado: EstadoCuenta.rechazada),
       );
 
-      expect(
-        find.text('El administrador no dejó un motivo.'),
-        findsOneWidget,
-      );
+      expect(find.text('El administrador no dejó un motivo.'), findsOneWidget);
     });
 
     testWidgets('suspendida: explica y da por dónde reclamar', (tester) async {

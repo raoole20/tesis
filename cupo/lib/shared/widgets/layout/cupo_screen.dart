@@ -20,11 +20,11 @@ import '../../../theme/theme.dart';
 class CupoScreen extends StatelessWidget {
   const CupoScreen({
     super.key,
-    required this.children,
     this.leading,
     this.footer,
     this.topGap = AppSpacing.xs,
     this.crossAxisAlignment = CrossAxisAlignment.stretch,
+    required this.children,
   });
 
   /// Contenido desplazable.
@@ -65,7 +65,7 @@ class CupoScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              if (footer != null) footer!,
+              ?footer,
               const SizedBox(height: AppSpacing.screenBottom),
             ],
           ),

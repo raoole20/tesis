@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../../onboarding/presentation/set_home_screen.dart';
 import 'auth_routes.dart';
 import 'auth_scope.dart';
 
@@ -16,22 +17,6 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupoScreen(
       topGap: AppSpacing.xxxl,
-      children: [
-        const Center(child: CupoLockup()),
-        const SizedBox(height: AppSpacing.xxxl),
-        Text(
-          'Tu puesto fijo hasta la URBE',
-          style: AppTypography.display,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          'Te conectamos con transportistas que ya hacen tu ruta. '
-          'Crear la cuenta toma menos de dos minutos.',
-          style: AppTypography.body,
-          textAlign: TextAlign.center,
-        ),
-      ],
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -51,6 +36,14 @@ class WelcomeScreen extends StatelessWidget {
             linkLabel: 'Iniciar sesión',
             onTap: () => Navigator.of(context).pushNamed(AuthRoutes.signIn),
           ),
+          // Recorrido del estudiante con datos de ejemplo, sin crear cuenta:
+          // sirve para la demostración al tutor.
+          CupoLink(
+            label: 'Explorar como invitado',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SetHomeScreen()),
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Al continuar aceptas los términos y el aviso de privacidad. '
@@ -60,6 +53,22 @@ class WelcomeScreen extends StatelessWidget {
           ),
         ],
       ),
+      children: [
+        const Center(child: CupoLockup()),
+        const SizedBox(height: AppSpacing.xxxl),
+        Text(
+          'Tu puesto fijo hasta la URBE',
+          style: AppTypography.display,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Te conectamos con transportistas que ya hacen tu ruta. '
+          'Crear la cuenta toma menos de dos minutos.',
+          style: AppTypography.body,
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

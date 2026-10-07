@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../../onboarding/presentation/set_home_screen.dart';
+import '../../trip/presentation/student_home_screen.dart';
 import '../domain/destino_auth.dart';
 import 'auth_scope.dart';
 import 'estado/estado_screens.dart';
@@ -37,18 +39,14 @@ Widget destinoPantalla(DestinoAuth destino) {
       titulo: 'Elige tus zonas de trabajo',
       paso: 'Selección de zonas con vista previa en mapa',
     ),
-    DestinoAuth.onboardingEstudiante => const EnConstruccionScreen(
-      titulo: 'Marca dónde vives',
-      paso: 'Pin de casa sobre el mapa',
-    ),
+    // Prototipo con datos de ejemplo: todavía no guarda el pin ni marca el
+    // onboarding como completo.
+    DestinoAuth.onboardingEstudiante => const SetHomeScreen(),
     DestinoAuth.inicioConductor => const EnConstruccionScreen(
       titulo: 'Inicio del conductor',
       paso: 'Rutas, turnos y cupos — Iteración 2',
     ),
-    DestinoAuth.inicioEstudiante => const EnConstruccionScreen(
-      titulo: 'Inicio del estudiante',
-      paso: 'Búsqueda de rutas — Iteración 2',
-    ),
+    DestinoAuth.inicioEstudiante => const StudentHomeScreen(),
     DestinoAuth.bandejaAdministrador => const EnConstruccionScreen(
       titulo: 'Bandeja de solicitudes',
       paso: 'Aprobar y rechazar registros',
