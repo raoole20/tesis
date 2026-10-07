@@ -5,8 +5,9 @@ import '../../../theme/theme.dart';
 
 /// L3 — Verificar teléfono.
 ///
-/// Seis casillas, un solo campo activo y una salida clara si el número está
-/// mal: ese es el error más común y por eso tiene su propio bloque.
+/// Seis casillas y un solo campo activo. El título dice adónde llegó el
+/// código, con el número enmascarado: si el número está mal, que es el error
+/// más común, el botón de retroceso lleva de vuelta a corregirlo.
 class VerifyPhoneScreen extends StatefulWidget {
   const VerifyPhoneScreen({super.key, this.phoneNumber = '0414 000 0000'});
 
@@ -29,24 +30,30 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     super.dispose();
   }
 
+  /// Solo los últimos cuatro dígitos: «••• 0000».
+  String get _numeroEnmascarado {
+    final digitos = widget.phoneNumber.replaceAll(RegExp(r'\D'), '');
+    final cola = digitos.length > 4
+        ? digitos.substring(digitos.length - 4)
+        : digitos;
+    return '••• $cola';
+  }
+
   void _verify() {
     // Aquí entra la verificación contra el backend.
   }
 
   @override
   Widget build(BuildContext context) {
-    return CupoScreen(
-      leading: const CupoBackButton(),
+    return CupoHeroScreen(
+      title: 'Crear cuenta',
       children: [
         const SizedBox(height: AppSpacing.xl),
-        Text('Escribe el código', style: AppTypography.title),
-        const SizedBox(height: AppSpacing.sm),
-        CupoEmphasisText(
-          before: 'Te lo mandamos por WhatsApp al ',
-          emphasis: widget.phoneNumber,
-          after: '.',
+        Text(
+          'Escribe el código que te llegó al $_numeroEnmascarado',
+          style: AppTypography.title,
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.xl),
         CupoOtpInput(
           length: _codeLength,
           controller: _code,
@@ -54,24 +61,14 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
           onChanged: (code) =>
               setState(() => _complete = code.length == _codeLength),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        CupoResendCountdown(onResend: () {}),
         const SizedBox(height: AppSpacing.xl),
-        CupoInfoBanner(
-          child: CupoInlineLinkText(
-            before: '¿Número equivocado? ',
-            linkLabel: 'Cámbialo aquí',
-            after: ' y te mandamos otro código.',
-            onTap: () => Navigator.of(context).maybePop(),
-            style: AppTypography.body,
-            textAlign: TextAlign.start,
-          ),
+        CupoPrimaryButton(
+          label: 'Continuar',
+          onPressed: _complete ? _verify : null,
         ),
+        const SizedBox(height: AppSpacing.md),
+        CupoResendCountdown(onResend: () {}),
       ],
-      footer: CupoPrimaryButton(
-        label: 'Verificar',
-        onPressed: _complete ? _verify : null,
-      ),
     );
   }
 }

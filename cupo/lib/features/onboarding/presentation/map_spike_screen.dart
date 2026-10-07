@@ -56,9 +56,6 @@ class _MapSpikeScreenState extends State<MapSpikeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Ubicación de domicilio', style: textTheme.titleMedium),
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.border),

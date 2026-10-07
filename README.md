@@ -49,12 +49,13 @@ versiona como cualquier fuente.
 
 Depende de qué vengas a hacer.
 
-**Si vienes a programar** → [`cupo/README.md`](cupo/README.md). Ahí está todo:
-requisitos, creación del proyecto, configuración de Android y Firebase,
-extensiones de VS Code, herramientas, qué estudiar antes de escribir código y
-recursos para aprenderlo. El entorno de esta máquina ya está montado: lo que
-quedó instalado, las desviaciones respecto de ese README y cómo levantar la app
-están más abajo, en **Entorno de desarrollo** y **Cómo levantar la app**.
+**Si vienes a programar** → [`cupo/README.md`](cupo/README.md). La instalación
+son cuatro pasos: requisitos, `flutter pub get`, las credenciales de Supabase y
+`flutter run`. Todo lo demás —cómo se construyó el proyecto, extensiones y
+herramientas— quedó en los apéndices de ese mismo archivo, y el plan de estudio
+en [`cupo/APRENDER.md`](cupo/APRENDER.md). El entorno de esta máquina ya está
+montado: lo que quedó instalado y cómo levantar la app están más abajo, en
+**Entorno de desarrollo** y **Cómo levantar la app**.
 
 **Si vienes a escribir la tesis** → [`docs/tesis/PENDIENTES.md`](docs/tesis/PENDIENTES.md).
 Hay 31 pendientes abiertos, 7 de ellos bloqueantes.
@@ -64,8 +65,8 @@ dependencia, no por gusto.
 
 ## Entorno de desarrollo
 
-Los pasos 1 a 8 de [`cupo/README.md`](cupo/README.md) están ejecutados y
-verificados en esta máquina.
+La instalación de [`cupo/README.md`](cupo/README.md) está ejecutada y
+verificada en esta máquina.
 
 ### Qué quedó instalado
 
@@ -112,9 +113,9 @@ licencias. El APK resultante declara `com.cupo.app`, `minSdkVersion 26`,
 
 ### Desviaciones respecto de `cupo/README.md`
 
-Tres cosas de ese README no sobrevivieron al contacto con las versiones
-actuales de las herramientas. Conviene corregirlas allí para que el documento y
-el código no se contradigan ante el jurado.
+Tres cosas del README original no sobrevivieron al contacto con las versiones
+actuales de las herramientas. Ya están corregidas allí; quedan anotadas aquí
+porque explican decisiones que el jurado puede preguntar.
 
 1. **`compileSdk` es 36, no 35.** No es opcional: `firebase_*`,
    `sqflite_android` y `package_info_plus` exigen compilar contra 36, y el
@@ -173,7 +174,7 @@ instalación del APK.
 ```powershell
 cd cupo
 adb devices     # el teléfono debe aparecer como "device"
-flutter run
+flutter run --dart-define-from-file=dart_define.json
 ```
 
 Desde VS Code es equivalente: **F5**, con el dispositivo elegido en la barra de

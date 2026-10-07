@@ -3,25 +3,35 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../data/auth_repository.dart';
-import 'auth_routes.dart';
 import 'auth_scope.dart';
 
-/// L4 — Iniciar sesión.
+/// L4 — Iniciar sesión, como contenido de la hoja de la bienvenida.
 ///
-/// Mismo orden de métodos que en el registro —Google primero, luego correo y
-/// clave— para que quien vuelve reconozca por dónde entró.
+/// No es una pantalla aparte: la hoja de `WelcomeScreen` crece y este
+/// formulario aparece dentro. Por eso no navega: «volver» y «Créala» se los
+/// pide a la bienvenida por [onVolver] y [onCrearCuenta].
 ///
-/// No navega al terminar: al abrirse la sesión, el `AuthGate` lee la fila de
-/// `usuarios` y decide la pantalla según la tabla del apartado 6. Esta
-/// pantalla solo tiene que entregar la credencial.
-class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key});
+/// Tampoco navega al terminar: al abrirse la sesión, el `AuthGate` lee la fila
+/// de `usuarios` y decide la pantalla según la tabla del apartado 6. Este
+/// formulario solo tiene que entregar la credencial.
+class SignInForm extends StatefulWidget {
+  const SignInForm({
+    super.key,
+    required this.onVolver,
+    required this.onCrearCuenta,
+  });
+
+  /// Pliega la hoja y vuelve a la bienvenida.
+  final VoidCallback onVolver;
+
+  /// Cambia al formulario de registro sin plegar la hoja.
+  final VoidCallback onCrearCuenta;
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  State<SignInForm> createState() => _SignInFormState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInFormState extends State<SignInForm> {
   final _email = TextEditingController();
   final _password = TextEditingController();
 
@@ -54,10 +64,8 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
-      await AuthScope.de(context).repositorio.entrar(
-        email: _email.text,
-        clave: _password.text,
-      );
+      await AuthScope.de(context).repositorio
+          .entrar(email: _email.text, clave: _password.text);
       // Nada más. El AuthGate se encarga del resto.
     } on AuthFallo catch (e) {
       if (mounted) setState(() => _error = e.mensaje);
@@ -68,18 +76,11 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Future<void> _entrarConGoogle() async {
-    setState(() => _error = null);
-    try {
-      await AuthScope.de(context).repositorio.entrarConGoogle();
-    } on AuthFallo catch (e) {
-      if (mounted) setState(() => _error = e.mensaje);
-    }
-  }
-
   Future<void> _recuperarClave() async {
     if (!_email.text.contains('@')) {
-      setState(() => _error = 'Escribe tu correo arriba y vuelve a tocar aquí.');
+      setState(
+        () => _error = 'Escribe tu correo arriba y vuelve a tocar aquí.',
+      );
       return;
     }
     final messenger = ScaffoldMessenger.of(context);
@@ -97,23 +98,17 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final error = _error;
 
-    return CupoScreen(
-      leading: const CupoBackButton(),
+    return CupoSheetBody(
+      title: 'Iniciar sesión',
+      onBack: widget.onVolver,
+      footer: CupoInlineLinkText(
+        before: '¿No tienes cuenta? ',
+        linkLabel: 'Créala',
+        onTap: widget.onCrearCuenta,
+      ),
       children: [
         const SizedBox(height: AppSpacing.xl),
-        Text('Bienvenida de vuelta', style: AppTypography.title),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Entra con el mismo método que usaste al registrarte.',
-          style: AppTypography.body,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        CupoGoogleButton(
-          label: 'Entrar con Google',
-          onPressed: _enviando ? null : _entrarConGoogle,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const CupoDividerLabel('o con tu correo'),
+        Text('Qué bueno verte', style: AppTypography.title),
         const SizedBox(height: AppSpacing.xl),
         CupoField(
           label: 'Correo',
@@ -128,40 +123,28 @@ class _SignInScreenState extends State<SignInScreen> {
         const SizedBox(height: AppSpacing.md),
         CupoField(
           label: 'Clave',
+          trailing: CupoLink(
+            label: '¿La olvidaste?',
+            onPressed: _recuperarClave,
+            style: AppTypography.linkSmall,
+          ),
           child: CupoPasswordInput(
             controller: _password,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _entrar(),
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: CupoLink(label: 'Olvidé mi clave', onPressed: _recuperarClave),
-        ),
         if (error != null) ...[
           const SizedBox(height: AppSpacing.md),
           CupoErrorBanner(mensaje: error),
         ],
+        const SizedBox(height: AppSpacing.xl),
+        CupoPrimaryButton(
+          label: 'Entrar',
+          onPressed: _enviando ? null : _entrar,
+          isLoading: _enviando,
+        ),
       ],
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CupoPrimaryButton(
-            label: 'Entrar',
-            onPressed: _enviando ? null : _entrar,
-            isLoading: _enviando,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          CupoInlineLinkText(
-            before: '¿No tienes cuenta? ',
-            linkLabel: 'Créala aquí',
-            onTap: () => Navigator.of(
-              context,
-            ).pushReplacementNamed(AuthRoutes.signUp),
-          ),
-        ],
-      ),
     );
   }
 }

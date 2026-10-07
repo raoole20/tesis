@@ -18,7 +18,7 @@ Fase 1 — Campo (Objetivos 1 y 2)
 Esto va primero por una razón formal: si diseñas la base de datos antes de aplicar los instrumentos, los requerimientos quedan justificados al revés y se nota.
 
 Fase 2 — Prototipos de riesgo (en paralelo con la Fase 3)
- Crear el proyecto Flutter y conectar Firebase (flutterfire configure)
+ Crear el proyecto Flutter y conectar Supabase
  Spike 1: rastreo de ubicación con la app minimizada y la pantalla apagada
  Spike 2: consulta por radio con geohash en Firestore
  Spike 3: punto en polígono y distancia punto-polilínea, con pruebas unitarias

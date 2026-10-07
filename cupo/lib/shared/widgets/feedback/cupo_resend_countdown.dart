@@ -9,7 +9,8 @@ import '../text/cupo_link.dart';
 /// Contador de reenvío del código: «Reenviar en 0:42».
 ///
 /// Mientras corre, el reenvío no se puede tocar —esa es la razón de que el
-/// tiempo esté a la vista—. Al llegar a cero se convierte en un enlace.
+/// tiempo esté a la vista—. Al llegar a cero se convierte en un enlace. Va
+/// centrado bajo el botón principal, como en el diseño.
 class CupoResendCountdown extends StatefulWidget {
   const CupoResendCountdown({
     super.key,
@@ -71,15 +72,14 @@ class _CupoResendCountdownState extends State<CupoResendCountdown> {
   @override
   Widget build(BuildContext context) {
     if (_remaining <= 0) {
-      return Align(
-        alignment: Alignment.centerLeft,
+      return Center(
         child: CupoLink(
           label: widget.readyLabel,
           onPressed: () {
             widget.onResend();
             setState(_start);
           },
-          style: AppTypography.link.copyWith(fontSize: 14),
+          style: AppTypography.link,
         ),
       );
     }
@@ -89,6 +89,7 @@ class _CupoResendCountdownState extends State<CupoResendCountdown> {
       emphasis: _format(_remaining),
       style: AppTypography.meta,
       emphasisStyle: AppTypography.metaStrong,
+      textAlign: TextAlign.center,
     );
   }
 }

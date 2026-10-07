@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Cupo",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "cupo",
+      "program": "lib/main.dart",
+      "toolArgs": ["--dart-define-from-file=dart_define.json"]
+    }
+  ]
+}

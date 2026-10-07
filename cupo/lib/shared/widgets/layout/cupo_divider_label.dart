@@ -17,7 +17,7 @@ class CupoDividerLabel extends StatelessWidget {
         const Expanded(child: _Rule()),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text(label, style: AppTypography.meta),
+          child: Text(label, style: AppTypography.helper),
         ),
         const Expanded(child: _Rule()),
       ],
@@ -29,8 +29,6 @@ class _Rule extends StatelessWidget {
   const _Rule();
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: 1,
-        color: AppColors.border,
-      );
+  Widget build(BuildContext context) =>
+      Container(height: 1, color: AppColors.border);
 }

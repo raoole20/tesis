@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 import '../../../theme/theme.dart';
 import 'cupo_button_shell.dart';
 
-/// Acción alternativa: misma jerarquía de tamaño que la principal, pero en
-/// blanco con borde. Es la base del botón de Google.
+/// Acción alternativa: misma píldora que la principal, pero en blanco con
+/// borde.
 class CupoSecondaryButton extends StatelessWidget {
   const CupoSecondaryButton({
     super.key,
@@ -26,10 +26,8 @@ class CupoSecondaryButton extends StatelessWidget {
       onPressed: onPressed,
       background: AppColors.surface,
       foreground: AppColors.ink,
-      border: const BorderSide(
-        color: AppColors.border,
-        width: AppSizes.border,
-      ),
+      pressedBackground: AppColors.backgroundAlt,
+      border: const BorderSide(color: AppColors.border, width: AppSizes.border),
       leading: leading,
       isLoading: isLoading,
     );

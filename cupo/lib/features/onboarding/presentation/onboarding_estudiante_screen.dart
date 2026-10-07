@@ -77,9 +77,6 @@ class _OnboardingEstudianteScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text('Marca dónde vives', style: textTheme.titleMedium),
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
         actions: [
           IconButton(
             tooltip: 'Cerrar sesión',

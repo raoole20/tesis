@@ -1,12 +1,14 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../theme/theme.dart';
+import 'cupo_focus_ring.dart';
 
 /// Opción seleccionable de una lista corta: «Soy estudiante» / «Soy conductor».
 ///
-/// La selección se marca con el verde suave de fondo y el borde en verde lago,
-/// no con una sombra: la jerarquía de Cupo se expresa con borde y fondo
-/// (regla 5 de CLAUDE.md).
+/// La selección se marca con el verde suave de fondo, el borde en verde lago y
+/// el halo de [CupoFocusRing], no con una sombra: la jerarquía de Cupo se
+/// expresa con borde y fondo (regla 5 de CLAUDE.md). El título no cambia de
+/// tamaño al seleccionarse, para que la lista no salte.
 class CupoChoiceTile extends StatelessWidget {
   const CupoChoiceTile({
     super.key,
@@ -26,29 +28,28 @@ class CupoChoiceTile extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: seleccionado ? AppColors.primarySoft : AppColors.surface,
-          borderRadius: AppRadius.mdAll,
-          border: Border.all(
-            color: seleccionado ? AppColors.primary : AppColors.border,
-            width: seleccionado ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              titulo,
-              style: seleccionado
-                  ? AppTypography.bodyStrong
-                  : AppTypography.label,
+      child: CupoFocusRing(
+        visible: seleccionado,
+        radius: AppRadius.md,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: seleccionado ? AppColors.primarySoft : AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(
+              color: seleccionado ? AppColors.primary : AppColors.border,
+              width: AppSizes.border,
             ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(descripcion, style: AppTypography.helper),
-          ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(titulo, style: AppTypography.bodyStrong),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(descripcion, style: AppTypography.helper),
+            ],
+          ),
         ),
       ),
     );

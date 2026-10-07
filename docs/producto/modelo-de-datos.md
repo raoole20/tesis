@@ -727,7 +727,7 @@ El repositorio todavía documenta Firebase. Esto es lo que hay que revisar:
 | Reglas de acceso | Security Rules | RLS + `grant` por columna | `TODO.md` Fase 3 |
 | Consultas geográficas | geohash + cálculo en Dart | PostGIS (`ST_Covers`, `ST_DWithin`) | `TODO.md` Fase 2, Spikes 2 y 3 |
 | Paquetes Flutter | `firebase_*` (5) | `supabase_flutter` (1) | `cupo/pubspec.yaml` ✅ hecho |
-| Notificaciones push | Firebase Cloud Messaging | **sigue siendo FCM** | `README.md` |
+| Notificaciones push | Firebase Cloud Messaging | **por decidir** (ver punto 4) | `README.md` |
 
 Cuatro consecuencias que valen más que el cambio de nombre:
 
@@ -755,9 +755,11 @@ prueban con pruebas unitarias.
    tutor antes de escribirlo en el capítulo.
 
 **4. Supabase no envía notificaciones push.** No tiene equivalente de
-Cloud Messaging. Para las notificaciones de la Iteración 5 hay que
-conservar `firebase_messaging` —solo eso, sin el resto del stack— o meter
-un tercero. Conviene saberlo ahora y no en la Iteración 5.
+Cloud Messaging, y el proyecto usa solo Supabase. Para las
+notificaciones de la Iteración 5 hay que elegir entre Supabase Realtime
+más notificaciones locales (solo avisa mientras la app o su servicio en
+primer plano están vivos) o un servicio externo de push. Conviene saberlo
+ahora y no en la Iteración 5.
 
 ## 11. Preguntas abiertas de este módulo
 

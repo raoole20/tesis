@@ -11,14 +11,9 @@ dependencies:
     sdk: flutter
 
   # Backend: autenticación, PostgreSQL y Realtime en un solo paquete.
-  # Reemplaza a cloud_firestore, firebase_auth, firebase_core y
-  # firebase_database (ver apartado 10 de docs/producto/modelo-de-datos.md).
+  # Reemplaza todo el stack de Firebase (ver apartado 10 de
+  # docs/producto/modelo-de-datos.md).
   supabase_flutter: ^2.8.0
-
-  # Se queda: Supabase no tiene equivalente de Cloud Messaging, así que las
-  # notificaciones push de la Iteración 5 siguen siendo FCM.
-  firebase_core: ^4.14.0
-  firebase_messaging: ^16.6.0
 
   flutter_map: ^8.3.2
   geolocator: ^14.0.3
@@ -35,3 +30,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    # Foto de cabecera del primer ingreso («Cupo Login v2»).
+    - assets/images/hero_primer_ingreso.webp
