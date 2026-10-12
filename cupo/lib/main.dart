@@ -4,12 +4,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/env.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_gate.dart';
+import 'features/onboarding/presentation/map_spike_screen.dart';
 import 'theme/theme.dart';
 
 Future<void> main() async {
   // Antes de tocar nada asíncrono hay que amarrar el motor de Flutter. Sin
   // esto, Supabase.initialize falla al leer la sesión guardada en el teléfono.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Spike de mapa para demostración / pruebas directas:
+  // flutter run --dart-define=SPIKE_MAP=true
+  const spikeMap = bool.fromEnvironment('SPIKE_MAP', defaultValue: false);
+  if (spikeMap) {
+    runApp(MaterialApp(
+      title: 'Cupo — Spike Mapa',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: const MapSpikeScreen(),
+    ));
+    return;
+  }
 
   if (!Env.estaConfigurado) {
     // Sin credenciales la app no puede hacer nada, pero tampoco debe arrancar
