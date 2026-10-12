@@ -45,4 +45,19 @@ abstract final class AppSizes {
 
   /// Grosor del halo de foco ([AppColors.primaryRing]) por fuera del borde.
   static const double focusRing = 3;
+
+  /// Lado del mosaico cuadrado que lleva el icono de una opción.
+  static const double choiceIconTile = 40;
+
+  /// Lado de los iconos de Lucide dentro de opciones y pasos.
+  static const double icon = 20;
+
+  /// Lado de los iconos de Lucide dentro de un círculo de paso.
+  static const double iconSmall = 16;
+
+  /// Diámetro del círculo numerado de un paso.
+  static const double stepDot = 24;
+
+  /// Grosor de la línea que une dos pasos.
+  static const double stepConnector = 2;
 }

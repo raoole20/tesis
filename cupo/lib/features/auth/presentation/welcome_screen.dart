@@ -7,29 +7,46 @@ import 'package:flutter/services.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../onboarding/presentation/set_home_screen.dart';
+import '../domain/rol_usuario.dart';
 import 'sign_in_form.dart';
 import 'sign_up_form.dart';
+import 'sign_up_role_form.dart';
 
 /// Qué muestra la hoja de la bienvenida.
-enum ModoAcceso { bienvenida, iniciarSesion, crearCuenta }
+///
+/// Crear cuenta son dos pasos: [elegirRol] y después [crearCuenta], el
+/// formulario de ese rol.
+enum ModoAcceso { bienvenida, iniciarSesion, elegirRol, crearCuenta }
 
 /// L1 — Bienvenida, y también L2 y L4.
 ///
 /// Es una sola pantalla. En [ModoAcceso.bienvenida] la foto ocupa casi todo
 /// y la hoja de abajo ofrece los dos caminos. Al elegir uno, la hoja **crece**
 /// hasta dejar la foto como cabecera compacta, y su contenido pasa a ser el
-/// formulario ([SignInForm] o [SignUpForm]). Volver la pliega otra vez.
+/// formulario ([SignInForm], o [SignUpRoleForm] y luego [SignUpForm]).
+/// Volver la pliega otra vez.
 ///
 /// No hay rutas en medio: el formulario vive dentro de la hoja, así que el
 /// paso de un camino al otro («Créala», «Inicia sesión») cambia el contenido
-/// sin plegar nada. El botón «atrás» del sistema también pliega la hoja en
-/// vez de cerrar la app.
+/// sin plegar nada. El botón «atrás» del sistema hace lo mismo que el de la
+/// hoja: desde el paso 2 del registro vuelve al paso 1, y desde cualquier
+/// otro formulario pliega la hoja en vez de cerrar la app.
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key, this.modoInicial = ModoAcceso.bienvenida});
+  const WelcomeScreen({
+    super.key,
+    this.modoInicial = ModoAcceso.bienvenida,
+    this.rolInicial,
+  }) : assert(
+         modoInicial != ModoAcceso.crearCuenta || rolInicial != null,
+         'El paso 2 del registro necesita un rol.',
+       );
 
   /// Con qué abre la hoja. Las pruebas lo usan para entrar directo a un
   /// formulario.
   final ModoAcceso modoInicial;
+
+  /// El rol ya elegido, para abrir directo en [ModoAcceso.crearCuenta].
+  final RolUsuario? rolInicial;
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -44,6 +61,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   static const Duration _duracionContenido = Duration(milliseconds: 260);
 
   late ModoAcceso _modo = widget.modoInicial;
+
+  /// El rol del paso 1. Se conserva al volver para que siga marcado.
+  late RolUsuario? _rol = widget.rolInicial;
 
   /// 0 = hoja plegada (bienvenida), 1 = hoja desplegada (formulario).
   late final AnimationController _despliegue = AnimationController(
@@ -74,6 +94,25 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     _despliegue.reverse();
   }
 
+  void _elegirRol(RolUsuario rol) {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _rol = rol;
+      _modo = ModoAcceso.crearCuenta;
+    });
+  }
+
+  /// El retroceso de la hoja y del sistema: un paso atrás dentro del
+  /// registro, o plegar.
+  void _atras() {
+    if (_modo == ModoAcceso.crearCuenta) {
+      FocusScope.of(context).unfocus();
+      setState(() => _modo = ModoAcceso.elegirRol);
+    } else {
+      _volver();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final margenInferior = MediaQuery.paddingOf(context).bottom;
@@ -81,7 +120,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     return PopScope(
       canPop: _modo == ModoAcceso.bienvenida,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _volver();
+        if (!didPop) _atras();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -152,17 +191,28 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   Widget _contenido() {
+    final rol = _rol;
+
     return switch (_modo) {
       ModoAcceso.bienvenida => _Caminos(
         onIniciarSesion: () => _abrir(ModoAcceso.iniciarSesion),
-        onCrearCuenta: () => _abrir(ModoAcceso.crearCuenta),
+        onCrearCuenta: () => _abrir(ModoAcceso.elegirRol),
       ),
       ModoAcceso.iniciarSesion => SignInForm(
         onVolver: _volver,
-        onCrearCuenta: () => _abrir(ModoAcceso.crearCuenta),
+        onCrearCuenta: () => _abrir(ModoAcceso.elegirRol),
       ),
-      ModoAcceso.crearCuenta => SignUpForm(
+      ModoAcceso.crearCuenta when rol != null => SignUpForm(
+        rol: rol,
+        onVolver: _atras,
+        onIniciarSesion: () => _abrir(ModoAcceso.iniciarSesion),
+      ),
+      // Sin rol no hay paso 2 (por ejemplo, tras un hot reload con la hoja
+      // abierta): se vuelve a pedir.
+      ModoAcceso.elegirRol || ModoAcceso.crearCuenta => SignUpRoleForm(
+        rolInicial: rol,
         onVolver: _volver,
+        onElegir: _elegirRol,
         onIniciarSesion: () => _abrir(ModoAcceso.iniciarSesion),
       ),
     };

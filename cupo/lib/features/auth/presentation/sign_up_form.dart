@@ -5,37 +5,38 @@ import '../../../theme/theme.dart';
 import '../data/auth_repository.dart';
 import '../domain/rol_usuario.dart';
 import 'auth_scope.dart';
+import 'sign_up_role_form.dart';
 
-/// L2 — Crear cuenta, como contenido de la hoja de la bienvenida.
+/// L2, paso 2 de 2 — Los datos de la cuenta, según el rol del paso 1.
 ///
 /// Igual que `SignInForm`, no es una pantalla aparte: vive dentro de la hoja
 /// de `WelcomeScreen`, y «volver» e «Inicia sesión» se los pide a ella por
 /// [onVolver] y [onIniciarSesion].
 ///
-/// El párrafo de arriba justifica por qué se piden estos datos: el conductor da
-/// crédito, así que necesita saber a quién se lo da. La cédula y el teléfono de
-/// WhatsApp están ahí por eso, no por trámite.
-///
-/// Lo primero es el rol, y no es un detalle: viaja en el `data` del `signUp` y
-/// es lo que lee el trigger `crear_usuario()` para decidir si la fila del
-/// subtipo va en `estudiantes` o en `conductores`. Después del registro ya no
-/// se puede cambiar desde la app — los privilegios por columna se lo prohíben
-/// al propio usuario.
+/// El rol ya viene elegido de `SignUpRoleForm`. Los campos son los mismos para
+/// los dos —el `signUp` y el trigger `crear_usuario()` piden lo mismo—, pero
+/// el texto le habla a cada uno: al estudiante se le explica que el conductor
+/// da crédito y por eso pide cédula y WhatsApp; al conductor, que su cuenta
+/// pasa por revisión y que la licencia se pide en el paso siguiente.
 class SignUpForm extends StatefulWidget {
   const SignUpForm({
     super.key,
+    required this.rol,
     required this.onVolver,
     required this.onIniciarSesion,
-    this.rolInicial = RolUsuario.estudiante,
-  });
+  }) : assert(
+         rol != RolUsuario.administrador,
+         'El administrador no se registra desde la app.',
+       );
 
-  /// Pliega la hoja y vuelve a la bienvenida.
+  /// El rol elegido en el paso 1. Viaja en el `data` del `signUp`.
+  final RolUsuario rol;
+
+  /// Vuelve al paso 1, a elegir el rol.
   final VoidCallback onVolver;
 
   /// Cambia al formulario de inicio de sesión sin plegar la hoja.
   final VoidCallback onIniciarSesion;
-
-  final RolUsuario rolInicial;
 
   @override
   State<SignUpForm> createState() => _SignUpFormState();
@@ -48,7 +49,6 @@ class _SignUpFormState extends State<SignUpForm> {
   final _phone = TextEditingController();
   final _password = TextEditingController();
 
-  late RolUsuario _rol = widget.rolInicial;
   bool _enviando = false;
   String? _error;
 
@@ -98,7 +98,7 @@ class _SignUpFormState extends State<SignUpForm> {
       await repo.registrar(
         email: _email.text,
         clave: _password.text,
-        rol: _rol,
+        rol: widget.rol,
         nombres: nombres,
         apellidos: apellidos,
         telefono: _phone.text,
@@ -126,6 +126,7 @@ class _SignUpFormState extends State<SignUpForm> {
   @override
   Widget build(BuildContext context) {
     final error = _error;
+    final textos = _TextosDelRol.de(widget.rol);
 
     return CupoSheetBody(
       title: 'Crear cuenta',
@@ -137,35 +138,17 @@ class _SignUpFormState extends State<SignUpForm> {
       ),
       children: [
         const SizedBox(height: AppSpacing.xl),
-        Text('Crea tu cuenta', style: AppTypography.title),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Los conductores dan crédito: montas primero y pagas después. '
-          'Por eso necesitan saber con quién están tratando.',
-          style: AppTypography.body,
-        ),
+        const CupoStepIndicator(pasos: pasosDelRegistro, actual: 1),
         const SizedBox(height: AppSpacing.xl),
-        Text('¿Cómo vas a usar Cupo?', style: AppTypography.label),
+        Text(textos.titulo, style: AppTypography.title),
         const SizedBox(height: AppSpacing.xs),
-        CupoChoiceTile(
-          titulo: 'Soy estudiante',
-          descripcion: 'Busco puesto fijo para ir y volver de la universidad.',
-          seleccionado: _rol.esEstudiante,
-          onPressed: () => setState(() => _rol = RolUsuario.estudiante),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        CupoChoiceTile(
-          titulo: 'Soy conductor',
-          descripcion: 'Hago rutas y quiero llenar los puestos de mi unidad.',
-          seleccionado: _rol.esConductor,
-          onPressed: () => setState(() => _rol = RolUsuario.conductor),
-        ),
+        Text(textos.explicacion, style: AppTypography.body),
         const SizedBox(height: AppSpacing.xl),
         CupoField(
           label: 'Nombre y apellido',
           child: CupoTextInput(
             controller: _name,
-            hintText: 'Génesis Materán',
+            hintText: textos.nombreDeEjemplo,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.name],
@@ -177,7 +160,7 @@ class _SignUpFormState extends State<SignUpForm> {
           helper: 'Con este entras a Cupo.',
           child: CupoTextInput(
             controller: _email,
-            hintText: 'genesis@ejemplo.com',
+            hintText: textos.correoDeEjemplo,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.email],
@@ -196,7 +179,7 @@ class _SignUpFormState extends State<SignUpForm> {
         const SizedBox(height: AppSpacing.md),
         CupoField(
           label: 'Teléfono (el de WhatsApp)',
-          helper: 'Por ahí te contacta el conductor.',
+          helper: textos.ayudaTelefono,
           child: CupoTextInput(
             controller: _phone,
             hintText: '0414 000 0000',
@@ -229,4 +212,41 @@ class _SignUpFormState extends State<SignUpForm> {
       ],
     );
   }
+}
+
+/// Lo que el paso 2 le dice a cada rol. Los campos no cambian; el porqué sí.
+class _TextosDelRol {
+  const _TextosDelRol({
+    required this.titulo,
+    required this.explicacion,
+    required this.nombreDeEjemplo,
+    required this.correoDeEjemplo,
+    required this.ayudaTelefono,
+  });
+
+  factory _TextosDelRol.de(RolUsuario rol) => rol.esConductor
+      ? const _TextosDelRol(
+          titulo: 'Tu cuenta de conductor',
+          explicacion:
+              'Antes de ofrecer puestos, revisamos quién maneja. Primero tus '
+              'datos; después te pedimos la licencia y el certificado médico.',
+          nombreDeEjemplo: 'José Rondón',
+          correoDeEjemplo: 'jose@ejemplo.com',
+          ayudaTelefono: 'Por ahí te escriben los estudiantes.',
+        )
+      : const _TextosDelRol(
+          titulo: 'Tu cuenta de estudiante',
+          explicacion:
+              'Los conductores dan crédito: montas primero y pagas después. '
+              'Por eso necesitan saber con quién están tratando.',
+          nombreDeEjemplo: 'Génesis Materán',
+          correoDeEjemplo: 'genesis@ejemplo.com',
+          ayudaTelefono: 'Por ahí te contacta el conductor.',
+        );
+
+  final String titulo;
+  final String explicacion;
+  final String nombreDeEjemplo;
+  final String correoDeEjemplo;
+  final String ayudaTelefono;
 }

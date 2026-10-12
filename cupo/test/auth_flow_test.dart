@@ -4,6 +4,7 @@ import 'package:cupo/features/auth/presentation/destino_pantalla.dart';
 import 'package:cupo/features/auth/presentation/estado/estado_screens.dart';
 import 'package:cupo/features/auth/presentation/sign_in_form.dart';
 import 'package:cupo/features/auth/presentation/sign_up_form.dart';
+import 'package:cupo/features/auth/presentation/sign_up_role_form.dart';
 import 'package:cupo/features/auth/presentation/verify_phone_screen.dart';
 import 'package:cupo/features/auth/presentation/welcome_screen.dart';
 import 'package:cupo/shared/widgets/widgets.dart';
@@ -60,23 +61,25 @@ void main() {
       expect(find.textContaining('Google'), findsNothing);
     });
 
-    testWidgets('«Crear cuenta» despliega el registro en la misma pantalla', (
-      tester,
-    ) async {
-      await montarPantalla(tester, const WelcomeScreen());
+    testWidgets(
+      '«Crear cuenta» despliega la elección de rol en la misma pantalla',
+      (tester) async {
+        await montarPantalla(tester, const WelcomeScreen());
 
-      await tester.tap(
-        find.widgetWithText(CupoSecondaryButton, 'Crear cuenta'),
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(
+          find.widgetWithText(CupoSecondaryButton, 'Crear cuenta'),
+        );
+        await tester.pumpAndSettle();
 
-      // Sigue siendo la misma ruta: la hoja creció, no se empujó nada.
-      expect(find.byType(WelcomeScreen), findsOneWidget);
-      expect(find.byType(SignUpForm), findsOneWidget);
-      expect(find.text('Crea tu cuenta'), findsOneWidget);
-      expect(find.text('Explorar como invitado'), findsNothing);
-      expect(find.text('Tu puesto fijo hasta la URBE'), findsNothing);
-    });
+        // Sigue siendo la misma ruta: la hoja creció, no se empujó nada.
+        expect(find.byType(WelcomeScreen), findsOneWidget);
+        expect(find.byType(SignUpRoleForm), findsOneWidget);
+        expect(find.byType(SignUpForm), findsNothing);
+        expect(find.text('¿Cómo vas a usar Cupo?'), findsOneWidget);
+        expect(find.text('Explorar como invitado'), findsNothing);
+        expect(find.text('Tu puesto fijo hasta la URBE'), findsNothing);
+      },
+    );
 
     testWidgets('«Iniciar sesión» despliega el login en la misma pantalla', (
       tester,
@@ -112,13 +115,13 @@ void main() {
     ) async {
       await montarPantalla(
         tester,
-        const WelcomeScreen(modoInicial: ModoAcceso.crearCuenta),
+        const WelcomeScreen(modoInicial: ModoAcceso.elegirRol),
       );
 
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
-      expect(find.byType(SignUpForm), findsNothing);
+      expect(find.byType(SignUpRoleForm), findsNothing);
       expect(
         find.widgetWithText(CupoPrimaryButton, 'Iniciar sesión'),
         findsOneWidget,
@@ -136,53 +139,170 @@ void main() {
       await tester.tapOnText(find.textRange.ofSubstring('Créala'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(SignUpForm), findsOneWidget);
+      expect(find.byType(SignUpRoleForm), findsOneWidget);
       expect(find.text('Tu puesto fijo hasta la URBE'), findsNothing);
     });
   });
 
-  group('L2 — Crear cuenta', () {
-    testWidgets('pide rol, nombre, correo, cédula, teléfono y clave', (
+  group('L2 — Crear cuenta, paso 1: rol', () {
+    CupoChoiceTile tejaDe(WidgetTester tester, String titulo) =>
+        tester.widget<CupoChoiceTile>(
+          find.ancestor(
+            of: find.text(titulo),
+            matching: find.byType(CupoChoiceTile),
+          ),
+        );
+
+    CupoPrimaryButton continuar(WidgetTester tester) =>
+        tester.widget(find.widgetWithText(CupoPrimaryButton, 'Continuar'));
+
+    testWidgets('muestra solo las dos opciones, sin campos', (tester) async {
+      await montarPantalla(
+        tester,
+        const WelcomeScreen(modoInicial: ModoAcceso.elegirRol),
+      );
+
+      expect(
+        find.bySemanticsLabel('Paso 1 de 2: Tipo de cuenta'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Elige bien'), findsNothing);
+
+      // Las dos opciones son cuadrados perfectos y del mismo tamaño.
+      for (final titulo in ['Soy estudiante', 'Soy conductor']) {
+        final lado = tester.getSize(
+          find.descendant(
+            of: find.ancestor(
+              of: find.text(titulo),
+              matching: find.byType(CupoChoiceTile),
+            ),
+            matching: find.byType(AspectRatio),
+          ),
+        );
+        expect(lado.width, lado.height);
+      }
+      expect(find.text('Soy estudiante'), findsOneWidget);
+      expect(find.text('Soy conductor'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+    });
+
+    testWidgets('no marca ningún rol ni deja seguir hasta elegir uno', (
       tester,
     ) async {
       await montarPantalla(
         tester,
-        const WelcomeScreen(modoInicial: ModoAcceso.crearCuenta),
+        const WelcomeScreen(modoInicial: ModoAcceso.elegirRol),
       );
 
-      expect(find.text('¿Cómo vas a usar Cupo?'), findsOneWidget);
-      expect(find.text('Soy estudiante'), findsOneWidget);
-      expect(find.text('Soy conductor'), findsOneWidget);
+      expect(tejaDe(tester, 'Soy estudiante').seleccionado, isFalse);
+      expect(tejaDe(tester, 'Soy conductor').seleccionado, isFalse);
+      expect(continuar(tester).onPressed, isNull);
+
+      await tester.tap(find.text('Soy conductor'));
+      await tester.pump();
+
+      expect(tejaDe(tester, 'Soy conductor').seleccionado, isTrue);
+      expect(continuar(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('«Continuar» abre el formulario del rol elegido', (
+      tester,
+    ) async {
+      await montarPantalla(
+        tester,
+        const WelcomeScreen(modoInicial: ModoAcceso.elegirRol),
+      );
+
+      await tester.tap(find.text('Soy conductor'));
+      await tester.pump();
+      final boton = find.widgetWithText(CupoPrimaryButton, 'Continuar');
+      await tester.ensureVisible(boton);
+      await tester.tap(boton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SignUpRoleForm), findsNothing);
+      expect(
+        tester.widget<SignUpForm>(find.byType(SignUpForm)).rol,
+        RolUsuario.conductor,
+      );
+      expect(find.bySemanticsLabel('Paso 2 de 2: Tus datos'), findsOneWidget);
+      expect(find.text('Tu cuenta de conductor'), findsOneWidget);
+    });
+
+    testWidgets('volver del paso 2 regresa al paso 1 con el rol marcado', (
+      tester,
+    ) async {
+      await montarPantalla(
+        tester,
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.conductor,
+        ),
+      );
+
+      await tester.tap(find.byType(CupoBackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SignUpRoleForm), findsOneWidget);
+      expect(tejaDe(tester, 'Soy conductor').seleccionado, isTrue);
+    });
+
+    testWidgets('el «atrás» del sistema en el paso 2 vuelve al paso 1', (
+      tester,
+    ) async {
+      await montarPantalla(
+        tester,
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.estudiante,
+        ),
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SignUpForm), findsNothing);
+      expect(find.byType(SignUpRoleForm), findsOneWidget);
+      expect(find.text('Tu puesto fijo hasta la URBE'), findsNothing);
+    });
+  });
+
+  group('L2 — Crear cuenta, paso 2: datos', () {
+    testWidgets('pide nombre, correo, cédula, teléfono y clave, sin el rol', (
+      tester,
+    ) async {
+      await montarPantalla(
+        tester,
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.estudiante,
+        ),
+      );
+
+      expect(find.text('Tu cuenta de estudiante'), findsOneWidget);
+      expect(find.byType(CupoChoiceTile), findsNothing);
       expect(find.text('Nombre y apellido'), findsOneWidget);
       expect(find.text('Correo'), findsOneWidget);
       expect(find.text('Cédula'), findsOneWidget);
       expect(find.text('Teléfono (el de WhatsApp)'), findsOneWidget);
       expect(find.text('Clave'), findsOneWidget);
+      expect(find.text('Por ahí te contacta el conductor.'), findsOneWidget);
     });
 
-    testWidgets('el rol se puede cambiar y arranca en estudiante', (
+    testWidgets('al conductor le habla de la revisión y la licencia', (
       tester,
     ) async {
       await montarPantalla(
         tester,
-        const WelcomeScreen(modoInicial: ModoAcceso.crearCuenta),
-      );
-
-      CupoChoiceTile tejaDe(String titulo) => tester.widget<CupoChoiceTile>(
-        find.ancestor(
-          of: find.text(titulo),
-          matching: find.byType(CupoChoiceTile),
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.conductor,
         ),
       );
 
-      expect(tejaDe('Soy estudiante').seleccionado, isTrue);
-      expect(tejaDe('Soy conductor').seleccionado, isFalse);
-
-      await tester.tap(find.text('Soy conductor'));
-      await tester.pump();
-
-      expect(tejaDe('Soy estudiante').seleccionado, isFalse);
-      expect(tejaDe('Soy conductor').seleccionado, isTrue);
+      expect(find.textContaining('licencia'), findsOneWidget);
+      expect(find.text('Por ahí te escriben los estudiantes.'), findsOneWidget);
+      expect(find.textContaining('dan crédito'), findsNothing);
     });
 
     testWidgets('no envía nada con el formulario vacío: avisa qué falta', (
@@ -190,7 +310,10 @@ void main() {
     ) async {
       await montarPantalla(
         tester,
-        const WelcomeScreen(modoInicial: ModoAcceso.crearCuenta),
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.estudiante,
+        ),
       );
 
       // «Crear cuenta» también es el nombre del paso en el encabezado: se
@@ -211,7 +334,10 @@ void main() {
     ) async {
       await montarPantalla(
         tester,
-        const WelcomeScreen(modoInicial: ModoAcceso.crearCuenta),
+        const WelcomeScreen(
+          modoInicial: ModoAcceso.crearCuenta,
+          rolInicial: RolUsuario.estudiante,
+        ),
       );
 
       final ver = find.byIcon(Icons.visibility_outlined);

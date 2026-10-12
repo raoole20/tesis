@@ -31,6 +31,7 @@ export 'layout/cupo_screen.dart';
 export 'layout/cupo_sheet.dart';
 export 'layout/cupo_sheet_body.dart';
 export 'layout/cupo_sheet_header.dart';
+export 'layout/cupo_step_indicator.dart';
 export 'text/cupo_emphasis_text.dart';
 export 'text/cupo_inline_link_text.dart';
 export 'text/cupo_link.dart';

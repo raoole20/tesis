@@ -182,6 +182,13 @@ abstract final class AppTypography {
     color: AppColors.textSupport,
   );
 
+  /// Número dentro del círculo de un paso. El indicador le impone el color.
+  static final TextStyle stepNumber = manrope(
+    size: 12,
+    weight: FontWeight.w700,
+    height: 1,
+  );
+
   /// Dígito dentro de una casilla del código de verificación.
   static final TextStyle otpDigit = manrope(
     size: 20,

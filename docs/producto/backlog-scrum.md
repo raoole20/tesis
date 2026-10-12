@@ -934,26 +934,28 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 2 | Pendiente | S1 | — |
+| investigacion | Must | 2 | Hecho | Ya hecha | — |
 
 **Criterios de aceptación**
 
-- [ ] Existe docs/producto/hallazgos-de-campo.md, creado con su esqueleto, y su sección «Informantes» trae la cifra acordada: 3 choferes y 5 estudiantes (8 en total), salvo que el tutor indique otra.
-- [ ] La sección define criterios de inclusión verificables. Para el chofer: qué es «experiencia comprobable en rutas a la URBE» y cómo se comprueba. Para el estudiante: qué es «estudiante frecuente que reside en zona distante».
-- [ ] La Fase 1 de TODO.md deja de decir «4–6 transportistas» y «la muestra de estudiantes» y remite a la cifra y a los criterios acordados.
-- [ ] La selección queda declarada como intencional, no censal ni muestral. Las correcciones de texto del Cap. III (IN-30: 8 frente a 6; IN-31: población censal) quedan registradas en PENDIENTES.md para E15.
-- [ ] Otro miembro del equipo revisó el documento y el tutor dio su visto bueno, con constancia por correo o acta.
+- [x] Existe docs/producto/hallazgos-de-campo.md, creado con su esqueleto, y su sección «Informantes» trae la cifra acordada: 3 choferes y 5 estudiantes (8 en total), salvo que el tutor indique otra.
+- [x] La sección define criterios de inclusión verificables. Para el chofer: qué es «experiencia comprobable en rutas a la URBE» y cómo se comprueba. Para el estudiante: qué es «estudiante frecuente que reside en zona distante».
+- [x] La Fase 1 de TODO.md deja de decir «4–6 transportistas» y «la muestra de estudiantes» y remite a la cifra y a los criterios acordados.
+- [x] La selección queda declarada como intencional, no censal ni muestral. Las correcciones de texto del Cap. III (IN-30: 8 frente a 6; IN-31: población censal) quedan registradas en PENDIENTES.md para E15.
+- [x] Otro miembro del equipo revisó el documento y el tutor dio su visto bueno, con constancia por correo o acta.
 
 **Tareas**
 
-- [ ] `E01-HU01-T1` *investigacion* — Redactar los criterios de inclusión y exclusión de choferes y estudiantes a partir del Cuadro 1 del Cap. III
-- [ ] `E01-HU01-T2` *investigacion* — Definir cómo se comprueba la experiencia del chofer (tiempo prestando el servicio, estudiantes que lo refieren) y qué se entiende por zona distante
-- [ ] `E01-HU01-T3` *documentacion* — Crear el esqueleto de docs/producto/hallazgos-de-campo.md con la sección «Informantes»
-- [ ] `E01-HU01-T4` *gestion* — Alinear la Fase 1 de TODO.md con la cifra del Cap. III
-- [ ] `E01-HU01-T5` *documentacion* — Registrar en PENDIENTES.md las correcciones IN-30 e IN-31 del Cap. III para que las haga E15
-- [ ] `E01-HU01-T6` *gestion* — Revisión cruzada y visto bueno del tutor, pedido en la misma reunión o correo de E01-HU03
+- [x] `E01-HU01-T1` *investigacion* — Redactar los criterios de inclusión y exclusión de choferes y estudiantes a partir del Cuadro 1 del Cap. III
+- [x] `E01-HU01-T2` *investigacion* — Definir cómo se comprueba la experiencia del chofer (tiempo prestando el servicio, estudiantes que lo refieren) y qué se entiende por zona distante
+- [x] `E01-HU01-T3` *documentacion* — Crear el esqueleto de docs/producto/hallazgos-de-campo.md con la sección «Informantes»
+- [x] `E01-HU01-T4` *gestion* — Alinear la Fase 1 de TODO.md con la cifra del Cap. III
+- [x] `E01-HU01-T5` *documentacion* — Registrar en PENDIENTES.md las correcciones IN-30 e IN-31 del Cap. III para que las haga E15
+- [x] `E01-HU01-T6` *gestion* — Revisión cruzada y visto bueno del tutor, pedido en la misma reunión o correo de E01-HU03
 
 *Trazabilidad:* Requerimientos: IN-19, EA-40 · Actividades Cap. III: 1.1 · Objetivos: 1 · Fuentes: Cap. III, Población (Cuadro 1 y párrafos de población finita y censal); TODO.md, Fase 1; docs/tesis/actividades-capitulo-3.md
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU02 · Reclutar a los informantes y obtener su consentimiento informado
 
@@ -961,28 +963,30 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 3 | Pendiente | S1 | E01-HU01 |
+| investigacion | Must | 3 | Hecho | Ya hecha | E01-HU01 |
 
 **Criterios de aceptación**
 
-- [ ] Hay una lista, guardada fuera del repositorio, de 3 choferes y 5 estudiantes que cumplen los criterios de E01-HU01, más al menos un suplente por rol.
-- [ ] Cada informante tiene un código anónimo (C1–C3, E1–E5), y en los documentos del repositorio solo aparece ese código.
-- [ ] Cada informante firmó un consentimiento informado que explica el propósito académico, el uso anónimo de los datos y su derecho a retirarse.
-- [ ] Dado un informante que no autoriza la grabación, cuando se agenda su participación, entonces la agenda indica que se tomarán notas y que no se grabará.
-- [ ] Hay una agenda con fecha, lugar y entrevistador de cada aplicación, compatible con la ventana de la actividad 1.1 (Oct S1–S2) o con la nueva fecha acordada con el tutor.
-- [ ] El repositorio no versiona ningún dato personal (nombre, teléfono, cédula) ni formulario firmado.
+- [x] Hay una lista, guardada fuera del repositorio, de 3 choferes y 5 estudiantes que cumplen los criterios de E01-HU01, más al menos un suplente por rol.
+- [x] Cada informante tiene un código anónimo (C1–C3, E1–E5), y en los documentos del repositorio solo aparece ese código.
+- [x] Cada informante firmó un consentimiento informado que explica el propósito académico, el uso anónimo de los datos y su derecho a retirarse.
+- [x] Dado un informante que no autoriza la grabación, cuando se agenda su participación, entonces la agenda indica que se tomarán notas y que no se grabará.
+- [x] Hay una agenda con fecha, lugar y entrevistador de cada aplicación, compatible con la ventana de la actividad 1.1 (Oct S1–S2) o con la nueva fecha acordada con el tutor.
+- [x] El repositorio no versiona ningún dato personal (nombre, teléfono, cédula) ni formulario firmado.
 
 **Tareas**
 
-- [ ] `E01-HU02-T1` *documentacion* — Redactar en español de Venezuela el formato de consentimiento informado y la autorización de grabación, que va aparte
-- [ ] `E01-HU02-T2` *investigacion* — Buscar candidatos en el estacionamiento y las paradas de la URBE y por referidos de estudiantes
-- [ ] `E01-HU02-T3` *investigacion* — Comprobar la experiencia de los choferes según el criterio de E01-HU01
-- [ ] `E01-HU02-T4` *investigacion* — Recoger las firmas de consentimiento y asignar los códigos anónimos
-- [ ] `E01-HU02-T5` *gestion* — Armar la agenda de aplicación y repartir a los entrevistadores entre los tres miembros
+- [x] `E01-HU02-T1` *documentacion* — Redactar en español de Venezuela el formato de consentimiento informado y la autorización de grabación, que va aparte
+- [x] `E01-HU02-T2` *investigacion* — Buscar candidatos en el estacionamiento y las paradas de la URBE y por referidos de estudiantes
+- [x] `E01-HU02-T3` *investigacion* — Comprobar la experiencia de los choferes según el criterio de E01-HU01
+- [x] `E01-HU02-T4` *investigacion* — Recoger las firmas de consentimiento y asignar los códigos anónimos
+- [x] `E01-HU02-T5` *gestion* — Armar la agenda de aplicación y repartir a los entrevistadores entre los tres miembros
 
 *Trazabilidad:* Requerimientos: EA-40 · Actividades Cap. III: 1.1 · Objetivos: 1 · Fuentes: Cap. III, Población (Cuadro 1); TODO.md, Fase 1
 
 *Notas:* Los suplentes, el código anónimo y el consentimiento por escrito son propuesta del equipo (sin fuente explícita). Evitan que una ausencia rompa el diseño transversal y protegen la identidad de los informantes, dos temas que el Cap. III no trata.
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU03 · Acordar con el tutor las decisiones metodológicas previas al campo
 
@@ -1041,26 +1045,28 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 3 | Pendiente | S1 | E01-HU04 |
+| investigacion | Must | 3 | Hecho | Ya hecha | E01-HU04 |
 
 **Criterios de aceptación**
 
-- [ ] El guion existe como anexo (borrador en .docx) con introducción, lectura del consentimiento, bloques temáticos y cierre.
-- [ ] Cubre la captación de pasajeros, las rutas y los horarios, los sectores que atienden y cómo los nombran, la capacidad de la unidad y cómo lleva hoy la cuenta de puestos ocupados y libres por día, el cobro y el crédito, los documentos y la comunicación con los pasajeros.
-- [ ] Incluye las preguntas abiertas que cierran DA de campo: carros por puesto o unidades (DA-15), puesto compartido en días alternos (DA-16), dueño o chofer (DA-13), quién define las zonas y si la cobertura sale del recorrido (DA-09, DA-17), cómo se aparta un puesto y por cuánto tiempo (DA-23), cuándo y cómo se cobra (DA-24) y por qué canal se comunica con los pasajeros (DA-26).
-- [ ] Cada pregunta lleva el número de ítem y el indicador del cuadro de E01-HU04, y ningún indicador de los OE1 y OE2 dirigido a choferes queda sin pregunta.
-- [ ] Al final de la entrevista trae el protocolo de la actividad de cartografía social de E01-HU10.
-- [ ] Otro miembro lo revisó antes de pasar a validación (E01-HU07).
+- [x] El guion existe como anexo (borrador en .docx) con introducción, lectura del consentimiento, bloques temáticos y cierre.
+- [x] Cubre la captación de pasajeros, las rutas y los horarios, los sectores que atienden y cómo los nombran, la capacidad de la unidad y cómo lleva hoy la cuenta de puestos ocupados y libres por día, el cobro y el crédito, los documentos y la comunicación con los pasajeros.
+- [x] Incluye las preguntas abiertas que cierran DA de campo: carros por puesto o unidades (DA-15), puesto compartido en días alternos (DA-16), dueño o chofer (DA-13), quién define las zonas y si la cobertura sale del recorrido (DA-09, DA-17), cómo se aparta un puesto y por cuánto tiempo (DA-23), cuándo y cómo se cobra (DA-24) y por qué canal se comunica con los pasajeros (DA-26).
+- [x] Cada pregunta lleva el número de ítem y el indicador del cuadro de E01-HU04, y ningún indicador de los OE1 y OE2 dirigido a choferes queda sin pregunta.
+- [x] Al final de la entrevista trae el protocolo de la actividad de cartografía social de E01-HU10.
+- [x] Otro miembro lo revisó antes de pasar a validación (E01-HU07).
 
 **Tareas**
 
-- [ ] `E01-HU05-T1` *investigacion* — Redactar los bloques temáticos a partir del cuadro de operacionalización
-- [ ] `E01-HU05-T2` *investigacion* — Redactar las preguntas abiertas de las DA de campo: DA-09, DA-13, DA-15, DA-16, DA-17, DA-23, DA-24 y DA-26
-- [ ] `E01-HU05-T3` *investigacion* — Escribir el protocolo: introducción, consentimiento, grabación, cierre y cartografía
-- [ ] `E01-HU05-T4` *documentacion* — Armar la tabla pregunta–ítem–indicador
-- [ ] `E01-HU05-T5` *gestion* — Revisión cruzada y lectura en voz alta para medir la duración
+- [x] `E01-HU05-T1` *investigacion* — Redactar los bloques temáticos a partir del cuadro de operacionalización
+- [x] `E01-HU05-T2` *investigacion* — Redactar las preguntas abiertas de las DA de campo: DA-09, DA-13, DA-15, DA-16, DA-17, DA-23, DA-24 y DA-26
+- [x] `E01-HU05-T3` *investigacion* — Escribir el protocolo: introducción, consentimiento, grabación, cierre y cartografía
+- [x] `E01-HU05-T4` *documentacion* — Armar la tabla pregunta–ítem–indicador
+- [x] `E01-HU05-T5` *gestion* — Revisión cruzada y lectura en voz alta para medir la duración
 
 *Trazabilidad:* Requerimientos: EA-41 · Actividades Cap. III: 1.1 · Objetivos: 1, 2 · Fuentes: Cap. III, Técnicas e instrumentos de recolección de datos; TODO.md, Fase 0 y Fase 1; docs/producto/modelo-de-datos.md §11
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU06 · Redactar el cuestionario espejo para estudiantes
 
@@ -1068,29 +1074,31 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 3 | Pendiente | S1 | E01-HU03, E01-HU04 |
+| investigacion | Must | 3 | Hecho | Ya hecha | E01-HU03, E01-HU04 |
 
 **Criterios de aceptación**
 
-- [ ] El cuestionario existe como anexo, con su formato (impreso o formulario en línea) y los tipos de pregunta definidos: cerradas, de escala y abiertas.
-- [ ] Pregunta cómo contactan hoy el transporte, el tiempo de espera (línea base, si E01-HU03 la aprobó), el costo y cómo y cada cuánto pagan (DA-24), la seguridad, su sector y municipio con el nombre que usan, la distancia que aceptan caminar hasta una parada (RN-21), si comparten puesto en días alternos (DA-16), sus días y turno de clases y sus expectativas de usabilidad.
-- [ ] Una tabla de correspondencia muestra de qué pregunta del guion es espejo cada ítem del cuestionario.
-- [ ] Cada ítem lleva su número y su indicador del cuadro de E01-HU04.
-- [ ] Abre con el texto de consentimiento y no pide nombre, cédula ni dirección exacta.
-- [ ] Otro miembro lo revisó antes de pasar a validación (E01-HU07).
+- [x] El cuestionario existe como anexo, con su formato (impreso o formulario en línea) y los tipos de pregunta definidos: cerradas, de escala y abiertas.
+- [x] Pregunta cómo contactan hoy el transporte, el tiempo de espera (línea base, si E01-HU03 la aprobó), el costo y cómo y cada cuánto pagan (DA-24), la seguridad, su sector y municipio con el nombre que usan, la distancia que aceptan caminar hasta una parada (RN-21), si comparten puesto en días alternos (DA-16), sus días y turno de clases y sus expectativas de usabilidad.
+- [x] Una tabla de correspondencia muestra de qué pregunta del guion es espejo cada ítem del cuestionario.
+- [x] Cada ítem lleva su número y su indicador del cuadro de E01-HU04.
+- [x] Abre con el texto de consentimiento y no pide nombre, cédula ni dirección exacta.
+- [x] Otro miembro lo revisó antes de pasar a validación (E01-HU07).
 
 **Tareas**
 
-- [ ] `E01-HU06-T1` *investigacion* — Decidir el formato y los tipos de pregunta
-- [ ] `E01-HU06-T2` *investigacion* — Redactar los ítems de mecanismos de contacto, espera, costo y forma de pago, y seguridad
-- [ ] `E01-HU06-T3` *investigacion* — Redactar los ítems de sector, municipio, distancia a pie aceptada, puesto compartido, días y turno
-- [ ] `E01-HU06-T4` *investigacion* — Redactar los ítems de expectativas de usabilidad
-- [ ] `E01-HU06-T5` *documentacion* — Armar la tabla espejo con el guion y la tabla ítem–indicador
-- [ ] `E01-HU06-T6` *gestion* — Revisión cruzada
+- [x] `E01-HU06-T1` *investigacion* — Decidir el formato y los tipos de pregunta
+- [x] `E01-HU06-T2` *investigacion* — Redactar los ítems de mecanismos de contacto, espera, costo y forma de pago, y seguridad
+- [x] `E01-HU06-T3` *investigacion* — Redactar los ítems de sector, municipio, distancia a pie aceptada, puesto compartido, días y turno
+- [x] `E01-HU06-T4` *investigacion* — Redactar los ítems de expectativas de usabilidad
+- [x] `E01-HU06-T5` *documentacion* — Armar la tabla espejo con el guion y la tabla ítem–indicador
+- [x] `E01-HU06-T6` *gestion* — Revisión cruzada
 
 *Trazabilidad:* Requerimientos: EA-42 · Actividades Cap. III: 1.1 · Objetivos: 1, 2 · Fuentes: Cap. III, Técnicas e instrumentos de recolección de datos; TODO.md, Fase 1; Cap. I, Planteamiento del problema
 
 *Notas:* La sección de línea base depende de la decisión sobre DA-32 en E01-HU03: si el tutor la descarta, esos ítems se quitan. Los ítems de forma de pago y puesto compartido son el espejo de las preguntas del guion sobre DA-24 y DA-16.
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU07 · Validar el guion y el cuestionario y redactar el apartado de validez y confiabilidad
 
@@ -1098,25 +1106,27 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 3 | Pendiente | S2 | E01-HU05, E01-HU06 |
+| investigacion | Must | 3 | Hecho | Ya hecha | E01-HU05, E01-HU06 |
 
 **Criterios de aceptación**
 
-- [ ] El guion y el cuestionario se entregaron al tutor o a los expertos con un formato de validación que evalúa pertinencia, claridad y coherencia con los indicadores.
-- [ ] Las observaciones están incorporadas y hay un registro de cambios por ítem.
-- [ ] Las constancias de validación firmadas están listas como anexo.
-- [ ] Los instrumentos quedan congelados como versión final y no se cambian después.
-- [ ] El apartado de validez y confiabilidad está en el .docx original del Cap. III, con sus citas cotejadas, y la copia de lectura está regenerada. Explica cómo se trata la confiabilidad en instrumentos cualitativos con 8 informantes, o cómo se calculó el coeficiente si el tutor lo pidió. PENDIENTES.md está al día.
+- [x] El guion y el cuestionario se entregaron al tutor o a los expertos con un formato de validación que evalúa pertinencia, claridad y coherencia con los indicadores.
+- [x] Las observaciones están incorporadas y hay un registro de cambios por ítem.
+- [x] Las constancias de validación firmadas están listas como anexo.
+- [x] Los instrumentos quedan congelados como versión final y no se cambian después.
+- [x] El apartado de validez y confiabilidad está en el .docx original del Cap. III, con sus citas cotejadas, y la copia de lectura está regenerada. Explica cómo se trata la confiabilidad en instrumentos cualitativos con 8 informantes, o cómo se calculó el coeficiente si el tutor lo pidió. PENDIENTES.md está al día.
 
 **Tareas**
 
-- [ ] `E01-HU07-T1` *documentacion* — Preparar el formato de validación y la carta de solicitud
-- [ ] `E01-HU07-T2` *gestion* — Entregar los instrumentos y hacer seguimiento a las respuestas
-- [ ] `E01-HU07-T3` *investigacion* — Incorporar las observaciones y llevar el registro de cambios
-- [ ] `E01-HU07-T4` *documentacion* — Redactar el apartado de validez y confiabilidad con sus citas cotejadas, insertarlo en el .docx del Cap. III y regenerar la copia de lectura
-- [ ] `E01-HU07-T5` *documentacion* — Actualizar PENDIENTES.md y congelar la versión final de los instrumentos
+- [x] `E01-HU07-T1` *documentacion* — Preparar el formato de validación y la carta de solicitud
+- [x] `E01-HU07-T2` *gestion* — Entregar los instrumentos y hacer seguimiento a las respuestas
+- [x] `E01-HU07-T3` *investigacion* — Incorporar las observaciones y llevar el registro de cambios
+- [x] `E01-HU07-T4` *documentacion* — Redactar el apartado de validez y confiabilidad con sus citas cotejadas, insertarlo en el .docx del Cap. III y regenerar la copia de lectura
+- [x] `E01-HU07-T5` *documentacion* — Actualizar PENDIENTES.md y congelar la versión final de los instrumentos
 
 *Trazabilidad:* Requerimientos: EA-43 · Actividades Cap. III: 1.1 · Objetivos: 1, 2 · Fuentes: Cap. III, Técnicas e instrumentos de recolección de datos; TODO.md, Fase 1
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU08 · Entrevistar a los choferes una sola vez
 
@@ -1124,25 +1134,27 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 5 | Pendiente | S2 | E01-HU02, E01-HU07 |
+| investigacion | Must | 5 | Hecho | Ya hecha | E01-HU02, E01-HU07 |
 
 **Criterios de aceptación**
 
-- [ ] Las 3 entrevistas se hicieron con la versión congelada del guion, una sola vez por informante y dentro de la misma ventana de aplicación.
-- [ ] Cada entrevista tiene registro de fecha, lugar, duración y entrevistador, y su transcripción o sus notas están en una plantilla con el código del informante.
-- [ ] Solo se grabó con autorización expresa. Los audios y las transcripciones con datos personales se guardan fuera del repositorio.
-- [ ] Si se observó la operación del chofer, se usó la guía de observación acordada en E01-HU03 y se registró como técnica (RT-48). Si no se observó, la plantilla lo dice.
-- [ ] Dado un chofer que no puede participar dentro de la ventana, cuando se lo reemplaza, entonces se entrevista a su suplente con el mismo guion congelado y el reemplazo queda anotado.
+- [x] Las 3 entrevistas se hicieron con la versión congelada del guion, una sola vez por informante y dentro de la misma ventana de aplicación.
+- [x] Cada entrevista tiene registro de fecha, lugar, duración y entrevistador, y su transcripción o sus notas están en una plantilla con el código del informante.
+- [x] Solo se grabó con autorización expresa. Los audios y las transcripciones con datos personales se guardan fuera del repositorio.
+- [x] Si se observó la operación del chofer, se usó la guía de observación acordada en E01-HU03 y se registró como técnica (RT-48). Si no se observó, la plantilla lo dice.
+- [x] Dado un chofer que no puede participar dentro de la ventana, cuando se lo reemplaza, entonces se entrevista a su suplente con el mismo guion congelado y el reemplazo queda anotado.
 
 **Tareas**
 
-- [ ] `E01-HU08-T1` *documentacion* — Preparar la plantilla de transcripción por pregunta
-- [ ] `E01-HU08-T2` *investigacion* — Aplicar la entrevista al chofer C1
-- [ ] `E01-HU08-T3` *investigacion* — Aplicar la entrevista al chofer C2
-- [ ] `E01-HU08-T4` *investigacion* — Aplicar la entrevista al chofer C3
-- [ ] `E01-HU08-T5` *investigacion* — Transcribir o pasar en limpio las notas de las tres entrevistas
+- [x] `E01-HU08-T1` *documentacion* — Preparar la plantilla de transcripción por pregunta
+- [x] `E01-HU08-T2` *investigacion* — Aplicar la entrevista al chofer C1
+- [x] `E01-HU08-T3` *investigacion* — Aplicar la entrevista al chofer C2
+- [x] `E01-HU08-T4` *investigacion* — Aplicar la entrevista al chofer C3
+- [x] `E01-HU08-T5` *investigacion* — Transcribir o pasar en limpio las notas de las tres entrevistas
 
 *Trazabilidad:* Requerimientos: EA-44, RT-48 · Actividades Cap. III: 1.1 · Objetivos: 1, 2 · Fuentes: Cap. III, Técnicas e instrumentos de recolección de datos; Cap. III, Tipo y diseño de la investigación; TODO.md, Fase 1
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU09 · Aplicar el cuestionario a los estudiantes una sola vez
 
@@ -1150,23 +1162,25 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 3 | Pendiente | S2 | E01-HU02, E01-HU07 |
+| investigacion | Must | 3 | Hecho | Ya hecha | E01-HU02, E01-HU07 |
 
 **Criterios de aceptación**
 
-- [ ] Los 5 cuestionarios se aplicaron con la versión congelada, una sola vez por informante y en la misma ventana que las entrevistas.
-- [ ] Todas las respuestas están transcritas a una hoja de cálculo con el código del informante y sin datos personales.
-- [ ] Dado un cuestionario con ítems sin responder, cuando se revisa su completitud, entonces se pide al estudiante que lo complete en la misma ventana. Si no es posible, se aplica a su suplente y queda anotado.
-- [ ] Los originales (papel o exportación del formulario) se guardan fuera del repositorio.
+- [x] Los 5 cuestionarios se aplicaron con la versión congelada, una sola vez por informante y en la misma ventana que las entrevistas.
+- [x] Todas las respuestas están transcritas a una hoja de cálculo con el código del informante y sin datos personales.
+- [x] Dado un cuestionario con ítems sin responder, cuando se revisa su completitud, entonces se pide al estudiante que lo complete en la misma ventana. Si no es posible, se aplica a su suplente y queda anotado.
+- [x] Los originales (papel o exportación del formulario) se guardan fuera del repositorio.
 
 **Tareas**
 
-- [ ] `E01-HU09-T1` *investigacion* — Preparar el cuestionario en su formato final (impreso o formulario)
-- [ ] `E01-HU09-T2` *investigacion* — Aplicar el cuestionario a E1–E5
-- [ ] `E01-HU09-T3` *investigacion* — Revisar la completitud y aplicarlo a los suplentes si hace falta
-- [ ] `E01-HU09-T4` *documentacion* — Transcribir las respuestas a la hoja de cálculo
+- [x] `E01-HU09-T1` *investigacion* — Preparar el cuestionario en su formato final (impreso o formulario)
+- [x] `E01-HU09-T2` *investigacion* — Aplicar el cuestionario a E1–E5
+- [x] `E01-HU09-T3` *investigacion* — Revisar la completitud y aplicarlo a los suplentes si hace falta
+- [x] `E01-HU09-T4` *documentacion* — Transcribir las respuestas a la hoja de cálculo
 
 *Trazabilidad:* Requerimientos: EA-44, RT-48 · Actividades Cap. III: 1.1 · Objetivos: 1, 2 · Fuentes: Cap. III, Técnicas e instrumentos de recolección de datos; TODO.md, Fase 1
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU10 · Relevar con cartografía social los sectores reales de recogida y de residencia
 
@@ -1174,29 +1188,31 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 5 | Pendiente | S2 | E01-HU02, E01-HU07 |
+| investigacion | Must | 5 | Hecho | Ya hecha | E01-HU02, E01-HU07 |
 
 **Criterios de aceptación**
 
-- [ ] Cada chofer marcó sobre un mapa de Maracaibo y San Francisco sus puntos de recogida y los sectores que atiende. Cada estudiante marcó su sector de residencia de forma aproximada, sin dirección exacta.
-- [ ] Hay una lista de sectores con su nombre local, su municipio y el informante que lo nombró. Incluye los sectores lejanos y los municipios foráneos si aparecen.
-- [ ] Los sectores están digitalizados en un GeoJSON borrador en WGS-84, con las coordenadas en orden longitud–latitud (RT-11), listo para que E07 lo convierta en polígonos.
-- [ ] El GeoJSON del repositorio solo trae sectores (polígonos aproximados) y ningún punto de residencia ligado a un informante.
-- [ ] Hay una comparación con las 12 zonas provisionales que dice cuáles coinciden, cuáles faltan, cuáles se solapan y cuáles sobran.
-- [ ] El método está fundamentado en Soto et al. y el resultado se resume en hallazgos-de-campo.md.
+- [x] Cada chofer marcó sobre un mapa de Maracaibo y San Francisco sus puntos de recogida y los sectores que atiende. Cada estudiante marcó su sector de residencia de forma aproximada, sin dirección exacta.
+- [x] Hay una lista de sectores con su nombre local, su municipio y el informante que lo nombró. Incluye los sectores lejanos y los municipios foráneos si aparecen.
+- [x] Los sectores están digitalizados en un GeoJSON borrador en WGS-84, con las coordenadas en orden longitud–latitud (RT-11), listo para que E07 lo convierta en polígonos.
+- [x] El GeoJSON del repositorio solo trae sectores (polígonos aproximados) y ningún punto de residencia ligado a un informante.
+- [x] Hay una comparación con las 12 zonas provisionales que dice cuáles coinciden, cuáles faltan, cuáles se solapan y cuáles sobran.
+- [x] El método está fundamentado en Soto et al. y el resultado se resume en hallazgos-de-campo.md.
 
 **Tareas**
 
-- [ ] `E01-HU10-T1` *geo* — Preparar el mapa base, impreso o digital, y la consigna de la actividad
-- [ ] `E01-HU10-T2` *investigacion* — Aplicar la cartografía con cada chofer al cerrar su entrevista
-- [ ] `E01-HU10-T3` *investigacion* — Aplicar la cartografía con los estudiantes
-- [ ] `E01-HU10-T4` *geo* — Digitalizar los sectores en un GeoJSON borrador (WGS-84, lng/lat) sin puntos de residencia individuales
-- [ ] `E01-HU10-T5` *geo* — Comparar con la semilla 20260924000008_seed_zonas_maracaibo.sql y documentar las diferencias
-- [ ] `E01-HU10-T6` *documentacion* — Redactar la sección de sectores en hallazgos-de-campo.md con la cita de Soto et al.
+- [x] `E01-HU10-T1` *geo* — Preparar el mapa base, impreso o digital, y la consigna de la actividad
+- [x] `E01-HU10-T2` *investigacion* — Aplicar la cartografía con cada chofer al cerrar su entrevista
+- [x] `E01-HU10-T3` *investigacion* — Aplicar la cartografía con los estudiantes
+- [x] `E01-HU10-T4` *geo* — Digitalizar los sectores en un GeoJSON borrador (WGS-84, lng/lat) sin puntos de residencia individuales
+- [x] `E01-HU10-T5` *geo* — Comparar con la semilla 20260924000008_seed_zonas_maracaibo.sql y documentar las diferencias
+- [x] `E01-HU10-T6` *documentacion* — Redactar la sección de sectores en hallazgos-de-campo.md con la cita de Soto et al.
 
 *Trazabilidad:* Requerimientos: EA-47 · Actividades Cap. III: 1.1, 1.2 · Objetivos: 1, 2, 3 · Fuentes: Cap. III, Técnicas de recolección de datos; Cap. II, Antecedentes, Soto et al. (l. 37); supabase/migrations/20260924000008_seed_zonas_maracaibo.sql; docs/producto/modelo-de-datos.md §11
 
 *Notas:* Convertir los sectores en polígonos válidos, resolver los solapes y cargarlos en la base es trabajo de E07 (RT-18, IN-05). Aquí solo se relevan y se digitaliza el borrador. La exclusión de puntos individuales del GeoJSON es propuesta del equipo (sin fuente explícita), coherente con la anonimización de E01-HU02.
+
+*Actualización 2026-10-11:* trabajo de campo completado según el equipo.
 
 #### E01-HU11 · Tabular y analizar los datos de campo
 
@@ -1204,7 +1220,7 @@ Diagnostica cómo contactan hoy los estudiantes de la URBE el transporte privado
 
 | Tipo | Prioridad | Puntos | Estado | Sprint | Depende de |
 | --- | --- | --- | --- | --- | --- |
-| investigacion | Must | 5 | Pendiente | S2 | E01-HU08, E01-HU09 |
+| investigacion | Must | 5 | Pendiente | S1 | E01-HU08, E01-HU09 |
 
 **Criterios de aceptación**
 

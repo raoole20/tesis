@@ -26,6 +26,14 @@ se genere en este repositorio. Todo lo nuevo debe respetar esta identidad.
   `button`. Es la voz deportiva de la marca; no va en párrafos ni campos.
 - Nunca introduzcas una cuarta familia tipográfica.
 
+### Iconografía
+
+- Los iconos nuevos son de **Lucide** (`lucide_icons_flutter`, `LucideIcons.*`),
+  en tamaño `AppSizes.icon` (20) o `AppSizes.iconSmall` (16).
+- Dentro de una opción seleccionable van en un mosaico cuadrado
+  (`AppSizes.choiceIconTile`): `primaryDeep` sobre `backgroundMuted`, y
+  `onPrimary` sobre `primary` cuando está seleccionada.
+
 ### Color
 
 La fuente de verdad es OkLCH; el hex es la expresión en sRGB usada en Dart.
