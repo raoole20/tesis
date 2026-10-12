@@ -60,4 +60,13 @@ abstract final class AppSizes {
 
   /// Grosor de la línea que une dos pasos.
   static const double stepConnector = 2;
+
+  /// Lado del marcador de la casa sobre el mapa.
+  static const double mapPin = 44;
+
+  /// Lado del punto que marca la ubicación actual sobre el mapa.
+  static const double mapDot = 16;
+
+  /// Grosor del borde blanco de los marcadores del mapa.
+  static const double mapMarkerBorder = 2;
 }

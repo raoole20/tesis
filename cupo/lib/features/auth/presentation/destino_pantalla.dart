@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../onboarding/presentation/onboarding_estudiante_screen.dart';
+import '../../profile/presentation/perfil_estudiante_screen.dart';
 import '../../trip/presentation/student_home_screen.dart';
 import '../domain/destino_auth.dart';
 import 'auth_scope.dart';
@@ -31,10 +32,8 @@ Widget destinoPantalla(DestinoAuth destino) {
       titulo: 'Completa tu perfil de conductor',
       paso: 'Licencia y certificado médico',
     ),
-    DestinoAuth.perfilEstudiante => const EnConstruccionScreen(
-      titulo: 'Completa tu perfil de estudiante',
-      paso: 'Universidad, carrera y carnet',
-    ),
+    // Estudios y casa en el mapa. Todavía no guarda ni envía a revisión.
+    DestinoAuth.perfilEstudiante => const PerfilEstudianteScreen(),
     DestinoAuth.onboardingConductor => const EnConstruccionScreen(
       titulo: 'Elige tus zonas de trabajo',
       paso: 'Selección de zonas con vista previa en mapa',
