@@ -69,4 +69,16 @@ abstract final class AppSizes {
 
   /// Grosor del borde blanco de los marcadores del mapa.
   static const double mapMarkerBorder = 2;
+
+  /// Diámetro del círculo numerado de una parada sobre el mapa.
+  static const double mapStop = 28;
+
+  /// Lado del marcador de la unidad y del destino sobre el mapa.
+  static const double mapVehicle = 36;
+
+  /// Grosor de la línea del recorrido sobre el mapa.
+  static const double mapRoute = 5;
+
+  /// Alto de la vista previa del mapa dentro de una tarjeta.
+  static const double mapPreview = 180;
 }

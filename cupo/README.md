@@ -432,42 +432,43 @@ El repositorio trae [`.mcp.json`](../.mcp.json) en la raíz: conecta Claude Code
 con la cuenta de Supabase para crear el proyecto, aplicar migraciones,
 consultar tablas y leer logs sin salir del editor.
 
-**El archivo no contiene la credencial.** Lleva `${SUPABASE_ACCESS_TOKEN}`, que
-se expande desde una variable de entorno, así que se puede versionar sin
-riesgo. El token se guarda una sola vez, en la máquina:
+**El archivo no contiene la credencial.** No arranca el servidor directamente:
+llama a [`scripts/mcp/supabase.mjs`](../scripts/mcp/supabase.mjs), que lee el
+`.env` de la raíz y recién entonces lanza `@supabase/mcp-server-supabase`. Claude
+Code no lee archivos `.env` por su cuenta; el lanzador existe para eso, y así no
+hace falta copiar el token al entorno de Windows.
 
-1. Sacarlo en [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
+1. Sacar el token en [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
    → **Generate new token**. Se muestra una sola vez.
-2. Anotarlo en `.env` en la raíz del repositorio —ignorado por git— con el
-   nombre exacto de la variable, que es el que busca `.mcp.json`:
+2. Anotarlo en `.env` en la raíz del repositorio —ignorado por git— junto con
+   la referencia del proyecto (la parte `xxxx` de `https://xxxx.supabase.co`):
 
    ```
    SUPABASE_ACCESS_TOKEN=sbp_el-token-que-copiaste
+   SUPABASE_PROJECT_REF=xxxx
    ```
 
-   Hay una plantilla en [`.env.example`](../.env.example).
+   Hay una plantilla en [`.env.example`](../.env.example). Si una de las dos
+   variables ya está en el entorno del sistema, gana sobre la del `.env`.
 
-3. Pasarlo al entorno del usuario. **Claude Code no lee archivos `.env`**: la
-   expansión `${SUPABASE_ACCESS_TOKEN}` de `.mcp.json` sale del entorno del
-   proceso, así que el `.env` por sí solo no alcanza.
+3. Claude Code pregunta si se confía en el servidor MCP del proyecto la
+   primera vez. Con `/mcp` se ve el estado de la conexión, y desde ahí se
+   reconecta después de cambiar el `.env`.
 
-   ```powershell
-   $v = ((Get-Content .env | Where-Object { $_ -match '^SUPABASE_ACCESS_TOKEN=' }) -split '=',2)[1].Trim()
-   [Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN', $v, 'User')
-   ```
-
-4. **Cerrar y reabrir VS Code.** La variable solo llega a procesos nuevos.
-5. Claude Code pregunta si se confía en el servidor MCP del proyecto la
-   primera vez. Con `/mcp` se ve el estado de la conexión.
+Hace falta Node en el `PATH` (lo trae cualquier instalación que tenga `npx`).
 
 El token vale por **toda la cuenta**, no por un proyecto. Conviene borrarlo del
 panel cuando se termine la tesis.
 
 ### Alcance concedido
 
+Con `SUPABASE_PROJECT_REF` el servidor solo ve el proyecto de la tesis, y el
+grupo `account` queda fuera. Sin ella, el lanzador lo pide para poder listar y
+crear proyectos.
+
 | Grupo | Para qué |
 |---|---|
-| `account` | listar y crear proyectos |
+| `account` | listar y crear proyectos (solo sin `SUPABASE_PROJECT_REF`) |
 | `database` | aplicar migraciones, consultar tablas, ver el esquema |
 | `development` | leer la URL y la `anon key` (las de `dart_define.json`) |
 | `debugging` | logs y avisos del asesor de seguridad |

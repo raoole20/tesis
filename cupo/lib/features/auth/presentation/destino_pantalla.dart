@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../../driver/presentation/inicio_conductor_screen.dart';
+import '../../driver/presentation/zonas_trabajo_screen.dart';
 import '../../onboarding/presentation/onboarding_estudiante_screen.dart';
 import '../../profile/presentation/perfil_estudiante_screen.dart';
 import '../../trip/presentation/student_home_screen.dart';
@@ -34,17 +36,14 @@ Widget destinoPantalla(DestinoAuth destino) {
     ),
     // Estudios y casa en el mapa. Todavía no guarda ni envía a revisión.
     DestinoAuth.perfilEstudiante => const PerfilEstudianteScreen(),
-    DestinoAuth.onboardingConductor => const EnConstruccionScreen(
-      titulo: 'Elige tus zonas de trabajo',
-      paso: 'Selección de zonas con vista previa en mapa',
-    ),
+    // Elige sus zonas en `conductor_zonas` y completa el onboarding; el
+    // stream del AuthGate lleva entonces a inicioConductor.
+    DestinoAuth.onboardingConductor => const ZonasTrabajoScreen(),
     // Fija el domicilio en PostGIS y completa el onboarding; el stream del
     // AuthGate lleva entonces a inicioEstudiante.
     DestinoAuth.onboardingEstudiante => const OnboardingEstudianteScreen(),
-    DestinoAuth.inicioConductor => const EnConstruccionScreen(
-      titulo: 'Inicio del conductor',
-      paso: 'Rutas, turnos y cupos — Iteración 2',
-    ),
+    // Prototipo con datos de ejemplo; solo las zonas son reales.
+    DestinoAuth.inicioConductor => const InicioConductorScreen(),
     DestinoAuth.inicioEstudiante => const StudentHomeScreen(),
     DestinoAuth.bandejaAdministrador => const EnConstruccionScreen(
       titulo: 'Bandeja de solicitudes',

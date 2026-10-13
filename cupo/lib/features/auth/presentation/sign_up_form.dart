@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/venezuela/documento_identidad.dart';
+import '../../../core/venezuela/telefono_movil.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../data/auth_repository.dart';
@@ -49,6 +51,9 @@ class _SignUpFormState extends State<SignUpForm> {
   final _phone = TextEditingController();
   final _password = TextEditingController();
 
+  TipoDocumento _tipoDocumento = TipoDocumento.v;
+  OperadoraMovil? _operadora;
+
   bool _enviando = false;
   String? _error;
 
@@ -65,8 +70,10 @@ class _SignUpFormState extends State<SignUpForm> {
   String? _validar() {
     if (_name.text.trim().isEmpty) return 'Escribe tu nombre y apellido.';
     if (!_email.text.contains('@')) return 'Escribe un correo válido.';
-    if (_idCard.text.trim().isEmpty) return 'Escribe tu cédula.';
-    if (_phone.text.trim().isEmpty) return 'Escribe tu teléfono.';
+    final documento = validarDocumento(_tipoDocumento, _idCard.text);
+    if (documento != null) return documento;
+    final telefono = validarTelefono(_operadora, _phone.text);
+    if (telefono != null) return telefono;
     if (_password.text.length < 6) {
       return 'La clave necesita al menos 6 caracteres.';
     }
@@ -94,6 +101,11 @@ class _SignUpFormState extends State<SignUpForm> {
 
     final repo = AuthScope.de(context).repositorio;
 
+    // Una sola forma por dato —«V-30111222», «+584141234567»— para que las
+    // restricciones `unique` de la base detecten los duplicados.
+    final cedula = normalizarDocumento(_tipoDocumento, _idCard.text);
+    final telefono = normalizarTelefono(_operadora!, _phone.text);
+
     try {
       await repo.registrar(
         email: _email.text,
@@ -101,7 +113,7 @@ class _SignUpFormState extends State<SignUpForm> {
         rol: widget.rol,
         nombres: nombres,
         apellidos: apellidos,
-        telefono: _phone.text,
+        telefono: telefono,
       );
 
       // La cédula no viaja en el signUp: el trigger no la escribe, y además
@@ -110,8 +122,8 @@ class _SignUpFormState extends State<SignUpForm> {
       await repo.guardarDatosPersonales(
         nombres: nombres,
         apellidos: apellidos,
-        cedula: _idCard.text,
-        telefono: _phone.text,
+        cedula: cedula,
+        telefono: telefono,
       );
 
       // No se navega: el AuthGate ve la sesión nueva y enruta según el estado,
@@ -168,11 +180,15 @@ class _SignUpFormState extends State<SignUpForm> {
         ),
         const SizedBox(height: AppSpacing.md),
         CupoField(
-          label: 'Cédula',
-          child: CupoTextInput(
+          label: textos.etiquetaDocumento,
+          helper: _tipoDocumento == TipoDocumento.j
+              ? 'El RIF de la empresa o cooperativa, con su último dígito.'
+              : null,
+          child: CupoDocumentoInput(
             controller: _idCard,
-            hintText: 'V-30.111.222',
-            textCapitalization: TextCapitalization.characters,
+            tipo: _tipoDocumento,
+            tipos: textos.tiposDocumento,
+            onTipoChanged: (tipo) => setState(() => _tipoDocumento = tipo),
             textInputAction: TextInputAction.next,
           ),
         ),
@@ -180,12 +196,11 @@ class _SignUpFormState extends State<SignUpForm> {
         CupoField(
           label: 'Teléfono (el de WhatsApp)',
           helper: textos.ayudaTelefono,
-          child: CupoTextInput(
+          child: CupoTelefonoInput(
             controller: _phone,
-            hintText: '0414 000 0000',
-            keyboardType: TextInputType.phone,
+            operadora: _operadora,
+            onOperadoraChanged: (o) => setState(() => _operadora = o),
             textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.telephoneNumber],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -222,6 +237,8 @@ class _TextosDelRol {
     required this.nombreDeEjemplo,
     required this.correoDeEjemplo,
     required this.ayudaTelefono,
+    required this.etiquetaDocumento,
+    required this.tiposDocumento,
   });
 
   factory _TextosDelRol.de(RolUsuario rol) => rol.esConductor
@@ -233,6 +250,10 @@ class _TextosDelRol {
           nombreDeEjemplo: 'José Rondón',
           correoDeEjemplo: 'jose@ejemplo.com',
           ayudaTelefono: 'Por ahí te escriben los estudiantes.',
+          // Hay conductores que trabajan a nombre de una empresa o de una
+          // cooperativa de transporte: esos se registran con el RIF.
+          etiquetaDocumento: 'Cédula o RIF',
+          tiposDocumento: [TipoDocumento.v, TipoDocumento.j],
         )
       : const _TextosDelRol(
           titulo: 'Tu cuenta de estudiante',
@@ -242,6 +263,8 @@ class _TextosDelRol {
           nombreDeEjemplo: 'Génesis Materán',
           correoDeEjemplo: 'genesis@ejemplo.com',
           ayudaTelefono: 'Por ahí te contacta el conductor.',
+          etiquetaDocumento: 'Cédula',
+          tiposDocumento: [TipoDocumento.v],
         );
 
   final String titulo;
@@ -249,4 +272,10 @@ class _TextosDelRol {
   final String nombreDeEjemplo;
   final String correoDeEjemplo;
   final String ayudaTelefono;
+
+  /// Etiqueta del campo del documento.
+  final String etiquetaDocumento;
+
+  /// Letras que puede elegir. Con una sola, el prefijo queda fijo.
+  final List<TipoDocumento> tiposDocumento;
 }

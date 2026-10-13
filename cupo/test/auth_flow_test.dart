@@ -302,6 +302,8 @@ void main() {
 
       expect(find.textContaining('licencia'), findsOneWidget);
       expect(find.text('Por ahí te escriben los estudiantes.'), findsOneWidget);
+      // El conductor puede registrarse con cédula o con el RIF de su empresa.
+      expect(find.text('Cédula o RIF'), findsOneWidget);
       expect(find.textContaining('dan crédito'), findsNothing);
     });
 
@@ -472,23 +474,21 @@ void main() {
   });
 
   group('Marcadores de las pantallas que faltan', () {
-    testWidgets('el conductor aprobado sin onboarding ve su próximo paso', (
-      tester,
-    ) async {
+    testWidgets('el administrador aprobado ve su próximo paso', (tester) async {
       await montarPantalla(
         tester,
         const EnConstruccionScreen(
-          titulo: 'Elige tus zonas de trabajo',
-          paso: 'Selección de zonas con vista previa en mapa',
+          titulo: 'Bandeja de solicitudes',
+          paso: 'Aprobar y rechazar registros',
         ),
         usuario: usuarioDePrueba(
-          rol: RolUsuario.conductor,
+          rol: RolUsuario.administrador,
           estado: EstadoCuenta.aprobada,
         ),
       );
 
-      expect(find.text('Elige tus zonas de trabajo'), findsOneWidget);
-      expect(find.textContaining('rol: conductor'), findsOneWidget);
+      expect(find.text('Bandeja de solicitudes'), findsOneWidget);
+      expect(find.textContaining('rol: administrador'), findsOneWidget);
       expect(find.textContaining('estado: aprobada'), findsOneWidget);
     });
   });

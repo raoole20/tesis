@@ -28,6 +28,7 @@ class CupoTextInput extends StatefulWidget {
     this.autofillHints,
     this.obscureText = false,
     this.enabled = true,
+    this.prefix,
     this.suffix,
     this.onChanged,
     this.onSubmitted,
@@ -46,6 +47,10 @@ class CupoTextInput extends StatefulWidget {
   final Iterable<String>? autofillHints;
   final bool obscureText;
   final bool enabled;
+
+  /// Contenido pegado al borde izquierdo, por ejemplo el selector de la letra
+  /// de la cédula. Va sin relleno propio: lo pone quien lo construye.
+  final Widget? prefix;
 
   /// Contenido pegado al borde derecho, por ejemplo el ojo de la clave.
   final Widget? suffix;
@@ -69,6 +74,7 @@ class _CupoTextInputState extends State<CupoTextInput> {
 
   @override
   Widget build(BuildContext context) {
+    final prefix = widget.prefix;
     final suffix = widget.suffix;
 
     // `Focus` sin nodo propio escucha el foco de su descendiente, el
@@ -106,6 +112,11 @@ class _CupoTextInputState extends State<CupoTextInput> {
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.md,
+            ),
+            prefixIcon: prefix,
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
             ),
             suffixIcon: suffix == null
                 ? null
