@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../shared/models/transport_shift.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../../auth/presentation/auth_scope.dart';
+import '../../auth/presentation/cuenta/boton_de_cuenta.dart';
 import 'live_tracking_screen.dart';
 
 /// 10 — Inicio del estudiante ya inscrito (Home).
@@ -35,6 +37,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final shift = widget.shift ?? TransportShift.mockShifts.first;
+    final usuario = AuthScope.usuarioDe(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,21 +66,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text('Hola, Génesis', style: AppTypography.title),
+                      Text(
+                        'Hola, ${usuario.nombres.isEmpty ? 'estudiante' : usuario.nombres}',
+                        style: AppTypography.title,
+                      ),
                     ],
                   ),
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: AppColors.primarySoft,
-                    child: Text(
-                      'GM',
-                      style: AppTypography.manrope(
-                        size: 15,
-                        weight: FontWeight.w800,
-                        color: AppColors.primaryDeep,
-                      ),
-                    ),
-                  ),
+                  const BotonDeCuenta(),
                 ],
               ),
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../driver/presentation/inicio_conductor_screen.dart';
+import '../../driver/presentation/perfil_conductor_screen.dart';
 import '../../driver/presentation/zonas_trabajo_screen.dart';
 import '../../onboarding/presentation/onboarding_estudiante_screen.dart';
 import '../../profile/presentation/perfil_estudiante_screen.dart';
@@ -27,13 +28,9 @@ Widget destinoPantalla(DestinoAuth destino) {
     DestinoAuth.rechazada => const RechazadaScreen(),
     DestinoAuth.suspendida => const SuspendidaScreen(),
 
-    // Las que faltan por construir. Cada una es un paso del plan del
-    // onboarding; hasta entonces muestran dónde está la persona en vez de
-    // dejarla en blanco.
-    DestinoAuth.perfilConductor => const EnConstruccionScreen(
-      titulo: 'Completa tu perfil de conductor',
-      paso: 'Licencia y certificado médico',
-    ),
+    // Licencia y vehículo; al enviar, el stream del AuthGate lleva a
+    // enRevision (HU-004).
+    DestinoAuth.perfilConductor => const PerfilConductorScreen(),
     // Estudios y casa en el mapa. Todavía no guarda ni envía a revisión.
     DestinoAuth.perfilEstudiante => const PerfilEstudianteScreen(),
     // Elige sus zonas en `conductor_zonas` y completa el onboarding; el
@@ -45,6 +42,8 @@ Widget destinoPantalla(DestinoAuth destino) {
     // Prototipo con datos de ejemplo; solo las zonas son reales.
     DestinoAuth.inicioConductor => const InicioConductorScreen(),
     DestinoAuth.inicioEstudiante => const StudentHomeScreen(),
+    // Pendiente de construir: muestra dónde está la persona en vez de
+    // dejarla en blanco.
     DestinoAuth.bandejaAdministrador => const EnConstruccionScreen(
       titulo: 'Bandeja de solicitudes',
       paso: 'Aprobar y rechazar registros',

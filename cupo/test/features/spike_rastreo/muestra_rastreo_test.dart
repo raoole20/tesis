@@ -38,19 +38,30 @@ void main() {
     );
 
     test('trae exactamente las columnas que la migración deja insertar', () {
-      // El `grant insert (...)` de 20261026000001_spike_rastreo.sql. Si una
-      // columna sobra, PostgREST rechaza la fila entera.
-      final migracion = File(
-        '../supabase/migrations/20261026000001_spike_rastreo.sql',
-      ).readAsStringSync();
-      final grant = RegExp(r'grant insert \(([^)]*)\)')
-          .firstMatch(migracion)!
-          .group(1)!;
-      final permitidas = grant
-          .split(',')
-          .map((c) => c.trim())
-          .where((c) => c.isNotEmpty)
-          .toSet();
+      // Los `grant insert (...) on public.spike_posiciones` de las dos
+      // migraciones del spike. Si una columna sobra, PostgREST rechaza la
+      // fila entera.
+      final permitidas = <String>{};
+      for (final archivo in const [
+        '20261026000001_spike_rastreo.sql',
+        '20261026000002_spike_recorrido.sql',
+        '20261026000003_spike_simulacion.sql',
+      ]) {
+        final migracion = File('../supabase/migrations/$archivo')
+            .readAsStringSync();
+        final grants = RegExp(
+          r'grant insert \(([^)]*)\)\s*on public\.spike_posiciones',
+        ).allMatches(migracion);
+        for (final grant in grants) {
+          permitidas.addAll(
+            grant
+                .group(1)!
+                .split(',')
+                .map((c) => c.trim())
+                .where((c) => c.isNotEmpty),
+          );
+        }
+      }
 
       expect(fila.keys.toSet(), permitidas);
     });
@@ -86,6 +97,7 @@ void main() {
     expect(PermisoRastreo.values.map((p) => p.valor), [
       'mientras_se_usa',
       'siempre',
+      'no_aplica',
     ]);
   });
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,20 +10,39 @@ import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../data/canal_dispositivo.dart';
 import '../data/fuente_de_ubicacion.dart';
+import '../data/fuente_simulada.dart';
+import '../data/servicio_de_rutas.dart';
 import '../data/spike_rastreo_repository.dart';
+import '../domain/estado_en_barra.dart';
+import '../domain/geo.dart';
 import '../domain/muestra_rastreo.dart';
 import '../domain/protocolo_rastreo.dart';
 import '../domain/reporte_fase.dart';
+import '../domain/reporte_ruta.dart';
+import '../domain/ruta_planificada.dart';
+import '../domain/seguimiento.dart';
+import '../domain/simulador.dart';
+import '../domain/traza.dart';
+import 'mapa_recorrido.dart';
 import 'rastreador_de_prueba.dart';
+
+part 'recorrido_widgets.dart';
 
 /// «Prueba de rastreo» — spike de HU-011, solo en modo debug.
 ///
 /// Responde una pregunta: ¿Cupo sigue mandando la ubicación del conductor a
-/// Supabase con la app minimizada y con la pantalla apagada? Corre tres
-/// fases seguidas (app abierta, minimizada, pantalla apagada), guarda cada
-/// muestra en `spike_posiciones` y al final muestra `spike_reporte()`. El
-/// protocolo y cómo leer el resultado están en
-/// `docs/producto/spike-rastreo.md`.
+/// Supabase con la app minimizada y con la pantalla apagada? Tiene dos modos:
+///
+/// - **Por fases:** tres fases seguidas por reloj (app abierta, minimizada,
+///   pantalla apagada), sin salir de casa. Resultado: `spike_reporte()`.
+/// - **Recorrido real:** una ruta de verdad en carro (por omisión,
+///   [RutaDePrueba.porOmision]), con el teléfono usado como de costumbre. La
+///   ruta planificada se traza con OSRM y se dibuja sobre el mapa; al llegar,
+///   «Terminar recorrido». Resultado: `spike_reporte_ruta()` y el mapa con la
+///   traza, que sirve de figura para la tesis.
+///
+/// Cada muestra va a `spike_posiciones`. El protocolo y cómo leer el
+/// resultado están en `docs/producto/spike-rastreo.md`.
 ///
 /// Se entra desde el inicio del conductor, con un botón que solo existe en
 /// las compilaciones de depuración.
@@ -32,12 +52,14 @@ class PruebaRastreoScreen extends StatefulWidget {
     this.repositorio,
     this.ubicacion,
     this.canal,
+    this.rutas,
   });
 
   /// Por omisión, los reales. Las pruebas pasan unos falsos.
   final SpikeRastreoRepository? repositorio;
   final FuenteDeUbicacion? ubicacion;
   final CanalDispositivo? canal;
+  final ServicioDeRutas? rutas;
 
   @override
   State<PruebaRastreoScreen> createState() => _PruebaRastreoScreenState();
@@ -46,24 +68,81 @@ class PruebaRastreoScreen extends StatefulWidget {
 /// A qué pantalla de Ajustes manda el error de arranque.
 enum _Ajustes { ubicacion, app }
 
+/// Los tres modos del selector.
+enum _Modo { fases, recorrido, simulacion }
+
+/// Una ruta recalculada que todavía no llega a Supabase.
+typedef _Recalculo = ({
+  DateTime en,
+  PuntoGeo desde,
+  RutaPlanificada ruta,
+  double? desvioM,
+});
+
 class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   late final SpikeRastreoRepository _repo =
       widget.repositorio ?? SpikeRastreoRepository();
   late final FuenteDeUbicacion _ubicacion =
       widget.ubicacion ?? const FuenteDeUbicacion();
   late final CanalDispositivo _canal = widget.canal ?? const CanalDispositivo();
+  late final ServicioDeRutas _rutas = widget.rutas ?? const ServicioDeRutas();
 
   late final RastreadorDePrueba _rastreador = RastreadorDePrueba(
     abrirPosiciones: _abrirPosiciones,
     enviar: _repo.insertar,
-    pantallaEncendida: _canal.pantallaEncendida,
+    estadoTelefono: _canal.estadoAlCapturar,
     alCambiarDeFase: _alCambiarDeFase,
+    registrarSesion: _registrarSesion,
   );
 
   late final AppLifecycleListener _ciclo;
 
+  _Modo _modo = _Modo.fases;
   DuracionPrueba _duracion = DuracionPrueba.estandar;
   bool _wakelock = true;
+
+  bool get _esRecorrido => _modo != _Modo.fases;
+  bool get _simular => _modo == _Modo.simulacion;
+
+  // Recorrido real y simulación. La llegada es fija (la URBE); la salida, la
+  // ubicación actual (o la de respaldo de [RutaDePrueba.porOmision]).
+  RutaDePrueba _ruta = RutaDePrueba.porOmision;
+  bool _buscandoPartida = false;
+  bool _partidaPedida = false;
+  bool _partidaDelGps = false;
+  String? _avisoPartida;
+  RutaPlanificada? _planificada;
+  bool _trazando = false;
+  String? _errorRuta;
+  PuntoGeo? _domicilio;
+  _Toque? _toque;
+  int _pedidoDeRuta = 0;
+  ReporteRuta? _reporteRuta;
+  List<PuntoTraza>? _traza;
+
+  // Simulación.
+  double _velocidadKmh = 30;
+  int _multiplicador = 5;
+  bool _simularCorte = false;
+  bool _simularDesvio = false;
+  FuenteSimulada? _fuenteSimulada;
+
+  // En vivo: lo que falta, el desvío, el recálculo y la llegada.
+  SeguimientoDeRuta? _seguimiento;
+  int _ultimaSeqSeguida = 0;
+  RutaPlanificada? _rutaVigente;
+  bool _recalculando = false;
+  int _recalculos = 0;
+  String? _avisoRuta;
+  bool _llego = false;
+  final List<_Recalculo> _recalculosPendientes = [];
+
+  // La notificación en vivo (y, en web, el título de la pestaña).
+  DateTime? _inicioReal;
+  DateTime? _ultimaPublicacion;
+  EtapaPrueba? _etapaPublicada;
+  FaseRastreo? _fasePublicada;
+  int _seqPublicada = 0;
 
   InfoDispositivo? _info;
   LocationPermission? _permiso;
@@ -81,12 +160,19 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   void initState() {
     super.initState();
     _ciclo = AppLifecycleListener(onResume: _alVolver);
+    _rastreador.addListener(_seguirUnidad);
+    // Después de _seguirUnidad, así ya ve lo que falta actualizado.
+    _rastreador.addListener(_publicarEnBarra);
     unawaited(_leerTelefono());
   }
 
   @override
   void dispose() {
     _ciclo.dispose();
+    _rastreador.removeListener(_seguirUnidad);
+    _rastreador.removeListener(_publicarEnBarra);
+    unawaited(_canal.cerrarEstado());
+    _tituloPestana('Cupo');
     _rastreador.dispose();
     unawaited(_canal.mantenerPantallaEncendida(false));
     super.dispose();
@@ -120,16 +206,435 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   }
 
   Stream<Position> _abrirPosiciones(ConfigPrueba config) {
-    return _ubicacion.posiciones(
+    final recorrido = config.modo == ModoPrueba.recorrido;
+    final simulada = _fuenteSimulada;
+    final fuente = config.simulada && simulada != null ? simulada : _ubicacion;
+    return fuente.posiciones(
       intervalo: config.intervalo,
       wakelock: config.wakelock,
-      tituloAviso: 'Cupo · Prueba de rastreo',
-      textoAviso:
-          'Midiendo si tu ubicación llega a Cupo. Sigue los avisos de '
-          'cada fase.',
+      tituloAviso: recorrido
+          ? 'Cupo · Recorrido real en curso'
+          : 'Cupo · Prueba de rastreo',
+      textoAviso: recorrido
+          ? 'Al llegar y estacionar, abre Cupo y toca «Terminar recorrido».'
+          : 'Midiendo si tu ubicación llega a Cupo. Sigue los avisos de '
+                'cada fase.',
       acento: AppColors.primary,
     );
   }
+
+  /// Guarda el plan del recorrido en `spike_recorridos`. En el modo por
+  /// fases no hay plan.
+  Future<void> _registrarSesion(SesionRastreo sesion) async {
+    if (sesion.modo != ModoPrueba.recorrido) return;
+    await _repo.registrarRecorrido(
+      sesionId: sesion.id,
+      ruta: _ruta,
+      idaYVuelta: false,
+      planificada: _planificada,
+      domicilio: _domicilio,
+      simulada: sesion.simulada,
+    );
+  }
+
+  void _elegirModo(_Modo modo) {
+    setState(() => _modo = modo);
+    switch (modo) {
+      case _Modo.fases:
+        return;
+      // El recorrido real sale de donde está el teléfono.
+      case _Modo.recorrido when !_partidaDelGps && !_buscandoPartida:
+        unawaited(_buscarPartida());
+      case _Modo.recorrido:
+        return;
+      // La simulación no necesita el GPS ni su permiso: sale de la salida de
+      // respaldo (o de la que ya había). «Salir desde mi ubicación actual»
+      // la cambia.
+      case _Modo.simulacion when !_partidaPedida:
+        setState(() => _partidaPedida = true);
+        unawaited(_trazarRuta());
+      case _Modo.simulacion:
+        return;
+    }
+  }
+
+  /// La salida del recorrido es donde está el teléfono. Mientras se busca, el
+  /// mapa se queda en la URBE; si no se puede (sin permiso, sin GPS, sin
+  /// señal), se usa la salida de respaldo y se avisa.
+  Future<void> _buscarPartida() async {
+    setState(() {
+      _partidaPedida = true;
+      _buscandoPartida = true;
+      _avisoPartida = null;
+    });
+    try {
+      final aqui = await _ubicacion.posicionActual();
+      if (!mounted) return;
+      setState(() {
+        _ruta = _ruta.copyWith(inicio: PuntoGeo(aqui.latitude, aqui.longitude));
+        _partidaDelGps = true;
+      });
+    } catch (e) {
+      // Cualquier falla (permiso, servicio, señal, plataforma) lleva al
+      // respaldo: la prueba se puede hacer igual.
+      if (!mounted) return;
+      setState(() {
+        _ruta = _ruta.copyWith(inicio: RutaDePrueba.porOmision.inicio);
+        _partidaDelGps = false;
+        _avisoPartida =
+            'No se pudo leer tu ubicación: se usa la salida de respaldo '
+            '(Av. 61). Toca «Salida» y luego el mapa para elegir otra.';
+      });
+    } finally {
+      if (mounted) setState(() => _buscandoPartida = false);
+    }
+    if (mounted) unawaited(_trazarRuta());
+  }
+
+  /// Sigue a la unidad con cada muestra nueva: lo que falta, el desvío, el
+  /// recálculo y la llegada. Corre antes que el `ListenableBuilder`, así la
+  /// vista ya ve los valores nuevos.
+  void _seguirUnidad() {
+    final r = _rastreador;
+    final ultima = r.ultima;
+    final seguimiento = _seguimiento;
+    if (!r.esRecorrido ||
+        !r.etapa.activa ||
+        ultima == null ||
+        seguimiento == null ||
+        ultima.seq == _ultimaSeqSeguida) {
+      return;
+    }
+    _ultimaSeqSeguida = ultima.seq;
+    final aqui = PuntoGeo(ultima.lat, ultima.lng);
+    final evento = seguimiento.actualizar(aqui, ultima.capturadaEn);
+    if (evento.acabaDeLlegar) _avisarLlegada();
+    if (evento.recalcular && _planificada != null && !_recalculando) {
+      unawaited(_recalcular(aqui, ultima.capturadaEn, seguimiento.desvioM));
+    }
+  }
+
+  /// Publica la notificación en vivo: en cada hito (arranque, primera
+  /// muestra, cambio de fase o de etapa) y, si no, como mucho una vez cada
+  /// 5 s. El tic de un segundo del rastreador la despierta aunque no lleguen
+  /// muestras, y así aparece «Sin ubicación hace 45 s».
+  void _publicarEnBarra() {
+    final r = _rastreador;
+    if (r.etapa.cerrada && (_etapaPublicada?.activa ?? false)) {
+      // La prueba terminó: se quita la en vivo y, con el reporte, queda el
+      // resumen (ver _publicarResumen).
+      _etapaPublicada = r.etapa;
+      unawaited(_canal.cerrarEstado());
+      return;
+    }
+    if (!r.etapa.activa) return;
+
+    final ahora = DateTime.now();
+    final seq = r.ultima?.seq ?? 0;
+    final hito =
+        r.etapa != _etapaPublicada ||
+        r.fase != _fasePublicada ||
+        (_seqPublicada == 0 && seq > 0);
+    final ultima = _ultimaPublicacion;
+    if (!hito &&
+        ultima != null &&
+        ahora.difference(ultima) < const Duration(seconds: 5)) {
+      return;
+    }
+    _ultimaPublicacion = ahora;
+    _etapaPublicada = r.etapa;
+    _fasePublicada = r.fase;
+    _seqPublicada = seq;
+
+    final config = r.config;
+    final sesion = r.sesion;
+    final modo = config?.modo ?? ModoPrueba.fases;
+    final estado = estadoEnBarra(
+      modo: modo,
+      simulada: config?.simulada ?? false,
+      buscandoGps: r.etapa == EtapaPrueba.buscandoGps,
+      enviadas: r.enviadas,
+      pendientes: r.pendientes,
+      sinRed: r.sinRed,
+      fase: r.fase,
+      desdeUltima: r.desdeUltima,
+      restanteM: _seguimiento?.restanteM,
+      recorridoM: r.distanciaM,
+      avanceFases: sesion != null && modo == ModoPrueba.fases
+          ? r.transcurrido.inMilliseconds /
+                sesion.protocolo.total.inMilliseconds
+          : null,
+    );
+    unawaited(
+      _canal.mostrarEstado(
+        titulo: estado.titulo,
+        texto: estado.texto,
+        inicio: _inicioReal,
+        progreso: estado.progreso,
+        maximo: EstadoEnBarra.maximo,
+        acento: AppColors.primary,
+      ),
+    );
+    _tituloPestana('${estado.corto} · Cupo');
+  }
+
+  /// El resumen que queda en la barra al terminar, descartable.
+  void _publicarResumen() {
+    final r = _rastreador;
+    final sesion = r.sesion;
+    if (!r.etapa.cerrada || sesion == null) return;
+    final EstadoEnBarra resumen;
+    if (sesion.modo == ModoPrueba.recorrido) {
+      final reporte = _reporteRuta;
+      resumen = resumenEnBarra(
+        simulada: sesion.simulada,
+        coberturaPct: reporte?.coberturaPct,
+        pasa: reporte?.cumple,
+      );
+    } else {
+      final fases = _reporte;
+      final coberturas = [
+        for (final f in fases ?? const <ReporteFase>[]) ?f.coberturaPct,
+      ];
+      resumen = resumenEnBarra(
+        simulada: false,
+        coberturaPct: coberturas.isEmpty
+            ? null
+            : coberturas.reduce((a, b) => a < b ? a : b),
+        pasa: fases == null ? null : veredictoRastreo(fases),
+      );
+    }
+    unawaited(
+      _canal.mostrarEstado(
+        titulo: resumen.titulo,
+        texto: resumen.texto,
+        fijo: false,
+        acento: AppColors.primary,
+      ),
+    );
+    _tituloPestana('${resumen.corto} · Cupo');
+  }
+
+  /// En web no hay barra de notificaciones: el estado va en el título de la
+  /// pestaña. Flutter web traduce esto a `document.title`, sin importar nada
+  /// de la plataforma; en Android no se llama.
+  void _tituloPestana(String texto) {
+    if (!kIsWeb) return;
+    unawaited(
+      SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(
+          label: texto,
+          primaryColor: AppColors.primary.toARGB32(),
+        ),
+      ),
+    );
+  }
+
+  /// La unidad se salió de la ruta: una nueva desde donde está hasta la
+  /// URBE. La regla de [SeguimientoDeRuta] ya limita la frecuencia.
+  Future<void> _recalcular(PuntoGeo desde, DateTime en, double? desvio) async {
+    _recalculando = true;
+    try {
+      final ruta = await _rutas.trazar([desde, _ruta.llegada]);
+      if (!mounted) return;
+      _seguimiento?.cambiarRuta(ruta.puntos);
+      _recalculosPendientes.add((
+        en: en,
+        desde: desde,
+        ruta: ruta,
+        desvioM: desvio,
+      ));
+      setState(() {
+        _rutaVigente = ruta;
+        _recalculos++;
+        _avisoRuta =
+            'Ruta recalculada ($_recalculos) a las ${horaCorta(en)}: te saliste '
+            '${_distancia(desvio)} de la ruta.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Ruta recalculada',
+            style: AppTypography.meta.copyWith(color: AppColors.onPrimary),
+          ),
+        ),
+      );
+      unawaited(_guardarRecalculos());
+    } on RutaFallo catch (e) {
+      if (mounted) {
+        setState(
+          () => _avisoRuta =
+              'Te saliste de la ruta y no se pudo recalcular: ${e.mensaje}',
+        );
+      }
+    } finally {
+      _recalculando = false;
+    }
+  }
+
+  /// Manda a Supabase las rutas recalculadas que falten. Sin red, se quedan
+  /// para el próximo intento (el siguiente recálculo o el reporte).
+  Future<void> _guardarRecalculos() async {
+    final sesion = _rastreador.sesion;
+    if (sesion == null) return;
+    for (final r in List.of(_recalculosPendientes)) {
+      try {
+        await _repo.registrarRutaRecalculada(
+          sesionId: sesion.id,
+          calculadaEn: r.en,
+          desde: r.desde,
+          ruta: r.ruta,
+          desvioM: r.desvioM,
+          simulada: sesion.simulada,
+        );
+        _recalculosPendientes.remove(r);
+      } on SpikeRastreoFallo {
+        return;
+      }
+    }
+  }
+
+  void _avisarLlegada() {
+    setState(() => _llego = true);
+    unawaited(HapticFeedback.vibrate());
+    // En la simulación termina sola; en el real termina la persona.
+    if (!_simular) {
+      unawaited(
+        _canal.avisar(
+          titulo: 'Llegaste a la URBE',
+          texto: 'Cuando estaciones, abre Cupo y toca «Terminar recorrido».',
+        ),
+      );
+    }
+  }
+
+  /// Pide a OSRM la ruta por las calles. Si falla, el recorrido se hace
+  /// igual, sin ruta planificada.
+  Future<void> _trazarRuta() async {
+    final pedido = ++_pedidoDeRuta;
+    setState(() {
+      _trazando = true;
+      _errorRuta = null;
+    });
+    try {
+      final ruta = await _rutas.trazar(_ruta.paradas());
+      // Si mientras tanto se pidió otra (se movió un punto), esta sobra.
+      if (!mounted || pedido != _pedidoDeRuta) return;
+      setState(() => _planificada = ruta);
+    } on RutaFallo catch (e) {
+      if (!mounted || pedido != _pedidoDeRuta) return;
+      setState(() {
+        _planificada = null;
+        _errorRuta = e.mensaje;
+      });
+    } finally {
+      if (mounted && pedido == _pedidoDeRuta) {
+        setState(() => _trazando = false);
+      }
+    }
+  }
+
+  void _tocarMapa(PuntoGeo punto) {
+    switch (_toque) {
+      case _Toque.inicio:
+        setState(() {
+          _ruta = _ruta.copyWith(inicio: punto);
+          // Elegida a mano: el recorrido real no la vuelve a pisar con el GPS.
+          _partidaDelGps = true;
+          _avisoPartida = null;
+        });
+        unawaited(_trazarRuta());
+      case _Toque.domicilio:
+        setState(() => _domicilio = punto);
+      case null:
+        return;
+    }
+  }
+
+  Future<void> _terminarRecorrido() async {
+    final respuesta = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿Ya estacionaste?', style: AppTypography.titleMedium),
+        content: Text(
+          'Termina el recorrido solo con el carro detenido. Lo que pase '
+          'después ya no se mide.',
+          style: AppTypography.meta,
+        ),
+        actions: [
+          CupoLink(
+            label: 'Todavía no',
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          CupoLink(
+            label: 'Terminar',
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (respuesta != true || !mounted) return;
+    await _rastreador.terminarRecorrido();
+  }
+
+  Future<void> _copiarGeojson() async {
+    final sesion = _rastreador.sesion;
+    if (sesion == null) return;
+    final mensajero = ScaffoldMessenger.of(context);
+    String mensaje;
+    try {
+      final texto = await _repo.geojson(sesion.id);
+      await Clipboard.setData(ClipboardData(text: texto));
+      mensaje = 'GeoJSON copiado: pégalo en geojson.io o en QGIS.';
+    } on SpikeRastreoFallo catch (e) {
+      mensaje = e.mensaje;
+    }
+    mensajero.showSnackBar(
+      SnackBar(
+        content: Text(
+          mensaje,
+          style: AppTypography.meta.copyWith(color: AppColors.onPrimary),
+        ),
+      ),
+    );
+  }
+
+  void _verMapa() {
+    final traza = _traza;
+    final reporte = _reporteRuta;
+    if (traza == null) return;
+    final dispositivo = _rastreador.sesion?.dispositivo;
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MapaRecorridoScreen(
+            titulo:
+                '${_rastreador.sesion?.simulada == true ? 'Simulación (no es evidencia)' : 'Recorrido real'} · ${_ruta.nombre}',
+            subtitulo: [
+              if (reporte != null) _fechaCorta(reporte.inicio.toLocal()),
+              ?dispositivo,
+              if (reporte != null)
+                'cobertura ${_decimal(reporte.coberturaPct)} %',
+            ].join(' · '),
+            conRuta: _planificada != null,
+            conDomicilio: _domicilio != null,
+            mapa: mapaDelResultado(
+              traza: traza,
+              planificada: _planificada,
+              ruta: _ruta,
+              domicilio: _domicilio,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _fechaCorta(DateTime fecha) =>
+      '${fecha.day.toString().padLeft(2, '0')}/'
+      '${fecha.month.toString().padLeft(2, '0')}/${fecha.year} '
+      '${horaCorta(fecha)}';
 
   Future<void> _empezar() async {
     setState(() {
@@ -137,8 +642,35 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
       _errorInicio = null;
       _ajustesDelError = null;
       _reporte = null;
+      _reporteRuta = null;
+      _traza = null;
       _errorReporte = null;
+      _toque = null;
+      _seguimiento = null;
+      _ultimaSeqSeguida = 0;
+      _rutaVigente = null;
+      _recalculos = 0;
+      _avisoRuta = null;
+      _llego = false;
+      _recalculosPendientes.clear();
+      _inicioReal = DateTime.now();
+      _ultimaPublicacion = null;
+      _etapaPublicada = null;
+      _fasePublicada = null;
+      _seqPublicada = 0;
     });
+
+    if (_esRecorrido) {
+      _seguimiento = SeguimientoDeRuta(
+        ruta: _planificada?.puntos ?? const [],
+        destino: _ruta.llegada,
+      );
+    }
+
+    if (_simular) {
+      await _empezarSimulacion();
+      return;
+    }
 
     try {
       if (!await _ubicacion.servicioActivo()) {
@@ -187,10 +719,14 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
         _info = info ?? _info;
       });
 
-      // Sin esto, la pantalla se apagaría sola a mitad de la fase 1.
-      await _canal.mantenerPantallaEncendida(true);
+      // Sin esto, la pantalla se apagaría sola a mitad de la fase 1. En el
+      // recorrido no: el conductor usa el teléfono como siempre.
+      if (_modo == _Modo.fases) {
+        await _canal.mantenerPantallaEncendida(true);
+      }
       _rastreador.iniciar(
         ConfigPrueba(
+          modo: _esRecorrido ? ModoPrueba.recorrido : ModoPrueba.fases,
           duracion: _duracion,
           wakelock: _wakelock,
           permiso: nivel,
@@ -205,6 +741,44 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
     }
   }
 
+  /// La simulación no usa el GPS: no pide permisos ni levanta el servicio.
+  /// Recorre la ruta de OSRM (o, si no hubo, la recta de la salida a la URBE)
+  /// con el reloj simulado, y al llegar termina sola.
+  Future<void> _empezarSimulacion() async {
+    try {
+      final info = await _canal.info();
+      final linea = _planificada?.puntos ?? _ruta.paradas();
+      final fuente = FuenteSimulada(
+        simulador: SimuladorDeRecorrido(
+          linea: linea,
+          velocidadKmh: _velocidadKmh,
+          corte: _simularCorte,
+          desvio: _simularDesvio,
+        ),
+        multiplicador: _multiplicador,
+      );
+      fuente.alLlegar = () => unawaited(_rastreador.terminarRecorrido());
+      _fuenteSimulada = fuente;
+      if (!mounted) return;
+      setState(() => _info = info ?? _info);
+      _rastreador.iniciar(
+        ConfigPrueba(
+          modo: ModoPrueba.recorrido,
+          simulada: true,
+          wakelock: false,
+          permiso: PermisoRastreo.noAplica,
+          reloj: fuente.reloj.ahora,
+          bateriaSinRestriccion: info?.bateriaSinRestriccion,
+          dispositivo:
+              info?.descripcion ??
+              (kIsWeb ? 'Navegador (simulación)' : 'Simulación'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _preparando = false);
+    }
+  }
+
   void _fallarInicio(String mensaje, [_Ajustes? ajustes]) {
     if (!mounted) return;
     setState(() {
@@ -214,6 +788,11 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   }
 
   void _alCambiarDeFase(FaseRastreo? fase, SesionRastreo sesion) {
+    if (sesion.modo == ModoPrueba.recorrido) {
+      // El recorrido lo termina la persona, con la app a la vista.
+      if (fase == null) unawaited(_cargarReporte());
+      return;
+    }
     unawaited(HapticFeedback.vibrate());
 
     String finDe(FaseRastreo f) =>
@@ -295,19 +874,34 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
       _errorReporte = null;
     });
     try {
-      final reporte = await _repo.reporte(sesion.id);
-      if (mounted) setState(() => _reporte = reporte);
+      if (sesion.modo == ModoPrueba.recorrido) {
+        await _guardarRecalculos();
+        final reporte = await _repo.reporteRuta(sesion.id);
+        final traza = await _repo.traza(sesion.id);
+        if (mounted) {
+          setState(() {
+            _reporteRuta = reporte;
+            _traza = traza;
+          });
+        }
+      } else {
+        final reporte = await _repo.reporte(sesion.id);
+        if (mounted) setState(() => _reporte = reporte);
+      }
     } on SpikeRastreoFallo catch (e) {
       if (mounted) setState(() => _errorReporte = e.mensaje);
     } finally {
       if (mounted) setState(() => _cargandoReporte = false);
     }
+    if (mounted) _publicarResumen();
   }
 
   void _nuevaPrueba() {
     _rastreador.reiniciar();
     setState(() {
       _reporte = null;
+      _reporteRuta = null;
+      _traza = null;
       _errorReporte = null;
       _notificaciones = null;
     });
@@ -368,18 +962,28 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
               const SizedBox(height: AppSpacing.md),
               Text('Prueba de rastreo', style: AppTypography.title),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                '¿Cupo sigue enviando tu ubicación con la app minimizada y con '
-                'la pantalla apagada? Son tres fases seguidas y la app te '
-                'avisa cuándo cambiar.',
-                style: AppTypography.body,
-              ),
+              Text(switch (_modo) {
+                _Modo.fases =>
+                  '¿Cupo sigue enviando tu ubicación con la app '
+                      'minimizada y con la pantalla apagada? Son tres fases '
+                      'seguidas y la app te avisa cuándo cambiar.',
+                _Modo.recorrido =>
+                  '¿Cupo sigue enviando tu ubicación durante una ruta de '
+                      'verdad, desde donde estás hasta la URBE, con el '
+                      'teléfono usado como siempre?',
+                _Modo.simulacion =>
+                  'La unidad recorre la ruta hasta la URBE sin GPS, para '
+                      'ver cómo se mueve en el mapa y probar el envío y el '
+                      'reporte. Nunca cuenta como evidencia.',
+              }, style: AppTypography.body),
               const SizedBox(height: AppSpacing.xl),
               ...switch (r.etapa) {
                 EtapaPrueba.lista => _configuracion(),
                 EtapaPrueba.buscandoGps => _buscandoGps(r),
-                EtapaPrueba.enCurso => _enCurso(r),
-                EtapaPrueba.terminada || EtapaPrueba.detenida => _resultado(r),
+                EtapaPrueba.enCurso =>
+                  r.esRecorrido ? _enCursoRecorrido(r) : _enCurso(r),
+                EtapaPrueba.terminada || EtapaPrueba.detenida =>
+                  r.esRecorrido ? _resultadoRecorrido(r) : _resultado(r),
               },
               const SizedBox(height: AppSpacing.xl),
             ],
@@ -392,9 +996,22 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   Widget _pie(RastreadorDePrueba r) {
     return switch (r.etapa) {
       EtapaPrueba.lista => CupoPrimaryButton(
-        label: 'Empezar prueba',
+        label: switch (_modo) {
+          _Modo.fases => 'Empezar prueba',
+          _Modo.recorrido => 'Empezar recorrido',
+          _Modo.simulacion => 'Empezar simulación',
+        },
         isLoading: _preparando,
         onPressed: _preparando ? null : _empezar,
+      ),
+      EtapaPrueba.enCurso when r.esRecorrido && r.config?.simulada == true =>
+        CupoPrimaryButton(
+          label: 'Terminar simulación',
+          onPressed: _rastreador.terminarRecorrido,
+        ),
+      EtapaPrueba.enCurso when r.esRecorrido => CupoPrimaryButton(
+        label: 'Terminar recorrido',
+        onPressed: _terminarRecorrido,
       ),
       EtapaPrueba.buscandoGps || EtapaPrueba.enCurso => CupoSecondaryButton(
         label: 'Detener prueba',
@@ -410,67 +1027,150 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
   List<Widget> _configuracion() {
     final errorInicio = _errorInicio;
 
+    final recorrido = _esRecorrido;
+
     return [
-      Text('Duración de cada fase', style: AppTypography.label),
+      Text('Qué medir', style: AppTypography.label),
       const SizedBox(height: AppSpacing.xs),
-      for (final opcion in DuracionPrueba.values) ...[
+      for (final (modo, icono, titulo, descripcion) in const [
+        (
+          _Modo.fases,
+          LucideIcons.timer,
+          'Prueba por fases',
+          '30 min en tres fases, sin salir de casa.',
+        ),
+        (
+          _Modo.recorrido,
+          LucideIcons.car,
+          'Recorrido real',
+          'Desde donde estás hasta la URBE, en carro.',
+        ),
+        (
+          _Modo.simulacion,
+          LucideIcons.play,
+          'Simular recorrido',
+          'La unidad se mueve sola por la ruta. Sin GPS; no es evidencia.',
+        ),
+      ]) ...[
         CupoCheckTile(
-          icono: switch (opcion) {
-            DuracionPrueba.corta => LucideIcons.zap,
-            DuracionPrueba.estandar => LucideIcons.timer,
-            DuracionPrueba.larga => LucideIcons.hourglass,
-          },
-          titulo: '${opcion.porFase.inMinutes} minutos por fase',
-          descripcion: switch (opcion) {
-            DuracionPrueba.corta =>
-              'Ensayo de 6 minutos para ver que todo funciona. No cuenta '
-                  'como evidencia.',
-            DuracionPrueba.estandar =>
-              '30 minutos en total. Es la prueba que cuenta.',
-            DuracionPrueba.larga =>
-              'Una hora: le da tiempo a Android de entrar en reposo profundo.',
-          },
-          seleccionado: _duracion == opcion,
-          onPressed: () => setState(() => _duracion = opcion),
+          icono: icono,
+          titulo: titulo,
+          descripcion: descripcion,
+          seleccionado: _modo == modo,
+          onPressed: () => _elegirModo(modo),
         ),
         const SizedBox(height: AppSpacing.xs),
       ],
       const SizedBox(height: AppSpacing.md),
-      Text('Servicio de ubicación', style: AppTypography.label),
-      const SizedBox(height: AppSpacing.xs),
-      CupoCheckTile(
-        icono: LucideIcons.cpu,
-        titulo: 'Mantener el procesador despierto',
-        descripcion:
-            'Wake lock del servicio. Recomendado; quítalo solo para comparar.',
-        seleccionado: _wakelock,
-        onPressed: () => setState(() => _wakelock = !_wakelock),
-      ),
-      const SizedBox(height: AppSpacing.xl),
-      _EstadoTelefono(
-        info: _info,
-        permiso: _permiso,
-        onSegundoPlano: _pedirSegundoPlano,
-        onBateria: _canal.abrirAjustesBateria,
-      ),
-      const SizedBox(height: AppSpacing.md),
-      CupoInfoBanner(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Antes de empezar', style: AppTypography.metaStrong),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              '1. Desconecta el cargador: cargando, Android no ahorra batería '
-              'y la prueba no dice nada.\n'
-              '2. Sube el tiempo de espera de la pantalla al máximo, para que '
-              'no se apague sola en la fase 2.\n'
-              '3. Deja los datos móviles o el wifi encendidos.',
-              style: AppTypography.bodySmall,
-            ),
-          ],
+      if (recorrido) ...[
+        _PanelPlan(
+          ruta: _ruta,
+          planificada: _planificada,
+          trazando: _trazando,
+          errorRuta: _errorRuta,
+          buscandoPartida: _buscandoPartida,
+          avisoPartida: _avisoPartida,
+          domicilio: _domicilio,
+          toque: _toque,
+          onToque: (t) => setState(() => _toque = t),
+          onTapMapa: _tocarMapa,
+          onReintentar: _trazarRuta,
+          onUsarMiUbicacion: _buscarPartida,
+          onQuitarDomicilio: () => setState(() => _domicilio = null),
         ),
-      ),
+        if (_simular) ...[
+          const SizedBox(height: AppSpacing.md),
+          _PanelSimulacion(
+            velocidadKmh: _velocidadKmh,
+            multiplicador: _multiplicador,
+            corte: _simularCorte,
+            desvio: _simularDesvio,
+            onVelocidad: (v) => setState(() => _velocidadKmh = v),
+            onMultiplicador: (m) => setState(() => _multiplicador = m),
+            onCorte: () => setState(() => _simularCorte = !_simularCorte),
+            onDesvio: () => setState(() => _simularDesvio = !_simularDesvio),
+          ),
+        ],
+      ] else ...[
+        Text('Duración de cada fase', style: AppTypography.label),
+        const SizedBox(height: AppSpacing.xs),
+        for (final opcion in DuracionPrueba.values) ...[
+          CupoCheckTile(
+            icono: switch (opcion) {
+              DuracionPrueba.corta => LucideIcons.zap,
+              DuracionPrueba.estandar => LucideIcons.timer,
+              DuracionPrueba.larga => LucideIcons.hourglass,
+            },
+            titulo: '${opcion.porFase.inMinutes} minutos por fase',
+            descripcion: switch (opcion) {
+              DuracionPrueba.corta =>
+                'Ensayo de 6 minutos para ver que todo funciona. No cuenta '
+                    'como evidencia.',
+              DuracionPrueba.estandar =>
+                '30 minutos en total. Es la prueba que cuenta.',
+              DuracionPrueba.larga => 'Una hora: le da tiempo a Android de entrar en reposo profundo.',
+            },
+            seleccionado: _duracion == opcion,
+            onPressed: () => setState(() => _duracion = opcion),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
+      ],
+      if (!_simular) ...[
+        const SizedBox(height: AppSpacing.md),
+        Text('Servicio de ubicación', style: AppTypography.label),
+        const SizedBox(height: AppSpacing.xs),
+        CupoCheckTile(
+          icono: LucideIcons.cpu,
+          titulo: 'Mantener el procesador despierto',
+          descripcion: 'Wake lock del servicio. Recomendado; quítalo solo para comparar.',
+          seleccionado: _wakelock,
+          onPressed: () => setState(() => _wakelock = !_wakelock),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        _EstadoTelefono(
+          info: _info,
+          permiso: _permiso,
+          onSegundoPlano: _pedirSegundoPlano,
+          onBateria: _canal.abrirAjustesBateria,
+        ),
+      ],
+      const SizedBox(height: AppSpacing.md),
+      if (recorrido && !_simular) ...[
+        const _Aviso(
+          texto:
+              'Por seguridad: configura todo y toca «Empezar recorrido» '
+              'antes de arrancar. Manejando no toques el teléfono; solo un '
+              'acompañante, o tú con el carro estacionado.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
+      if (!_simular)
+        CupoInfoBanner(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Antes de empezar', style: AppTypography.metaStrong),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                recorrido
+                    ? '1. Batería cargada. Para medir lo peor, sin cargador; '
+                          'con el cargador del carro también vale, y queda '
+                          'registrado.\n'
+                          '2. Primera mitad con Cupo minimizada (WhatsApp o '
+                          'Waze abiertos); segunda mitad con la pantalla '
+                          'bloqueada.\n'
+                          '3. Datos móviles encendidos.'
+                    : '1. Desconecta el cargador: cargando, Android no ahorra '
+                          'batería y la prueba no dice nada.\n'
+                          '2. Sube el tiempo de espera de la pantalla al máximo, '
+                          'para que no se apague sola en la fase 2.\n'
+                          '3. Deja los datos móviles o el wifi encendidos.',
+                style: AppTypography.bodySmall,
+              ),
+            ],
+          ),
+        ),
       if (errorInicio != null) ...[
         const SizedBox(height: AppSpacing.md),
         CupoErrorBanner(mensaje: errorInicio),
@@ -567,6 +1267,148 @@ class _PruebaRastreoScreenState extends State<PruebaRastreoScreen> {
           const SizedBox(height: AppSpacing.xs),
         ],
       ],
+      Align(
+        alignment: Alignment.centerLeft,
+        child: CupoLink(
+          label: _cargandoReporte ? 'Actualizando…' : 'Actualizar resultado',
+          onPressed: _cargandoReporte ? null : _cargarReporte,
+        ),
+      ),
+      if (r.pendientes > 0) ...[
+        const SizedBox(height: AppSpacing.xs),
+        _Aviso(
+          texto:
+              'Faltan ${r.pendientes} muestras por llegar a Supabase; se '
+              'reintentan solas. Actualiza el resultado cuando lleguen.',
+        ),
+      ],
+      const SizedBox(height: AppSpacing.md),
+      _Contadores(rastreador: r),
+      ..._errores(r),
+      const SizedBox(height: AppSpacing.xl),
+      _Sesion(id: sesion.id, onCopiar: () => _copiarSesion(sesion.id)),
+    ];
+  }
+
+  List<Widget> _enCursoRecorrido(RastreadorDePrueba r) {
+    final sesion = r.sesion;
+    if (sesion == null) return const [];
+    final ultima = r.ultima;
+    final simulada = sesion.simulada;
+    final seguimiento = _seguimiento;
+    final avisoRuta = _avisoRuta;
+    final fuente = _fuenteSimulada;
+    final velocidad = ultima?.velocidadMs;
+
+    return [
+      _Tarjeta(
+        fondo: AppColors.primarySoft,
+        icono: simulada ? LucideIcons.play : LucideIcons.car,
+        etiqueta: simulada
+            ? 'SIMULACIÓN · NO ES EVIDENCIA'
+            : 'RECORRIDO REAL · EN CURSO',
+        titulo: simulada ? 'La unidad va sola' : 'Maneja normal',
+        texto: simulada
+            ? 'Recorre la ruta a ${_velocidadKmh.round()} km/h, '
+                  '×${fuente?.multiplicador ?? _multiplicador} más rápido '
+                  'que el tiempo real. Termina sola al llegar a la URBE.'
+            : 'Minimiza Cupo, usa Waze o WhatsApp, o bloquea el teléfono. Al '
+                  'llegar y estacionar, abre Cupo y toca «Terminar '
+                  'recorrido».',
+      ),
+      const SizedBox(height: AppSpacing.md),
+      _PanelEnVivo(
+        restanteM: seguimiento?.restanteM,
+        recorridoM: r.distanciaM,
+        transcurrido: r.transcurrido,
+        velocidadKmh: velocidad == null ? null : velocidad * 3.6,
+      ),
+      if (_llego) ...[
+        const SizedBox(height: AppSpacing.md),
+        _Tarjeta(
+          fondo: AppColors.successSoft,
+          icono: LucideIcons.flag,
+          etiqueta: 'LLEGADA',
+          titulo: 'Llegaste a la URBE',
+          texto: simulada
+              ? 'La simulación termina sola.'
+              : 'Estaciona y, con el carro detenido, toca «Terminar '
+                    'recorrido».',
+        ),
+      ],
+      if (avisoRuta != null) ...[
+        const SizedBox(height: AppSpacing.md),
+        CupoInfoBanner(child: Text(avisoRuta, style: AppTypography.bodySmall)),
+      ],
+      if (!simulada) ...[
+        const SizedBox(height: AppSpacing.md),
+        const _Aviso(texto: 'No toques el teléfono mientras manejas.'),
+      ],
+      const SizedBox(height: AppSpacing.md),
+      ClipRRect(
+        borderRadius: AppRadius.mdAll,
+        child: SizedBox(
+          height: _altoMapa,
+          child: MapaRecorrido(
+            rutaPlanificada: (_rutaVigente ?? _planificada)?.puntos,
+            trazaEnVivo: r.recorridoLocal,
+            inicio: _ruta.inicio,
+            llegada: _ruta.llegada,
+            domicilio: _domicilio,
+            radioAvisoM: _domicilio == null ? null : CriterioRuta.radioAvisoM,
+            unidad: ultima == null ? null : PuntoGeo(ultima.lat, ultima.lng),
+            rumboUnidad: ultima?.rumboDeg,
+            seguirUnidad: true,
+          ),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      _Contadores(rastreador: r),
+      ..._errores(r),
+      const SizedBox(height: AppSpacing.xl),
+      _Sesion(id: sesion.id, onCopiar: () => _copiarSesion(sesion.id)),
+    ];
+  }
+
+  List<Widget> _resultadoRecorrido(RastreadorDePrueba r) {
+    final sesion = r.sesion;
+    final reporte = _reporteRuta;
+    final errorReporte = _errorReporte;
+
+    if (sesion == null) {
+      return [
+        const _Tarjeta(
+          fondo: AppColors.backgroundAlt,
+          icono: LucideIcons.circleSlash,
+          etiqueta: 'SIN DATOS',
+          titulo: 'El recorrido no llegó a empezar',
+          texto: 'Se detuvo antes de la primera ubicación.',
+        ),
+        ..._errores(r),
+      ];
+    }
+
+    return [
+      if (reporte != null)
+        _ResultadoRecorrido(
+          reporte: reporte,
+          traza: _traza,
+          planificada: _planificada,
+          ruta: _ruta,
+          domicilio: _domicilio,
+          onVerMapa: _verMapa,
+          onCopiarGeojson: _copiarGeojson,
+        )
+      else if (errorReporte != null)
+        CupoErrorBanner(mensaje: errorReporte)
+      else
+        const _Tarjeta(
+          fondo: AppColors.backgroundAlt,
+          icono: LucideIcons.chartColumn,
+          etiqueta: 'RESULTADO',
+          titulo: 'Calculando…',
+          texto: 'Leyendo el recorrido en Supabase.',
+        ),
       Align(
         alignment: Alignment.centerLeft,
         child: CupoLink(
@@ -812,6 +1654,15 @@ class _EstadoTelefono extends StatelessWidget {
                   )
                 : null,
           ),
+          if (info?.bateriaPct case final nivel?)
+            _Dato(
+              icono: info?.cargando == true
+                  ? LucideIcons.batteryCharging
+                  : LucideIcons.battery,
+              texto: info?.cargando == true
+                  ? 'Carga: $nivel % · enchufado (queda registrado)'
+                  : 'Carga: $nivel % · sin cargador',
+            ),
           _Dato(
             icono: sinRestriccion == false
                 ? LucideIcons.batteryWarning

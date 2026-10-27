@@ -1,8 +1,14 @@
 # Spike 1 — Rastreo del conductor en segundo plano
 
 > **HU-011 · RF-62 · RNF-10 · E03-HU15.** Prueba de tiempo fijo: no lleva
-> puntos. Construida el 25-oct-2026. **Todavía no hay mediciones**: ese día no
-> había ningún teléfono ni emulador conectado (ver [Estado](#10-estado)).
+> puntos. Construida el 25-oct-2026; el modo «Recorrido real» se agregó el
+> 26-oct-2026. **Todavía no hay mediciones**: no había ningún teléfono ni
+> emulador conectado (ver [Estado](#10-estado)).
+>
+> Tres modos: **por fases** (secciones 4 a 9, en casa, 30 min), **recorrido
+> real** (sección 13, en carro, desde donde estés hasta la URBE) y **simular
+> recorrido** (sección 14: la unidad se mueve sola por el mapa, en el
+> navegador o con el teléfono quieto; **nunca cuenta como evidencia**).
 
 ## 1. La pregunta
 
@@ -41,12 +47,14 @@ técnica. Por eso se prueba antes de construir el viaje en vivo.
 | Pieza | Dónde | Para qué |
 | --- | --- | --- |
 | Tabla `spike_posiciones`, vista `spike_sesiones`, función `spike_reporte()` | [`supabase/migrations/20261026000001_spike_rastreo.sql`](../../supabase/migrations/20261026000001_spike_rastreo.sql) | Guardar cada muestra y calcular el resultado. Aplicada en el proyecto de desarrollo. |
+| Tabla `spike_recorridos`, funciones `spike_reporte_ruta()` y `spike_ruta_geojson()`, columnas nuevas de `spike_posiciones` | [`supabase/migrations/20261026000002_spike_recorrido.sql`](../../supabase/migrations/20261026000002_spike_recorrido.sql) | El modo «Recorrido real» (sección 13). Aplicada en el proyecto de desarrollo. |
+| Columna `simulada`, tabla `spike_rutas_recalculadas`, permiso `no_aplica`, `spike_reporte_ruta()` rehecha (con `simulada` y `rutas_recalculadas`) | [`supabase/migrations/20261026000003_spike_simulacion.sql`](../../supabase/migrations/20261026000003_spike_simulacion.sql) | La simulación (sección 14) y el recálculo de la ruta (13.3). Aplicada en el proyecto de desarrollo. |
 | Pantalla «Prueba de rastreo» | `cupo/lib/features/spike_rastreo/` | Correr el protocolo y ver el resultado en el teléfono. |
 | Botón «Prueba de rastreo» | Inicio del conductor, sobre el mapa | Entrada a la pantalla. **Solo existe en compilaciones de depuración** (`kDebugMode`). |
 | Canal `cupo/spike_rastreo` | `cupo/android/app/src/main/kotlin/com/cupo/cupo/MainActivity.kt` | Permiso de notificaciones, pantalla encendida en la fase 1, estado de la pantalla y de la batería, avisos de cambio de fase. Sin dependencias nuevas. |
 | Permiso `WAKE_LOCK` | `AndroidManifest.xml` | Lo exige el *wake lock* del servicio de ubicación. Se concede al instalar. |
 | Script de adb | [`scripts/spike_rastreo_adb.sh`](../../scripts/spike_rastreo_adb.sh) | Cambiar de fase sin tocar el teléfono (opcional). |
-| Pruebas | `cupo/test/features/spike_rastreo/` | Cálculo de fases, cola de reintentos, filas, reporte y pantalla. |
+| Pruebas | `cupo/test/features/spike_rastreo/` | Cálculo de fases, cola de reintentos, filas, reporte y pantalla; del recorrido: azimut, lectura de OSRM (con respuestas guardadas, sin red), brechas en metros, flechas de sentido, brújula y pantalla. |
 
 Cómo transmite la app durante la prueba:
 
@@ -356,7 +364,8 @@ la capa del fabricante (One UI, MIUI/HyperOS, EMUI…) y su versión.
 
 ## 10. Estado
 
-**25-oct-2026.** Construido, probado y aplicado; **no medido**.
+**25 y 26-oct-2026.** Construido, probado y aplicado (los dos modos);
+**no medido**.
 
 - Sin teléfono conectado (`adb devices` vacío) y sin emulador instalado, así
   que no se corrió ninguna sesión. No hay números todavía; la tabla de la
@@ -368,6 +377,23 @@ la capa del fabricante (One UI, MIUI/HyperOS, EMUI…) y su versión.
   revertida con una sesión sintética (dos muestras perdidas, una tardía y un
   silencio de 70 s en la fase 3) y detectó las tres cosas; la inserción como
   el conductor de prueba pasó las políticas RLS y los privilegios por columna.
+- `spike_reporte_ruta()` se probó igual (transacción revertida) con dos
+  trazas sintéticas sobre la ruta real de OSRM, de 100 muestras cada 5 s y un
+  silencio de 65 s:
+  - **pegada a la ruta**: desvío mediano 0 m, 100 % de las muestras a ≤ 50 m,
+    88,6 % de la ruta cubierta (lo que faltó es el tramo del silencio) y la
+    brecha detectada como 65 s y 686 m: no cumple, como debía;
+  - **corrida 220 m al norte**: desvío mediano 62 m, p95 218 m, solo 25 % de
+    las muestras a ≤ 50 m y 21,7 % de la ruta cubierta.
+
+  Es decir, las métricas separan una traza que sigue las calles de una que
+  no. Son datos sintéticos: **no** dicen nada todavía sobre un teléfono real.
+- La tercera migración (simulación y recálculo) también se probó revertida:
+  una sesión cuya segunda mitad siguió una ruta recalculada (220 m al norte)
+  dio desvío 0 m contra la ruta vigente, `rutas_recalculadas = 1` y
+  `simulada = true` en el reporte, en la vista y en el GeoJSON.
+- La app compila para web (`flutter build web`), así que la simulación se ve
+  en localhost. Las sesiones simuladas que se corran **no** son mediciones.
 
 ## 11. Hallazgo del código (no medido): Realtime se desconecta en segundo plano
 
@@ -398,6 +424,10 @@ Cuando HU-011 tenga su propia tabla de posiciones:
 
 1. En Supabase (SQL Editor del proyecto de desarrollo):
    ```sql
+   drop table    if exists public.spike_rutas_recalculadas;
+   drop function if exists public.spike_ruta_geojson(uuid, numeric);
+   drop function if exists public.spike_reporte_ruta(uuid, geography, numeric, numeric, numeric, numeric, numeric, numeric);
+   drop table    if exists public.spike_recorridos;
    drop view     if exists public.spike_sesiones;
    drop function if exists public.spike_reporte(uuid, numeric, numeric, numeric);
    drop table    if exists public.spike_posiciones;
@@ -410,3 +440,345 @@ Cuando HU-011 tenga su propia tabla de posiciones:
 4. Quitar el canal `cupo/spike_rastreo` de `MainActivity.kt`. El permiso
    `WAKE_LOCK` se queda si el rastreo real usa *wake lock*.
 5. Borrar `scripts/spike_rastreo_adb.sh`.
+
+## 13. Recorrido real
+
+La prueba por fases mide el segundo plano en condiciones controladas. El
+recorrido real mide lo que importa para HU-011: **una ruta de verdad en
+carro, desde donde estás hasta la URBE**, con el teléfono usado como lo usa
+un chofer (Cupo minimizada con WhatsApp o Waze abiertos, o el teléfono
+bloqueado en el soporte). Mientras avanzas, la pantalla muestra tu flecha
+sobre el mapa y **cuánto falta** hasta la URBE; si te sales de la ruta, la
+recalcula. Al final, dibuja la traza sobre el mapa real y la compara con la
+ruta.
+
+### 13.1 Qué cambia respecto de las fases
+
+| | Por fases | Recorrido real |
+| --- | --- | --- |
+| Dónde | En casa, el teléfono quieto | En carro, por calles de verdad |
+| Cuánto dura | 6, 30 o 60 min, por reloj | Lo que dure la ruta; termina al tocar «Terminar recorrido» |
+| Qué hace la persona | Lo que dice cada fase | Usa el teléfono como siempre |
+| Cómo se separa el resultado | Por fase (reloj) | Por lo que de verdad pasó en cada muestra: Cupo a la vista, minimizada o pantalla apagada |
+| Pantalla encendida a la fuerza | Sí, en la fase 1 | No |
+| Ruta planificada y mapa | No | Sí: OSRM antes de salir; traza, brechas y flechas al llegar |
+| Reporte | `spike_reporte()` | `spike_reporte_ruta()` y `spike_ruta_geojson()` |
+
+En cada muestra se guarda además la **batería** (%, y si estaba enchufada:
+también cuenta el cargador del carro), el **rumbo** (del GPS; si el GPS no lo
+da —quieto suele mandar 0 o −1—, se calcula con el azimut desde la muestra
+anterior y queda marcado en `rumbo_calculado`) y la **velocidad** del GPS.
+
+### 13.2 La ruta: de tu ubicación a la URBE
+
+- **Llegada: fija, la URBE** — 10.709200993030072, −71.62351346346288.
+- **Salida: tu ubicación actual.** Al elegir «Recorrido real», la app pide la
+  posición (en el navegador, el aviso «usar tu ubicación»; localhost cuenta
+  como contexto seguro). Mientras la busca, el mapa se queda en la URBE y dice
+  «Buscando tu ubicación…». Con la posición, pide a OSRM la ruta por las
+  calles hasta la URBE y encuadra la salida y la llegada.
+- **Respaldo:** si no hay permiso, GPS o señal, se usa la Av. 61
+  (10.702096062336127, −71.60399954232982) y se avisa. También se puede
+  tocar «Salida» y luego el mapa para elegir otra, o «Salir desde mi
+  ubicación actual» para volver a intentar. La simulación usa este respaldo
+  por omisión, sin pedir la ubicación.
+
+Desde el respaldo, según OSRM (26-oct-2026): **5,39 km y ≈8 min sin
+tráfico**, por Avenida 61 → Calle 44 A → Avenida 2 → Calle N → Avenida 5 →
+Av. Circunvalación 2 → Av. Paúl René Moreno Camacho → URBE.
+
+**Dónde se cambia:** es una sola constante, `RutaDePrueba.porOmision`, en
+`cupo/lib/features/spike_rastreo/domain/ruta_planificada.dart`: `llegada` es
+el destino (la URBE, con la etiqueta «URBE») e `inicio` es la salida de
+respaldo. Cambiar el destino es editar esas dos coordenadas. No es de ningún
+usuario: lo que se manejó de verdad queda en `spike_recorridos`, con el
+`conductor_id` de quien corrió la sesión.
+
+La ruta la traza el **servidor público de OSRM** (`router.project-osrm.org`).
+Es **solo para pruebas**: su política de uso no admite tráfico de producción.
+El proveedor de rutas de Cupo sigue sin decidir (**DA-19**). Si OSRM no
+responde, el recorrido se hace igual: el resultado sale sin la comparación
+contra la ruta. En web, OSRM se llama con `fetch` del navegador (responde con
+`Access-Control-Allow-Origin: *`).
+
+**Por qué antes «el mapa no estaba en la URBE».** No pude ver la pantalla del
+usuario, pero en el código había dos causas que lo explican. Primera: el mapa
+encuadraba la ruta entera desde la Av. 61, que queda 2,3 km al este, y no la
+URBE. Segunda: en el navegador, la consulta a OSRM usaba `dart:io`, que no
+existe en web, así que la ruta nunca llegaba y quedaba solo el encuadre
+genérico. Ahora la cámara arranca en la URBE, encuadra la salida real y la
+URBE con margen, y OSRM se consulta con `fetch` en web. Una prueba de widget
+verifica que las dos queden a la vista.
+
+### 13.2.1 En vivo: lo que falta, el desvío y la llegada
+
+- **La unidad** es una flecha orientada por su rumbo, y la **cámara la
+  sigue**. Si arrastras el mapa deja de seguirla; los botones del mapa sirven
+  para volver a seguirla, para encuadrar todo y (con la brújula) para volver
+  al norte.
+- **Panel:** «Faltan X km» hasta la URBE, la distancia recorrida, el tiempo y
+  la velocidad actual. Lo que falta se mide **sobre la ruta**: la posición se
+  proyecta sobre la línea y se cuenta lo que queda de ella. **No se muestra
+  hora estimada de llegada**: está fuera del alcance (Cuadro 18 de la tesis).
+- **Desvío:** si la unidad pasa más de **80 m** de la ruta durante **15 s o 3
+  muestras seguidas**, la app pide a OSRM una ruta nueva desde donde está
+  hasta la URBE (nunca más de una cada **30 s**), avisa «Ruta recalculada» y
+  la guarda en `spike_rutas_recalculadas` con su hora.
+- **Llegada:** a **100 m** de la URBE avisa «Llegaste a la URBE» (con una
+  notificación si Cupo está minimizada) y ofrece terminar. **No termina
+  sola**: termina la persona, ya estacionada. La simulación sí termina sola.
+
+### 13.3 Qué mide `spike_reporte_ruta(sesion)`
+
+Una sola fila. Cada muestra se clasifica en *Cupo a la vista* (`resumed` con
+pantalla encendida), *minimizada* (`paused`/`hidden` con pantalla encendida) o
+*pantalla apagada*, y el tiempo entre dos muestras se carga al estado de la
+primera (si Android congela la app, el silencio cae donde estaba).
+
+| Grupo | Columnas | Cómo se lee |
+| --- | --- | --- |
+| Recorrido | `duracion_s`, `distancia_m`, `velocidad_media_kmh`, `velocidad_max_gps_kmh`, `velocidad_max_traza_kmh` | Distancia = suma de `ST_Distance` entre muestras consecutivas. Las velocidades validan la traza: más de ~120 km/h en la ciudad delata saltos falsos. |
+| Cobertura | `esperadas`, `recibidas`, `cobertura_pct` y, por estado, `pct_*` (parte del tiempo) y `cobertura_*` | Igual que en las fases, pero separada por lo que de verdad pasó. |
+| Brechas | `brecha_max_s`, `brecha_max_en`, `brecha_max_m`, `brecha_p95_s`, `brechas_largas` | La brecha en **metros** es el salto más largo sin muestras: lo que el estudiante no vio moverse. |
+| Entrega | `perdidas`, `tardias`, `latencia_mediana_s` | Como en las fases (sección 4.4). La marca de cierre tiene el `seq` siguiente, así que se ven también las perdidas justo antes de terminar. |
+| Contra la ruta | `desvio_mediana_m`, `desvio_p95_m`, `desvio_max_m`, `pct_muestras_cerca_ruta` (≤ 50 m), `pct_ruta_cubierta`, `rutas_recalculadas` | Si el GPS siguió las calles. **Decisión:** cada muestra se mide contra la **ruta vigente cuando se capturó** (la última recalculada antes de esa hora, o la original); así, un desvío del chofer que ya provocó un recálculo no infla el desvío del resto del viaje. *Ruta cubierta* se mide contra la **última ruta vigente**, la que de verdad llevó a la URBE: la línea se parte en puntos cada ≤ 25 m y se cuentan los que tienen alguna muestra a ≤ 50 m. La ruta original queda en `spike_recorridos` y las recalculadas en `spike_rutas_recalculadas`, para compararlas en el mapa. |
+| Simulación | `simulada` (primera columna) | `true` si la sesión la produjo el simulador: **no es evidencia**. |
+| Teléfono | `precision_p50_m`, `precision_p95_m`, `pct_cargando`, `bateria_inicio_pct`, `bateria_fin_pct` | Si iba enchufado, el resultado no mide el peor caso: anótalo. |
+| Domicilio de prueba | `dom_radio_m`, `dom_distancia_min_m`, `dom_entrada_en`, `dom_entrada_m`, `dom_brecha_previa_s`, `dom_muestras_alrededor`, `dom_aviso_a_tiempo` | Solo si se marcó uno. A qué hora y a cuántos metros la unidad entró por primera vez en el radio de **1500 m** (el aviso de proximidad de HU-014), cuánto silencio hubo justo antes (si fue largo, el aviso habría salido tarde) y cuántas muestras hubo en ±60 s. |
+| Veredicto | `completa`, `cumple` | `completa` = se tocó «Terminar recorrido». |
+
+### 13.4 Criterio de éxito del recorrido
+
+> **Cumple** si el recorrido está completo y:
+>
+> - la cobertura es **≥ 90 %** con Cupo **minimizada** y con la **pantalla
+>   apagada** (cada estado por separado, los que hubo), y
+> - la brecha máxima es **≤ 30 s** y el salto máximo **≤ 500 m**.
+
+500 m son unas cuatro cuadras: más que eso, la unidad «salta» en el mapa del
+estudiante. Un recorrido que pasó menos de la mitad del tiempo fuera de la
+vista no prueba el segundo plano aunque cumpla: la app lo avisa.
+
+### 13.5 Preparación
+
+1. **Instala el APK** y entra como conductor (sección 6.1). Comprueba que la
+   prueba por fases arranca (el ensayo de 6 min basta): así sabes que los
+   permisos y el envío funcionan antes de salir.
+2. **Batería cargada.** Para medir el peor caso, haz la ruta **sin cargador**.
+   Si va conectado al cargador del carro (lo realista), también vale: queda
+   registrado en cada muestra (`cargando`) y en el resultado; anótalo en la
+   tabla.
+3. **Datos móviles encendidos** (en la calle no hay wifi).
+4. Quién maneja: **idealmente uno de los choferes entrevistados, con su propio
+   teléfono**. Es la evidencia más fuerte para el Cap. IV: su marca, su capa
+   del fabricante, su forma de usar el teléfono.
+
+### 13.6 Seguridad
+
+- **Configura todo antes de arrancar**: elige el modo, revisa la ruta en el
+  mapa, marca el domicilio de prueba si lo usarás y toca «Empezar recorrido»
+  con el carro detenido.
+- **Manejando, nadie toca el teléfono.** Si hace falta mirarlo, lo hace un
+  acompañante. «Terminar recorrido» se toca **ya estacionado**; la app lo
+  pregunta («¿Ya estacionaste?»).
+- La prueba no necesita que nadie mire la pantalla: todo queda registrado.
+
+### 13.7 Protocolo (unos 10 a 20 min)
+
+1. Ve a donde empezará el recorrido. En «Prueba de rastreo», elige
+   **Recorrido real**. Acepta el permiso de ubicación: el mapa pasa de la URBE
+   a la ruta desde donde estás, con la distancia y las calles.
+2. (Opcional) Toca «Domicilio de prueba» y luego el mapa, cerca de la ruta,
+   para medir el aviso de proximidad. Se dibuja su radio de 1,5 km.
+3. Con el carro detenido, toca **«Empezar recorrido»** y acepta los permisos.
+   Espera «RECORRIDO REAL · EN CURSO».
+4. **Primera mitad: con Cupo minimizada.** Toca Inicio y abre WhatsApp o Waze,
+   como haría el chofer. Pantalla encendida.
+5. **Segunda mitad: con la pantalla bloqueada.** A mitad de camino (si
+   manejas tú, en un semáforo no: espera a un sitio donde puedas detenerte, o
+   que lo haga el acompañante), bloquea el teléfono y no lo toques.
+6. Al llegar, la app avisa «Llegaste a la URBE». **Estacionado**,
+   desbloquea, abre Cupo y toca **«Terminar recorrido»** → «Terminar».
+7. Lee el resultado y toca **«Ver mapa a pantalla completa»** para la figura
+   (13.9). Copia el identificador de la sesión a la tabla.
+
+No hace falta marcar en la app qué tramo fue cuál: el reporte separa el tiempo
+por `estado_app` y `pantalla_encendida`, que se registran solos en cada
+muestra. Si quieres más tiempo de cada estado, sal de más lejos o haz la ruta
+dos veces (dos sesiones).
+
+### 13.8 Repetir con otras marcas
+
+Una corrida vale por un teléfono. Para la tesis conviene **al menos dos
+marcas**, una de ellas Samsung, Xiaomi o Huawei (las de ahorro de batería
+más agresivo, EA-18). Por cada teléfono: primero con la configuración de
+fábrica; si no cumple, repite con la batería «Sin restricciones» y luego con
+«Permitir todo el tiempo» (las mismas corridas A–C de la sección 6.4). Misma
+ruta, a una hora de tráfico parecida.
+
+### 13.9 La figura para el Cap. IV
+
+- **Desde la app:** en el resultado, «Ver mapa a pantalla completa» abre el
+  mapa con título (ruta, fecha, teléfono y cobertura) y leyenda: ruta
+  planificada en tono suave, traza real en verde lago oscuro, **brechas en
+  rojo punteado**, inicio, llegada, domicilio con su radio, flechas de
+  sentido y el crédito «© OpenStreetMap contributors». Encuadra con dos dedos
+  (o con el botón de encuadre) y toma una **captura de pantalla** (encendido
+  + bajar volumen). El crédito de OpenStreetMap debe quedar visible en la
+  figura.
+- **Fuera de la app:** «Copiar GeoJSON» copia la sesión entera como GeoJSON.
+  Pégalo en [geojson.io](https://geojson.io) o ábrelo en QGIS (Capa › Añadir
+  capa vectorial, desde un archivo `.geojson`). También sale por SQL:
+
+  ```sql
+  select public.spike_ruta_geojson('PEGA-AQUÍ-EL-SESION-ID');
+  ```
+
+  En el SQL Editor, copia la celda del resultado y guárdala como
+  `recorrido.geojson`. Cada elemento lleva `properties.tipo`:
+  `ruta_planificada`, `traza`, `brecha` (con `segundos` y `metros`),
+  `muestra` (con `seq`, hora, `estado_app`, `pantalla_encendida`,
+  `precision_m`, `bateria_pct`, `cargando`, `rumbo_deg`, `velocidad_kmh`),
+  `inicio_plan`, `llegada_plan` y `domicilio`. Coordenadas en [lng, lat].
+
+### 13.10 Leer el recorrido en Supabase
+
+```sql
+-- Los recorridos, el más reciente primero
+select r.sesion_id, r.creado_en, r.ida_y_vuelta,
+       round(r.ruta_distancia_m) as ruta_m, s.dispositivo, s.muestras
+  from public.spike_recorridos r
+  join public.spike_sesiones s using (sesion_id)
+ order by r.creado_en desc;
+
+-- El resultado (una fila)
+select * from public.spike_reporte_ruta('PEGA-AQUÍ-EL-SESION-ID');
+
+-- Con otro domicilio de prueba, sin repetir el recorrido
+select dom_entrada_en, dom_entrada_m, dom_brecha_previa_s, dom_aviso_a_tiempo
+  from public.spike_reporte_ruta('PEGA-AQUÍ-EL-SESION-ID',
+         'SRID=4326;POINT(-71.6235 10.7092)'::geography);
+```
+
+Para encontrar dónde ocurrió una brecha, la consulta «los diez silencios más
+largos» de la sección 7 sirve igual (agrega `lat, lng` a sus columnas).
+
+### 13.11 Tabla de resultados del recorrido
+
+Una fila por recorrido.
+
+| Fecha y hora | Chofer | Teléfono | Android / capa | Permiso | Batería de Cupo | ¿Enchufado? | Salida | Duración | Distancia | Cobertura minimizada | Cobertura pantalla apagada | Brecha máx. (s / m) | Desvío p95 | Ruta cubierta | Resultado | Sesión |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | min | km | % | % | s / m | m | % | | |
+| | | | | | | | | min | km | % | % | s / m | m | % | | |
+
+Junto a cada fila: la captura del mapa (13.9) y, si hubo brechas, en qué
+calle ocurrieron.
+
+## 14. Simulación
+
+> **Una sesión simulada NUNCA cuenta como evidencia.** No la produjo ningún
+> GPS ni la frenó ningún Android: sirve para ver la unidad moverse por el
+> mapa y para probar de punta a punta la cola, el envío, el reporte SQL y la
+> figura. Queda marcada en cada fila (`simulada = true`), en
+> `spike_sesiones.simulada`, en la primera columna de `spike_reporte_ruta()`,
+> en el GeoJSON y en la pantalla del resultado («SESIÓN SIMULADA»).
+
+### 14.1 Verla en el navegador (localhost)
+
+Desde `cupo/`:
+
+```bash
+flutter run -d chrome --dart-define-from-file=dart_define.json
+```
+
+Entra con el conductor de prueba, toca «Prueba de rastreo» y elige **Simular
+recorrido**. En el navegador no hace falta teléfono, permiso de ubicación ni
+servicio en primer plano; la batería y la pantalla quedan vacías (`null`),
+porque ese canal solo existe en Android.
+
+### 14.2 Qué hace
+
+1. Usa el mismo plan del recorrido real: la ruta de OSRM hasta la URBE sobre
+   el mapa (por omisión desde la salida de respaldo, la Av. 61; «Salir desde
+   mi ubicación actual» la cambia) y el domicilio opcional.
+2. Elige la **velocidad** (20, 30 o 50 km/h; 30 por omisión) y **qué tan
+   rápido verla**: ×1 (tiempo real), ×5 o ×20. A ×20 y 30 km/h, los 5,4 km
+   se ven en unos 32 s.
+3. Opcional: **«Simular un corte de señal»** salta unos 60 s de muestras a
+   mitad de ruta (sale en rojo en el resultado) y **«Simular un desvío»**
+   lleva la unidad 45 s por una paralela a 150 m (dispara el recálculo).
+4. «Empezar simulación»: la flecha avanza por las calles, la traza se dibuja
+   detrás y la cámara la sigue. Al llegar termina sola y muestra el resultado
+   normal (mapa, flechas, brechas y métricas).
+
+Detalles: una muestra cada 5 s de **tiempo simulado** (a ×20 llegan cada
+0,25 s, pero sus horas siguen separadas 5 s, así el reporte mide igual), con
+el rumbo del tramo, un ruido de GPS de hasta ±7 m por eje y precisión de 8 m.
+La lógica está en `domain/simulador.dart` (Dart puro, determinista con
+semilla en las pruebas) y la fuente en `data/fuente_simulada.dart`. La
+latencia del reporte no significa nada en una simulación (el reloj es
+simulado).
+
+### 14.3 En Android
+
+Funciona igual con el teléfono quieto, desde el APK de debug. Ahí sí se leen
+la batería y la pantalla.
+
+## 15. La notificación de la prueba
+
+Mientras corre cualquiera de los tres modos, la barra de notificaciones tiene
+**una sola notificación fija** que muestra que la prueba sigue viva. Se
+actualiza con cada hito (arranque, primera ubicación, cambio de fase) y, si
+no, como mucho cada 5 s.
+
+| Parte | Qué muestra |
+| --- | --- |
+| Título | «Prueba de rastreo en curso» (fases), «Recorrido a la URBE en curso» o «Simulación en curso». |
+| Cronómetro | El tiempo desde que tocaste «Empezar». **Lo dibuja Android solo**: si avanza, el teléfono está bien; si la notificación entera desaparece, Android mató la prueba (ver sección 8). |
+| Texto | «128 enviadas · 0 pendientes · última hace 5 s», y en el recorrido «· faltan 3,2 km». En fases empieza con «Fase 2 de 3 · minimiza la app». |
+| Barra | En fases, el avance de la prueba completa; en el recorrido, lo recorrido sobre el total (recorrido + lo que falta). |
+| Acción | «Abrir» lleva a la pantalla de la prueba. **No hay «Terminar»** en la notificación, a propósito: no se toca manejando. |
+
+Qué significa cada estado del texto:
+
+- **«Buscando señal GPS…»**: todavía no llega la primera ubicación.
+- **«N enviadas · 0 pendientes · última hace 5 s»**: todo bien.
+- **«⚠ 6 pendientes, sin conexión»**: el GPS sigue capturando pero no hay red;
+  las muestras esperan en la cola y salen solas cuando vuelva.
+- **«Sin ubicación hace 45 s»** (más de 30 s sin una muestra nueva): el GPS
+  dejó de entregar posiciones. Con la pantalla apagada es justo el fallo que
+  mide esta prueba; mira la sección 8.
+- **La notificación desapareció**: Android cerró el servicio (o la app). Es un
+  fallo de la prueba: anótalo con la hora.
+
+Al terminar, la notificación en vivo se quita y queda un **resumen
+descartable**: «Prueba terminada · 96 % · PASA» (o «NO PASA», o «resultado
+parcial»; en la simulación, «Simulación terminada · … · no es evidencia»). En
+fases, el porcentaje es el de la peor fase; en el recorrido, el de toda la
+sesión.
+
+Detalles técnicos:
+
+- **No hay dos notificaciones.** geolocator muestra su propia notificación
+  fija del servicio en primer plano, con el id 75415 y en un canal de
+  importancia **NONE**, que por eso casi no se veía en la barra. La app
+  publica la suya **con ese mismo id**: reemplaza la de geolocator y sigue
+  siendo la del servicio, así que Android nunca lo deja sin notificación. Va
+  en un canal propio de importancia baja, «Prueba de rastreo: estado en
+  vivo»: se ve, pero no suena ni vibra en cada actualización. Los avisos de
+  cambio de fase y de «Llegaste a la URBE» siguen sonando por su canal de
+  siempre. Si se actualiza geolocator, hay que revisar que el id siga siendo
+  el mismo (`GeolocatorLocationService.ONGOING_NOTIFICATION_ID`).
+- En Android 14 o más nuevo, el sistema deja descartar incluso las
+  notificaciones fijas. Si la descartas, vuelve con la siguiente
+  actualización, y el servicio no se detiene por eso.
+- Las actualizaciones salen de Dart por el canal `cupo/spike_rastreo`. Con la
+  pantalla apagada deberían seguir llegando mientras geolocator entregue
+  posiciones, porque eso mantiene vivo el isolate de Dart. **No está
+  verificado en un teléfono todavía.** Justamente, si se congelan, eso
+  también es evidencia.
+- **En el navegador (localhost)** no hay barra de notificaciones: el mismo
+  estado va en el título de la pestaña, por ejemplo «● 128 · 3,2 km · Cupo»
+  (con «○» cuando lleva más de 30 s sin ubicación), y al terminar «✓ 99 % ·
+  Cupo».

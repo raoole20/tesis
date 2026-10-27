@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cupo/features/spike_rastreo/data/canal_dispositivo.dart';
 import 'package:cupo/features/spike_rastreo/domain/muestra_rastreo.dart';
 import 'package:cupo/features/spike_rastreo/domain/protocolo_rastreo.dart';
 import 'package:cupo/features/spike_rastreo/presentation/rastreador_de_prueba.dart';
@@ -21,7 +22,8 @@ class _Banco {
         enviadas.addAll(filas);
       },
       estadoApp: () => estado,
-      pantallaEncendida: () async => pantalla,
+      estadoTelefono: () async =>
+          EstadoAlCapturar(pantallaEncendida: pantalla, bateriaPct: 80),
       reloj: () => ahora,
       azar: Random(1),
       alCambiarDeFase: (fase, _) => avisos.add(fase),

@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/geo.dart';
 import '../domain/reporte_fase.dart';
+import '../domain/reporte_ruta.dart';
+import '../domain/ruta_planificada.dart';
+import '../domain/traza.dart';
 
 /// Error al hablar con Supabase durante la prueba, ya redactado para
 /// mostrarse.
@@ -76,6 +81,155 @@ class SpikeRastreoRepository {
       throw const SpikeRastreoFallo(
         'Supabase no respondió. Revisa la conexión y vuelve a intentar.',
       );
+    } catch (e) {
+      throw SpikeRastreoFallo(_traducir('$e'));
+    }
+  }
+
+  /// Guarda el plan del recorrido en `spike_recorridos` (una vez por
+  /// sesión; un reintento no duplica).
+  Future<void> registrarRecorrido({
+    required String sesionId,
+    required RutaDePrueba ruta,
+    required bool idaYVuelta,
+    RutaPlanificada? planificada,
+    PuntoGeo? domicilio,
+    bool simulada = false,
+  }) async {
+    try {
+      await _db
+          .from('spike_recorridos')
+          .upsert(
+            {
+              'sesion_id': sesionId,
+              'ruta_planificada': planificada?.ewkt,
+              'ruta_fuente': planificada?.fuente,
+              'ruta_distancia_m': planificada?.distanciaM,
+              'ruta_duracion_s': planificada?.duracionS,
+              'ida_y_vuelta': idaYVuelta,
+              'inicio_plan': ruta.inicio.ewkt,
+              'llegada_plan': ruta.llegada.ewkt,
+              'domicilio': domicilio?.ewkt,
+              'radio_aviso_m': CriterioRuta.radioAvisoM,
+              'simulada': simulada,
+            },
+            onConflict: 'sesion_id',
+            ignoreDuplicates: true,
+          )
+          .timeout(limite);
+    } on PostgrestException catch (e) {
+      throw SpikeRastreoFallo(_traducir(e.message));
+    } on TimeoutException {
+      throw const SpikeRastreoFallo(
+        'Supabase no respondió. Se reintenta solo.',
+      );
+    } catch (e) {
+      throw SpikeRastreoFallo(_traducir('$e'));
+    }
+  }
+
+  /// Guarda una ruta recalculada por un desvío, con la hora del teléfono
+  /// (la misma escala que `capturada_en`). Un reintento no duplica.
+  Future<void> registrarRutaRecalculada({
+    required String sesionId,
+    required DateTime calculadaEn,
+    required PuntoGeo desde,
+    required RutaPlanificada ruta,
+    double? desvioM,
+    bool simulada = false,
+  }) async {
+    try {
+      await _db
+          .from('spike_rutas_recalculadas')
+          .upsert(
+            {
+              'sesion_id': sesionId,
+              'calculada_en': calculadaEn.toUtc().toIso8601String(),
+              'desde': desde.ewkt,
+              'ruta': ruta.ewkt,
+              'distancia_m': ruta.distanciaM,
+              'duracion_s': ruta.duracionS,
+              'desvio_m': desvioM,
+              'simulada': simulada,
+            },
+            onConflict: 'sesion_id,calculada_en',
+            ignoreDuplicates: true,
+          )
+          .timeout(limite);
+    } on PostgrestException catch (e) {
+      throw SpikeRastreoFallo(_traducir(e.message));
+    } on TimeoutException {
+      throw const SpikeRastreoFallo('Supabase no respondió.');
+    } catch (e) {
+      throw SpikeRastreoFallo(_traducir('$e'));
+    }
+  }
+
+  /// `spike_reporte_ruta(sesion)`: el resultado del recorrido.
+  Future<ReporteRuta?> reporteRuta(String sesionId) async {
+    try {
+      final filas = await _db
+          .rpc<List<dynamic>>(
+            'spike_reporte_ruta',
+            params: {'p_sesion': sesionId},
+          )
+          .timeout(limite);
+      if (filas.isEmpty) return null;
+      return ReporteRuta.fromMap(filas.first as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw SpikeRastreoFallo(_traducir(e.message));
+    } on TimeoutException {
+      throw const SpikeRastreoFallo(
+        'Supabase no respondió. Revisa la conexión y vuelve a intentar.',
+      );
+    } catch (e) {
+      throw SpikeRastreoFallo(_traducir('$e'));
+    }
+  }
+
+  /// Las filas de la sesión, en orden, para dibujar la traza. Por páginas:
+  /// PostgREST corta en 1000 filas, y una hora de recorrido son 720.
+  Future<List<PuntoTraza>> traza(String sesionId) async {
+    const pagina = 1000;
+    final puntos = <PuntoTraza>[];
+    try {
+      for (var desde = 0; ; desde += pagina) {
+        final filas = await _db
+            .from('spike_posiciones')
+            .select(
+              'seq, lat, lng, capturada_en, estado_app, pantalla_encendida, '
+              'rumbo_deg, cierre',
+            )
+            .eq('sesion_id', sesionId)
+            .order('capturada_en')
+            .order('seq')
+            .range(desde, desde + pagina - 1)
+            .timeout(limite);
+        puntos.addAll(filas.map(PuntoTraza.fromMap));
+        if (filas.length < pagina) return puntos;
+      }
+    } on PostgrestException catch (e) {
+      throw SpikeRastreoFallo(_traducir(e.message));
+    } on TimeoutException {
+      throw const SpikeRastreoFallo('Supabase no respondió.');
+    } catch (e) {
+      if (e is SpikeRastreoFallo) rethrow;
+      throw SpikeRastreoFallo(_traducir('$e'));
+    }
+  }
+
+  /// `spike_ruta_geojson(sesion)` como texto, listo para pegar en
+  /// geojson.io o QGIS.
+  Future<String> geojson(String sesionId) async {
+    try {
+      final datos = await _db
+          .rpc<dynamic>('spike_ruta_geojson', params: {'p_sesion': sesionId})
+          .timeout(limite);
+      return const JsonEncoder.withIndent('  ').convert(datos);
+    } on PostgrestException catch (e) {
+      throw SpikeRastreoFallo(_traducir(e.message));
+    } on TimeoutException {
+      throw const SpikeRastreoFallo('Supabase no respondió.');
     } catch (e) {
       throw SpikeRastreoFallo(_traducir('$e'));
     }

@@ -83,6 +83,16 @@ class Usuario {
     return completo.isEmpty ? email : completo;
   }
 
+  /// Hasta dos letras para el avatar: inicial del nombre y del apellido. Sin
+  /// nombre, la primera letra del correo.
+  String get iniciales {
+    final a = nombres.trim();
+    final b = apellidos.trim();
+    final texto = '${a.isEmpty ? '' : a[0]}${b.isEmpty ? '' : b[0]}';
+    if (texto.isNotEmpty) return texto.toUpperCase();
+    return email.isEmpty ? '?' : email[0].toUpperCase();
+  }
+
   Usuario copyWith({
     RolUsuario? rol,
     EstadoCuenta? estado,

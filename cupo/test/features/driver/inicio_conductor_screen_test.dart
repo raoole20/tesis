@@ -1,5 +1,9 @@
 import 'package:cupo/features/auth/domain/rol_usuario.dart';
+import 'package:cupo/features/auth/presentation/cuenta/boton_de_cuenta.dart';
+import 'package:cupo/features/driver/data/conductor_repository.dart';
 import 'package:cupo/features/driver/data/zonas_repository.dart';
+import 'package:cupo/features/driver/domain/vehiculo.dart';
+import 'package:cupo/features/driver/presentation/vehiculo_screen.dart';
 import 'package:cupo/features/driver/domain/turno_del_conductor.dart';
 import 'package:cupo/features/driver/domain/zona.dart';
 import 'package:cupo/features/driver/presentation/inicio_conductor_screen.dart';
@@ -31,6 +35,15 @@ class _ZonasFalsas extends ZonasRepository {
   Future<Set<String>> misZonas() async => {'z1'};
 }
 
+class _ConductorFalso extends ConductorRepository {
+  _ConductorFalso(this.vehiculo);
+
+  final Vehiculo? vehiculo;
+
+  @override
+  Future<Vehiculo?> miVehiculo() async => vehiculo;
+}
+
 void main() {
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
@@ -38,11 +51,16 @@ void main() {
 
   const turno = TurnoDelConductor.ejemplo;
 
-  Future<void> montar(WidgetTester tester, {bool falla = false}) async {
+  Future<void> montar(
+    WidgetTester tester, {
+    bool falla = false,
+    Vehiculo? vehiculo,
+  }) async {
     await montarPantalla(
       tester,
       InicioConductorScreen(
         repositorio: _ZonasFalsas(falla: falla),
+        conductor: _ConductorFalso(vehiculo),
         hoy: DateTime(2026, 10, 12),
       ),
       usuario: usuarioDePrueba(rol: RolUsuario.conductor),
@@ -74,6 +92,7 @@ void main() {
 
     expect(find.text('Lunes 12 de octubre'), findsOneWidget);
     expect(find.text('Hola, Génesis'), findsOneWidget);
+    expect(find.byType(BotonDeCuenta), findsOneWidget);
     expect(find.text(turno.salida), findsOneWidget);
     expect(find.text('Por salir'), findsOneWidget);
     expect(find.text('11 de 14 puestos ocupados'), findsOneWidget);
@@ -148,12 +167,53 @@ void main() {
     );
   });
 
+  testWidgets('sin vehículo, invita a registrarlo y abre el formulario', (
+    tester,
+  ) async {
+    await montar(tester);
+
+    final aviso = find.text('Todavía no registras tu vehículo');
+    await tester.scrollUntilVisible(aviso, 200);
+    expect(aviso, findsOneWidget);
+
+    // A media pantalla, lejos de la acción fija del viaje que lo taparía.
+    final registrar = find.widgetWithText(CupoLink, 'Registrar');
+    await Scrollable.ensureVisible(tester.element(registrar), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(registrar.hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.byType(VehiculoScreen), findsOneWidget);
+  });
+
+  testWidgets('con vehículo, muestra la unidad registrada', (tester) async {
+    await montar(
+      tester,
+      vehiculo: const Vehiculo(
+        id: 'v1',
+        placa: 'AB123CD',
+        marca: 'Toyota',
+        modelo: 'Hiace',
+        color: 'Blanca',
+        capacidad: 14,
+      ),
+    );
+
+    final nombre = find.text('Toyota Hiace');
+    await tester.scrollUntilVisible(nombre, 200);
+    expect(nombre, findsOneWidget);
+    expect(find.text('AB123CD · Blanca · 14 puestos'), findsOneWidget);
+    expect(find.widgetWithText(CupoLink, 'Editar'), findsOneWidget);
+  });
+
   testWidgets('si las zonas no cargan, el inicio sigue sin esa sección', (
     tester,
   ) async {
     await montar(tester, falla: true);
 
-    await tester.scrollUntilVisible(find.text('Cerrar sesión'), 200);
+    await tester.scrollUntilVisible(
+      find.text('© OpenStreetMap contributors'),
+      200,
+    );
     expect(find.text('Tus zonas de trabajo'), findsNothing);
   });
 

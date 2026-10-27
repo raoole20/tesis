@@ -7,18 +7,25 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../auth/presentation/auth_scope.dart';
+import '../../auth/presentation/cuenta/boton_de_cuenta.dart';
 import '../../spike_rastreo/presentation/prueba_rastreo_screen.dart';
+import '../data/conductor_repository.dart';
 import '../data/zonas_repository.dart';
 import '../domain/turno_del_conductor.dart';
+import '../domain/vehiculo.dart';
 import '../domain/zona.dart';
+import 'cuentas_conductor_view.dart';
 import 'mapa_ruta_del_dia.dart';
+import 'ruta_conductor_view.dart';
+import 'semana_conductor_view.dart';
+import 'vehiculo_screen.dart';
 
 /// «Hoy» — Inicio del conductor (`DestinoAuth.inicioConductor`).
 ///
 /// **Prototipo.** El turno, la nómina, los puestos, las solicitudes y los
 /// cobros salen de [TurnoDelConductor.ejemplo]: las tablas de la operación
-/// llegan con la Iteración 2. Lo único real es quién entró y sus zonas de
-/// trabajo, leídas de `conductor_zonas`.
+/// llegan con la Iteración 2. Lo real es quién entró, sus zonas de trabajo
+/// (`conductor_zonas`) y su vehículo (`vehiculos`).
 ///
 /// El mapa de la ruta de hoy ocupa todo el fondo, y lo demás flota encima:
 /// arriba, el saludo; abajo, una hoja que se arrastra con lo que el conductor
@@ -34,6 +41,7 @@ class InicioConductorScreen extends StatefulWidget {
     super.key,
     this.turno = TurnoDelConductor.ejemplo,
     this.repositorio,
+    this.conductor,
     this.hoy,
   });
 
@@ -41,6 +49,9 @@ class InicioConductorScreen extends StatefulWidget {
 
   /// Por omisión, el de Supabase. Las pruebas pasan uno falso.
   final ZonasRepository? repositorio;
+
+  /// Licencia y vehículo. Por omisión, el de Supabase.
+  final ConductorRepository? conductor;
 
   /// Por omisión, la fecha del teléfono. Las pruebas la fijan.
   final DateTime? hoy;
@@ -67,6 +78,8 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
   static const double _altoAccion = AppSizes.button + AppSpacing.md * 3;
 
   late final ZonasRepository _zonas = widget.repositorio ?? ZonasRepository();
+  late final ConductorRepository _conductor =
+      widget.conductor ?? ConductorRepository();
   final _mapa = MapController();
 
   /// Alto del cuerpo de la pantalla, para calcular qué parte del mapa queda
@@ -76,12 +89,22 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
   _EstadoViaje _viaje = _EstadoViaje.porSalir;
   final Set<String> _aBordo = {};
   List<Zona>? _misZonas;
-  int _pestana = 0;
+
+  /// `false` mientras no se sepa si tiene vehículo: la sección no se muestra
+  /// hasta entonces, para no invitar a registrar uno que ya existe.
+  bool _vehiculoConsultado = false;
+  Vehiculo? _vehiculo;
+
+  /// Índices de [_BarraInferior].
+  static const int _hoy = 0;
+  static const int _cuentas = 3;
+  int _pestana = _hoy;
 
   @override
   void initState() {
     super.initState();
     _cargarZonas();
+    _cargarVehiculo();
   }
 
   @override
@@ -106,6 +129,30 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
     } catch (_) {
       // Sin zonas visibles; el resto del inicio sigue igual.
     }
+  }
+
+  /// El vehículo real. Si falla, la sección no se muestra, igual que las
+  /// zonas.
+  Future<void> _cargarVehiculo() async {
+    try {
+      final vehiculo = await _conductor.miVehiculo();
+      if (!mounted) return;
+      setState(() {
+        _vehiculo = vehiculo;
+        _vehiculoConsultado = true;
+      });
+    } catch (_) {
+      // Sin sección de vehículo.
+    }
+  }
+
+  Future<void> _abrirVehiculo() async {
+    final guardado = await Navigator.of(context).push<Vehiculo>(
+      MaterialPageRoute(
+        builder: (_) => VehiculoScreen(repositorio: _conductor),
+      ),
+    );
+    if (guardado != null && mounted) setState(() => _vehiculo = guardado);
   }
 
   /// En qué punto del recorrido va la unidad (ver [MapaRutaDelDia.avance]).
@@ -187,89 +234,99 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: LayoutBuilder(
-        builder: (context, caja) {
-          _altoCuerpo = caja.maxHeight;
+      // Las cuatro pestañas viven a la vez: volver a «Hoy» no reinicia el
+      // mapa ni el estado del viaje.
+      body: IndexedStack(
+        index: _pestana,
+        children: [
+          LayoutBuilder(
+            builder: (context, caja) {
+              _altoCuerpo = caja.maxHeight;
 
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: MapaRutaDelDia(
-                  turno: turno,
-                  avance: avance,
-                  controlador: _mapa,
-                  margen: _margen(context),
-                  // El crédito va al pie de la hoja, que taparía el de abajo.
-                  atribucion: false,
-                ),
-              ),
-              SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _Saludo(
-                        fecha: _fechaLarga(widget.hoy ?? DateTime.now()),
-                        nombre: usuario.nombres.isEmpty
-                            ? 'conductor'
-                            : usuario.nombres,
-                        iniciales: _iniciales(
-                          usuario.nombres,
-                          usuario.apellidos,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Row(
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: MapaRutaDelDia(
+                      turno: turno,
+                      avance: avance,
+                      controlador: _mapa,
+                      margen: _margen(context),
+                      // El crédito va al pie de la hoja, que taparía el de abajo.
+                      atribucion: false,
+                    ),
+                  ),
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Spike de HU-011: no existe en las compilaciones
-                          // de lanzamiento.
-                          if (kDebugMode)
-                            _BotonPruebaRastreo(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const PruebaRastreoScreen(),
+                          _Saludo(
+                            fecha: _fechaLarga(widget.hoy ?? DateTime.now()),
+                            nombre: usuario.nombres.isEmpty
+                                ? 'conductor'
+                                : usuario.nombres,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Row(
+                            children: [
+                              // Spike de HU-011: no existe en las compilaciones
+                              // de lanzamiento.
+                              if (kDebugMode)
+                                _BotonPruebaRastreo(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const PruebaRastreoScreen(),
+                                    ),
+                                  ),
                                 ),
+                              const Spacer(),
+                              BotonSobreMapa(
+                                icono: LucideIcons.scan,
+                                mensaje: 'Ver todo el recorrido',
+                                onPressed: () => _encuadrar(turno.trazado),
                               ),
-                            ),
-                          const Spacer(),
-                          BotonSobreMapa(
-                            icono: LucideIcons.scan,
-                            mensaje: 'Ver todo el recorrido',
-                            onPressed: () => _encuadrar(turno.trazado),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              DraggableScrollableSheet(
-                initialChildSize: _hojaInicial,
-                minChildSize: _hojaMinima,
-                maxChildSize: _hojaMaxima,
-                snap: true,
-                snapSizes: const [_hojaInicial],
-                builder: (context, desplazamiento) =>
-                    _hoja(desplazamiento, turno, avance),
-              ),
-              // La acción del viaje queda fija abajo, por encima de la hoja:
-              // es lo único que el conductor no puede tener que buscar.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _AccionViaje(
-                  turno: turno,
-                  estado: _viaje,
-                  aBordo: _aBordo.length,
-                  onAvanzar: _avanzarViaje,
-                ),
-              ),
-            ],
-          );
-        },
+                  DraggableScrollableSheet(
+                    initialChildSize: _hojaInicial,
+                    minChildSize: _hojaMinima,
+                    maxChildSize: _hojaMaxima,
+                    snap: true,
+                    snapSizes: const [_hojaInicial],
+                    builder: (context, desplazamiento) =>
+                        _hoja(desplazamiento, turno, avance),
+                  ),
+                  // La acción del viaje queda fija abajo, por encima de la hoja:
+                  // es lo único que el conductor no puede tener que buscar.
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _AccionViaje(
+                      turno: turno,
+                      estado: _viaje,
+                      aBordo: _aBordo.length,
+                      onAvanzar: _avanzarViaje,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          SemanaConductorView(
+            turno: turno,
+            onVerHoy: () => setState(() => _pestana = _hoy),
+          ),
+          RutaConductorView(turno: turno),
+          CuentasConductorView(turno: turno),
+        ],
       ),
       bottomNavigationBar: _BarraInferior(
         actual: _pestana,
@@ -325,7 +382,14 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
             onTocar: _alternarABordo,
           ),
           const SizedBox(height: AppSpacing.xl),
-          _PorCobrar(turno: turno),
+          _PorCobrar(
+            turno: turno,
+            onVerCuentas: () => setState(() => _pestana = _cuentas),
+          ),
+          if (_vehiculoConsultado) ...[
+            const SizedBox(height: AppSpacing.xl),
+            _MiVehiculo(vehiculo: _vehiculo, onAbrir: _abrirVehiculo),
+          ],
           if (misZonas != null && misZonas.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xl),
             _MisZonas(zonas: misZonas),
@@ -337,12 +401,7 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
             style: AppTypography.helper,
             textAlign: TextAlign.center,
           ),
-          Center(
-            child: CupoLink(
-              label: 'Cerrar sesión',
-              onPressed: AuthScope.de(context).repositorio.salir,
-            ),
-          ),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             '© OpenStreetMap contributors',
             style: AppTypography.legal,
@@ -358,13 +417,6 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
     if (avance == null) return '$total paradas · llegas ${turno.llegada}';
     if (avance >= total) return 'Llegaste a la ${turno.destino}';
     return 'Vas por la parada ${avance + 1} de $total';
-  }
-
-  static String _iniciales(String nombres, String apellidos) {
-    final a = nombres.trim();
-    final b = apellidos.trim();
-    final texto = '${a.isEmpty ? '' : a[0]}${b.isEmpty ? '' : b[0]}';
-    return texto.isEmpty ? 'C' : texto.toUpperCase();
   }
 
   /// «Lunes 12 de octubre». A mano para no depender de inicializar los
@@ -400,15 +452,10 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
 // ═══════════════════════════════════════════════════════════ secciones ═════
 
 class _Saludo extends StatelessWidget {
-  const _Saludo({
-    required this.fecha,
-    required this.nombre,
-    required this.iniciales,
-  });
+  const _Saludo({required this.fecha, required this.nombre});
 
   final String fecha;
   final String nombre;
-  final String iniciales;
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +479,7 @@ class _Saludo extends StatelessWidget {
               ],
             ),
           ),
-          _Avatar(iniciales: iniciales, grande: true),
+          const BotonDeCuenta(),
         ],
       ),
     );
@@ -820,9 +867,10 @@ class _FilaPasajero extends StatelessWidget {
 }
 
 class _PorCobrar extends StatelessWidget {
-  const _PorCobrar({required this.turno});
+  const _PorCobrar({required this.turno, required this.onVerCuentas});
 
   final TurnoDelConductor turno;
+  final VoidCallback onVerCuentas;
 
   @override
   Widget build(BuildContext context) {
@@ -855,9 +903,90 @@ class _PorCobrar extends StatelessWidget {
               ],
             ),
           ),
-          CupoLink(label: 'Ver cuentas', onPressed: () {}),
+          CupoLink(label: 'Ver cuentas', onPressed: onVerCuentas),
         ],
       ),
+    );
+  }
+}
+
+/// «Tu vehículo»: la unidad registrada o la invitación a registrarla, que
+/// hace falta para publicar turnos.
+class _MiVehiculo extends StatelessWidget {
+  const _MiVehiculo({required this.vehiculo, required this.onAbrir});
+
+  final Vehiculo? vehiculo;
+  final VoidCallback onAbrir;
+
+  @override
+  Widget build(BuildContext context) {
+    final vehiculo = this.vehiculo;
+    final registrado = vehiculo != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Tu vehículo', style: AppTypography.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: registrado ? AppColors.surface : AppColors.warningSoft,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(
+              color: registrado ? AppColors.border : AppColors.warningSoft,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: AppSizes.choiceIconTile,
+                height: AppSizes.choiceIconTile,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: registrado
+                      ? AppColors.backgroundMuted
+                      : AppColors.surface,
+                  borderRadius: AppRadius.smAll,
+                ),
+                child: Icon(
+                  LucideIcons.carFront,
+                  size: AppSizes.icon,
+                  color: registrado ? AppColors.primaryDeep : AppColors.warning,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: registrado
+                      ? [
+                          Text(
+                            vehiculo.nombre,
+                            style: AppTypography.bodyStrong,
+                          ),
+                          Text(vehiculo.detalle, style: AppTypography.helper),
+                        ]
+                      : [
+                          Text(
+                            'Todavía no registras tu vehículo',
+                            style: AppTypography.bodyStrong,
+                          ),
+                          Text(
+                            'Lo necesitas para publicar turnos.',
+                            style: AppTypography.helper,
+                          ),
+                        ],
+                ),
+              ),
+              CupoLink(
+                label: registrado ? 'Editar' : 'Registrar',
+                onPressed: onAbrir,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -999,18 +1128,15 @@ class _Etiqueta extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.iniciales, this.grande = false});
+  const _Avatar({required this.iniciales});
 
   final String iniciales;
-  final bool grande;
 
   @override
   Widget build(BuildContext context) {
-    final lado = grande ? AppSizes.iconButton : AppSizes.choiceIconTile;
-
     return Container(
-      width: lado,
-      height: lado,
+      width: AppSizes.choiceIconTile,
+      height: AppSizes.choiceIconTile,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         color: AppColors.primarySoft,

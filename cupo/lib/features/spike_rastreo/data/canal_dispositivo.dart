@@ -8,6 +8,8 @@ class InfoDispositivo {
     required this.android,
     required this.sdk,
     required this.bateriaSinRestriccion,
+    this.bateriaPct,
+    this.cargando,
   });
 
   final String fabricante;
@@ -22,8 +24,26 @@ class InfoDispositivo {
   /// Si Cupo está fuera de la optimización de batería de Android.
   final bool bateriaSinRestriccion;
 
+  /// Carga de la batería, en %, y si está conectado a un cargador (también
+  /// el del carro). `null` si no se pudo leer.
+  final int? bateriaPct;
+  final bool? cargando;
+
   /// «samsung SM-A515F · Android 13 (API 33)».
   String get descripcion => '$fabricante $modelo · Android $android (API $sdk)';
+}
+
+/// Pantalla y batería al capturar una muestra.
+class EstadoAlCapturar {
+  const EstadoAlCapturar({
+    this.pantallaEncendida,
+    this.bateriaPct,
+    this.cargando,
+  });
+
+  final bool? pantallaEncendida;
+  final int? bateriaPct;
+  final bool? cargando;
 }
 
 /// El canal `cupo/spike_rastreo` de `MainActivity.kt`.
@@ -51,6 +71,20 @@ class CanalDispositivo {
       android: mapa['android'] as String,
       sdk: mapa['sdk'] as int,
       bateriaSinRestriccion: mapa['bateriaSinRestriccion'] as bool,
+      bateriaPct: mapa['bateriaPct'] as int?,
+      cargando: mapa['cargando'] as bool?,
+    );
+  }
+
+  /// Pantalla y batería en el momento de capturar una muestra, en una sola
+  /// llamada.
+  Future<EstadoAlCapturar?> estadoAlCapturar() async {
+    final mapa = await _llamar<Map<Object?, Object?>>('estadoAlCapturar');
+    if (mapa == null) return null;
+    return EstadoAlCapturar(
+      pantallaEncendida: mapa['pantallaEncendida'] as bool?,
+      bateriaPct: mapa['bateriaPct'] as int?,
+      cargando: mapa['cargando'] as bool?,
     );
   }
 
@@ -71,6 +105,34 @@ class CanalDispositivo {
   Future<bool> avisar({required String titulo, required String texto}) async =>
       await _llamar<bool>('avisar', {'titulo': titulo, 'texto': texto}) ??
       false;
+
+  /// Publica la notificación en vivo de la prueba (la del servicio en primer
+  /// plano: ver `estadoEnVivo` en MainActivity.kt). Con [fijo] en `false`
+  /// publica el resumen final, descartable, en otro id. [acento] es
+  /// `AppColors.primary`. `false` si no se pudo mostrar.
+  Future<bool> mostrarEstado({
+    required String titulo,
+    required String texto,
+    DateTime? inicio,
+    int? progreso,
+    int maximo = 1000,
+    bool fijo = true,
+    Color? acento,
+  }) async =>
+      await _llamar<bool>('estadoEnVivo', {
+        'titulo': titulo,
+        'texto': texto,
+        'inicioMs': inicio?.millisecondsSinceEpoch,
+        'progreso': progreso,
+        'maximo': maximo,
+        'fijo': fijo,
+        'color': acento?.toARGB32(),
+      }) ??
+      false;
+
+  /// Quita la notificación en vivo (la del servicio la quita el servicio al
+  /// terminar; esta llamada cubre la simulación, que no tiene servicio).
+  Future<void> cerrarEstado() => _llamar<void>('cerrarEstado');
 
   /// Abre la lista de apps con optimización de batería de Android.
   Future<void> abrirAjustesBateria() => _llamar<void>('abrirAjustesBateria');

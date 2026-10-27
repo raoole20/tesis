@@ -60,7 +60,8 @@ class _CanalFalso extends CanalDispositivo {
   Future<bool> pedirNotificaciones() async => true;
 
   @override
-  Future<bool?> pantallaEncendida() async => true;
+  Future<EstadoAlCapturar?> estadoAlCapturar() async =>
+      const EstadoAlCapturar(pantallaEncendida: true, bateriaPct: 80);
 
   @override
   Future<void> mantenerPantallaEncendida(bool activo) async {
@@ -169,6 +170,8 @@ void main() {
       'fase 1 y envía la muestra', (tester) async {
     await montar(tester);
 
+    await tester.ensureVisible(find.text('2 minutos por fase'));
+    await tester.pump();
     await tester.tap(find.text('2 minutos por fase'));
     await tester.pump();
     await tester.tap(find.widgetWithText(CupoPrimaryButton, 'Empezar prueba'));

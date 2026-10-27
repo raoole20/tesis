@@ -28,9 +28,23 @@ enum PermisoRastreo {
   mientrasSeUsa('mientras_se_usa'),
 
   /// «Permitir todo el tiempo».
-  siempre('siempre');
+  siempre('siempre'),
+
+  /// Simulación: no se usa el GPS ni se pide permiso.
+  noAplica('no_aplica');
 
   const PermisoRastreo(this.valor);
+
+  final String valor;
+}
+
+/// Qué se mide: el protocolo de tres fases por reloj, o un recorrido real
+/// en carro (`spike_posiciones.modo`).
+enum ModoPrueba {
+  fases('fases'),
+  recorrido('recorrido');
+
+  const ModoPrueba(this.valor);
 
   final String valor;
 }
@@ -44,9 +58,16 @@ class SesionRastreo {
     required this.protocolo,
     required this.wakelock,
     required this.permiso,
+    this.modo = ModoPrueba.fases,
+    this.simulada = false,
     this.bateriaSinRestriccion,
     this.dispositivo,
   });
+
+  final ModoPrueba modo;
+
+  /// La produjo el simulador, no un GPS. **Nunca cuenta como evidencia.**
+  final bool simulada;
 
   /// UUID v4 generado en el teléfono.
   final String id;
@@ -55,6 +76,7 @@ class SesionRastreo {
   /// cuentan desde aquí.
   final DateTime inicio;
 
+  /// En un recorrido solo vale su intervalo: no hay fases.
   final ProtocoloRastreo protocolo;
 
   /// Si el servicio de ubicación retiene el procesador (y el wifi) despierto.
@@ -82,7 +104,11 @@ class SesionRastreo {
   Map<String, Object?> toMap() => {
     'sesion_id': id,
     'sesion_inicio': inicio.toUtc().toIso8601String(),
-    'duracion_fase_s': protocolo.duracionFase.inSeconds,
+    'modo': modo.valor,
+    'simulada': simulada,
+    'duracion_fase_s': modo == ModoPrueba.fases
+        ? protocolo.duracionFase.inSeconds
+        : null,
     'intervalo_s': protocolo.intervalo.inSeconds,
     'wakelock': wakelock,
     'permiso': permiso.valor,
@@ -103,10 +129,16 @@ class MuestraRastreo {
     required this.lng,
     required this.capturadaEn,
     required this.estadoApp,
-    required this.fase,
+    this.fase,
     this.precisionM,
     this.fijadaEn,
     this.pantallaEncendida,
+    this.bateriaPct,
+    this.cargando,
+    this.rumboDeg,
+    this.rumboCalculado,
+    this.velocidadMs,
+    this.cierre = false,
   });
 
   final int seq;
@@ -127,7 +159,25 @@ class MuestraRastreo {
   /// Si la pantalla estaba encendida; `null` si no se pudo leer.
   final bool? pantallaEncendida;
 
-  final FaseRastreo fase;
+  /// La fase por reloj; `null` en un recorrido (la columna dice
+  /// `recorrido`).
+  final FaseRastreo? fase;
+
+  /// Batería al capturar, en %, y si estaba cargando; `null` si no se supo.
+  final int? bateriaPct;
+  final bool? cargando;
+
+  /// Rumbo en grados (0 = norte) y si se calculó con el azimut desde la
+  /// muestra anterior en vez de venir del GPS. Ver `rumboDeMuestra()`.
+  final double? rumboDeg;
+  final bool? rumboCalculado;
+
+  /// Velocidad del GPS, en m/s.
+  final double? velocidadMs;
+
+  /// La marca de «Terminar recorrido»: cierra la ventana del reporte, no es
+  /// una muestra.
+  final bool cierre;
 
   /// La fila completa de `spike_posiciones`.
   ///
@@ -149,7 +199,13 @@ class MuestraRastreo {
     'enviada_en': enviadaEn.toUtc().toIso8601String(),
     'estado_app': estadoApp.valor,
     'pantalla_encendida': pantallaEncendida,
-    'fase': fase.valor,
+    'fase': fase?.valor ?? 'recorrido',
     'intentos': intentos,
+    'bateria_pct': bateriaPct,
+    'cargando': cargando,
+    'rumbo_deg': rumboDeg,
+    'rumbo_calculado': rumboCalculado,
+    'velocidad_ms': velocidadMs,
+    'cierre': cierre,
   };
 }
