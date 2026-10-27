@@ -1,0 +1,27 @@
+flowchart TB
+    subgraph CLI["Clientes"]
+        direction LR
+        subgraph TEL["Teléfono Android"]
+            direction LR
+            GPS["Servicio de ubicación<br/>en primer plano"] --> APP["App Cupo (Flutter)<br/>presentación · dominio · datos"]
+        end
+        subgraph WEB["Navegador"]
+            PANEL["Panel de administración<br/>(web)"]
+        end
+    end
+    subgraph SB["Supabase (nube)"]
+        direction LR
+        AUTH["Auth<br/>sesiones"] --> PG
+        API["API REST y RPC"] --> PG
+        RT["Realtime<br/>cambios en vivo"] --> PG
+        ST["Storage<br/>fotos y documentos"]
+        PG[("PostgreSQL + PostGIS<br/>datos, RLS y funciones")] -- webhook --> FN["Edge Functions<br/>envío de avisos"]
+    end
+    subgraph EXT["Servicios externos"]
+        direction LR
+        OSM["OpenStreetMap<br/>teselas del mapa"]
+        FCM["Firebase Cloud Messaging<br/>notificaciones push"]
+    end
+    CLI -- "HTTPS y WebSocket" --> SB
+    SB -- "push" --> EXT
+    EXT -. "teselas y notificaciones" .-> CLI

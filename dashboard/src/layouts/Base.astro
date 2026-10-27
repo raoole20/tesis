@@ -1,0 +1,103 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  titulo: string;
+}
+
+const { titulo } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es-VE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo}</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Manrope:wght@400;500;600;700;800&family=Teko:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <slot />
+    <div id="tooltip" class="tooltip" role="status" hidden></div>
+  </body>
+</html>
+
+<script>
+  // Tooltip único para toda la página. Cualquier elemento con
+  // data-tip-valor / data-tip-etiqueta lo muestra al pasar el puntero o al
+  // recibir foco. Dentro de un [data-recorrible] las flechas mueven el foco
+  // entre sus hijos con tooltip.
+  //
+  // El tooltip solo amplía: cada valor también está escrito en la página o en
+  // la tabla de su gráfico.
+
+  const tip = document.getElementById('tooltip') as HTMLElement;
+  let activo: HTMLElement | null = null;
+
+  function mostrar(objetivo: HTMLElement) {
+    activo?.classList.remove('activa');
+    activo = objetivo;
+    objetivo.classList.add('activa');
+
+    const valor = document.createElement('strong');
+    valor.textContent = objetivo.dataset.tipValor ?? '';
+    const etiqueta = document.createElement('span');
+    etiqueta.textContent = objetivo.dataset.tipEtiqueta ?? '';
+    tip.replaceChildren(valor, etiqueta);
+    tip.hidden = false;
+
+    // Se ancla al tope de la marca (la columna dentro de su ranura, si hay).
+    const ancla = objetivo.querySelector<HTMLElement>('[data-tip-ancla]') ?? objetivo;
+    const r = ancla.getBoundingClientRect();
+    const y = ancla === objetivo && objetivo.dataset.tipAbajo !== undefined ? r.bottom : r.top;
+    const x = r.left + r.width / 2;
+    const { offsetWidth: w, offsetHeight: h } = tip;
+    tip.style.left = `${Math.min(Math.max(8, x - w / 2), window.innerWidth - w - 8)}px`;
+    tip.style.top = `${y - h - 10 < 8 ? y + 16 : y - h - 10}px`;
+  }
+
+  function ocultar() {
+    activo?.classList.remove('activa');
+    activo = null;
+    tip.hidden = true;
+  }
+
+  const conTip = (n: EventTarget | null) =>
+    n instanceof Element ? n.closest<HTMLElement>('[data-tip-valor]') : null;
+
+  document.addEventListener('pointerover', (ev) => {
+    const t = conTip(ev.target);
+    if (t && t !== activo) mostrar(t);
+  });
+  document.addEventListener('pointerout', (ev) => {
+    const t = conTip(ev.target);
+    if (t && !t.contains(ev.relatedTarget as Node | null)) ocultar();
+  });
+  document.addEventListener('focusin', (ev) => {
+    const t = ev.target as HTMLElement;
+    if (t.matches('[data-tip-valor]')) mostrar(t);
+    else if (t.matches('[data-recorrible]')) {
+      const hijos = t.querySelectorAll<HTMLElement>('[data-tip-valor]');
+      if (hijos.length) mostrar(hijos[hijos.length - 1]);
+    }
+  });
+  document.addEventListener('focusout', ocultar);
+  window.addEventListener('scroll', ocultar, { passive: true });
+
+  document.addEventListener('keydown', (ev) => {
+    const caja = (ev.target as Element).closest?.('[data-recorrible]');
+    if (!caja || !activo || !caja.contains(activo)) return;
+    const paso = ({ ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity } as Record<string, number>)[ev.key];
+    if (paso === undefined) return;
+    ev.preventDefault();
+    const hijos = [...caja.querySelectorAll<HTMLElement>('[data-tip-valor]')];
+    const i = Math.min(hijos.length - 1, Math.max(0, hijos.indexOf(activo) + paso));
+    mostrar(hijos[i]);
+  });
+</script>

@@ -1,0 +1,202 @@
+---
+// Columnas de una sola serie, hechas con HTML y CSS: se adaptan al ancho sin
+// medir nada en el navegador. Columnas de 24px como máximo, tope redondeado
+// de 4px y base recta, rejilla de un pelo y solo el pico rotulado. Los demás
+// valores están en el tooltip y en la tabla de abajo.
+import type { Cubeta } from '../lib/panel';
+import { numero, plural } from '../lib/formato';
+
+interface Props {
+  datos: Cubeta[];
+  /** Singular y plural de lo que se cuenta: ['registro', 'registros']. */
+  unidades: [string, string];
+}
+
+const { datos, unidades } = Astro.props;
+const n = datos.length;
+const max = Math.max(0, ...datos.map((b) => b.valor));
+const total = datos.reduce((s, b) => s + b.valor, 0);
+
+function escalaLimpia(m: number) {
+  if (m <= 4) return { tope: Math.max(m, 1), paso: 1 };
+  const crudo = m / 4;
+  const mag = 10 ** Math.floor(Math.log10(crudo));
+  const norm = crudo / mag;
+  const paso = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+  return { tope: Math.ceil(m / paso) * paso, paso };
+}
+
+const { tope, paso } = escalaLimpia(max);
+const marcas: number[] = [];
+for (let v = 0; v <= tope; v += paso) marcas.push(v);
+const alto = (v: number) => `${(v / tope) * 100}%`;
+
+// Unas seis fechas en el eje, ancladas en la última para que hoy siempre se lea.
+const cada = Math.ceil(n / 6);
+const iPico = datos.findIndex((b) => b.valor === max);
+const titulo = unidades[1][0].toUpperCase() + unidades[1].slice(1);
+---
+
+<div
+  class="grafico"
+  style={`--n: ${n}`}
+  data-recorrible
+  tabindex={total ? 0 : undefined}
+  aria-label={`${plural(total, unidades[0], unidades[1])} en el período. Usa las flechas para recorrer los días.`}
+>
+  <div class="eje-y" aria-hidden="true">
+    {marcas.map((v) => <span style={`bottom: ${alto(v)}`}>{numero(v)}</span>)}
+  </div>
+
+  <div class="area">
+    {marcas.map((v) => <div class="rejilla" style={`bottom: ${alto(v)}`} />)}
+    {
+      total ? (
+        <div class="columnas">
+          {datos.map((b, i) => (
+            <div
+              class="ranura"
+              data-tip-valor={plural(b.valor, unidades[0], unidades[1])}
+              data-tip-etiqueta={b.larga}
+              data-tip-abajo
+            >
+              {b.valor > 0 && (
+                <div class="columna" style={`height: ${alto(b.valor)}`} data-tip-ancla>
+                  {i === iPico && <span class="pico">{numero(max)}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="vacio">Sin datos en el período</p>
+      )
+    }
+  </div>
+
+  <div class="eje-x" aria-hidden="true">
+    {datos.map((b, i) => <span>{(n - 1 - i) % cada === 0 ? b.corta : ''}</span>)}
+  </div>
+</div>
+
+<details>
+  <summary>Ver como tabla</summary>
+  <div class="tabla-envoltura corta">
+    <table class="tabla">
+      <thead>
+        <tr><th>Fecha</th><th class="num">{titulo}</th></tr>
+      </thead>
+      <tbody>
+        {
+          [...datos].reverse().map((b) => (
+            <tr>
+              <td>{b.larga}</td>
+              <td class="num">{numero(b.valor)}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</details>
+
+<style>
+  .grafico {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-rows: 160px auto;
+    column-gap: 8px;
+    padding-top: 20px; /* aire para el rótulo del pico */
+    border-radius: 8px;
+  }
+
+  .eje-y { position: relative; }
+  .eje-y span {
+    position: absolute;
+    right: 0;
+    transform: translateY(50%);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--text-support);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .area { position: relative; }
+  .rejilla {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    margin-bottom: -0.5px;
+    background: var(--border);
+  }
+
+  .columnas { position: absolute; inset: 0; display: flex; align-items: stretch; }
+  .ranura {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .columna {
+    position: relative;
+    /* Nunca más de 24px, y siempre 2px de aire con la vecina. */
+    width: min(24px, 70%, max(1px, calc(100% - 2px)));
+    min-height: 2px;
+    background: var(--primary);
+    border-radius: 4px 4px 0 0;
+  }
+  .ranura:hover .columna,
+  .ranura:global(.activa) .columna { background: var(--primary-darkest); }
+
+  .pico {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .vacio {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-support);
+  }
+
+  .eje-x {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    padding-top: 8px;
+  }
+  .eje-x span {
+    justify-self: center;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--text-support);
+    white-space: nowrap;
+  }
+
+  details { margin-top: 12px; }
+  summary {
+    display: inline-block;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: var(--primary-deep);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { background: var(--primary-soft); }
+  .corta { max-height: 260px; overflow-y: auto; margin-top: 8px; }
+</style>

@@ -1,0 +1,15 @@
+flowchart TD
+    A([Inicio]) --> B[El estudiante fija el pin<br/>de su domicilio en el mapa]
+    B --> C[La base de datos guarda<br/>el punto en WGS84]
+    C --> D{¿El punto cae dentro de<br/>una zona activa?}
+    D -- Sí --> E[Asigna la zona de menor área<br/>que contiene el punto]
+    D -- No --> F[Guarda el domicilio sin zona<br/>y avisa «sin cobertura»]
+    E --> G[Busca conductores que<br/>cubren esa zona]
+    F --> Z[Muestra estado vacío y<br/>zonas cercanas con servicio]
+    G --> H[Filtra turnos activos de<br/>conductores aprobados]
+    H --> I[Filtra por bloque horario<br/>y días de asistencia]
+    I --> J{¿Quedan turnos<br/>con cupo libre?}
+    J -- Sí --> K[Muestra tarjetas: conductor,<br/>vehículo, horario, tarifa y cupos]
+    J -- No --> Z
+    K --> L([Fin])
+    Z --> L

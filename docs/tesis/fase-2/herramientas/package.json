@@ -1,0 +1,9 @@
+{
+  "name": "cupo-diagramas",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mermaid": "11.12.1",
+    "puppeteer-core": "25.16.0"
+  }
+}

@@ -1,0 +1,22 @@
+---
+import { nombreDe, type Usuario } from '../lib/panel';
+
+interface Props {
+  usuario: Usuario;
+}
+
+const { usuario } = Astro.props;
+const nombre = nombreDe(usuario);
+---
+
+<div class="persona">
+  <span class:list={['nombre', { sin: !nombre }]}>{nombre || 'Sin nombre'}</span>
+  <span class="email">{usuario.email}</span>
+</div>
+
+<style>
+  .persona { display: flex; flex-direction: column; min-width: 160px; }
+  .nombre { font-weight: 700; }
+  .sin { color: var(--text-support); font-weight: 600; }
+  .email { font-size: 12px; color: var(--text-secondary); }
+</style>

@@ -1,0 +1,118 @@
+---
+// Los filtros son un formulario GET: el servidor filtra y la URL queda
+// compartible. El único JavaScript reenvía el formulario al cambiar un select.
+import { Search } from '@lucide/astro';
+import type { EstadoCuenta, Rol as TipoRol, Usuario } from '../lib/panel';
+import { detalleDe, nombreDe } from '../lib/panel';
+import { ESTADOS, ORDEN_ESTADOS, ROLES } from '../lib/catalogos';
+import { fecha, fechaHora, haceCuanto, normalizar, numero, plural } from '../lib/formato';
+import InsigniaEstado from './InsigniaEstado.astro';
+import Persona from './Persona.astro';
+import Rol from './Rol.astro';
+
+interface Props {
+  usuarios: Usuario[];
+  filtros: { q: string; rol: string; estado: string; dias: number };
+}
+
+const { usuarios, filtros } = Astro.props;
+const texto = normalizar(filtros.q.trim());
+const lista = usuarios.filter((u) =>
+  (!filtros.rol || u.rol === filtros.rol) &&
+  (!filtros.estado || u.estado === filtros.estado) &&
+  (!texto || normalizar(`${nombreDe(u)} ${u.email}`).includes(texto)));
+
+const conteo = lista.length === usuarios.length
+  ? plural(usuarios.length, 'usuario', 'usuarios')
+  : `${numero(lista.length)} de ${plural(usuarios.length, 'usuario', 'usuarios')}`;
+---
+
+<form class="filtros" method="get" action="/#usuarios" data-filtros>
+  <input type="hidden" name="dias" value={filtros.dias} />
+  <label class="control buscador">
+    <Search size={16} />
+    <input type="search" name="q" value={filtros.q} placeholder="Buscar por nombre o correo" aria-label="Buscar usuario" />
+  </label>
+  <select class="control" name="rol" aria-label="Rol">
+    <option value="">Todos los roles</option>
+    {(Object.keys(ROLES) as TipoRol[]).map((r) => (
+      <option value={r} selected={filtros.rol === r}>{ROLES[r].plural}</option>
+    ))}
+  </select>
+  <select class="control" name="estado" aria-label="Estado">
+    <option value="">Todos los estados</option>
+    {ORDEN_ESTADOS.map((e: EstadoCuenta) => (
+      <option value={e} selected={filtros.estado === e}>{ESTADOS[e].nombre}</option>
+    ))}
+  </select>
+  <span class="apoyo">{conteo}</span>
+</form>
+
+<div class="tabla-envoltura">
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Usuario</th><th>Rol</th><th>Estado</th><th>Registro</th>
+        <th>Último login</th><th class="num">Sesiones</th><th>Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        lista.length ? (
+          lista.map((u) => (
+            <tr>
+              <td><Persona usuario={u} /></td>
+              <td><Rol rol={u.rol} /></td>
+              <td><InsigniaEstado estado={u.estado} /></td>
+              <td class="nowrap">{fecha(u.creado_en)}</td>
+              <td class="nowrap" title={u.ultimo_login ? fechaHora(u.ultimo_login) : undefined}>
+                {u.ultimo_login ? haceCuanto(u.ultimo_login) : 'Nunca'}
+              </td>
+              <td class="num">{numero(u.sesiones_abiertas)}</td>
+              <td class="apoyo">{detalleDe(u)}</td>
+            </tr>
+          ))
+        ) : (
+          <tr><td class="vacia" colspan="7">Ningún usuario coincide con el filtro.</td></tr>
+        )
+      }
+    </tbody>
+  </table>
+</div>
+
+<script>
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-filtros]')) {
+    for (const select of form.querySelectorAll('select')) {
+      select.addEventListener('change', () => form.requestSubmit());
+    }
+  }
+</script>
+
+<style>
+  .filtros {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+  }
+  select.control { height: 40px; padding: 0 10px; font-size: 14px; }
+  .buscador {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    flex: 1 1 240px;
+    max-width: 360px;
+    color: var(--text-support-soft);
+  }
+  .buscador input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--ink);
+    font-size: 14px;
+  }
+</style>

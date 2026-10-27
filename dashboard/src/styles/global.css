@@ -1,0 +1,189 @@
+/* Tokens copiados de cupo/lib/theme/app_colors.dart: si un tono cambia allá,
+   cambia aquí. Light-only, como la app. Lo propio de cada componente va en su
+   <style> con alcance; aquí solo lo que comparten varios. */
+
+:root {
+  --primary: #007c8a;            /* oklch(0.460 0.09 195) */
+  --primary-hover: #006b78;      /* oklch(0.400 0.09 195) */
+  --primary-deep: #005f6c;       /* oklch(0.360 0.09 195) */
+  --primary-darkest: #003d4b;    /* oklch(0.240 0.09 195) */
+  --primary-soft: #e7f4f5;       /* oklch(0.965 0.018 195) */
+  --primary-ring: rgba(0, 124, 138, 0.14);
+  --on-primary: #ffffff;
+
+  --ink: #1c2224;
+  --text-secondary: #5f6a6c;
+  --text-support: #798487;
+  --text-support-soft: #889396;
+  --border: #dde0e0;
+  --background: #f9fcfc;
+  --background-alt: #f6f9f9;
+  --background-muted: #e3eeee;
+  --surface: #ffffff;
+
+  --success: #18a06a;
+  --success-soft: #d3f9e3;
+  --warning: #c98a00;
+  --warning-soft: #ffeac2;
+  --danger: #bd413f;
+  --danger-soft: #ffe2de;
+
+  --radius: 12px;
+  --font-ui: 'Manrope', system-ui, sans-serif;
+  --font-titulo: 'Teko', 'Manrope', sans-serif;
+  --font-logo: 'Caveat', cursive;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--ink);
+  font: 400 14px/1.5 var(--font-ui);
+}
+
+button, input, select { font: inherit; color: inherit; }
+
+:where(a, button, input, select, summary, [tabindex]):focus-visible {
+  outline: 4px solid var(--primary-ring);
+  outline-offset: 0;
+}
+
+/* Tipografía ------------------------------------------------------------- */
+
+.logo { font: 700 32px/1 var(--font-logo); color: var(--primary); }
+
+.titulo-seccion {
+  margin: 0;
+  font: 600 28px/1 var(--font-titulo);
+  letter-spacing: 0.2px;
+}
+
+.apoyo {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Botones ---------------------------------------------------------------- */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  padding: 4px 28px 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 500 22px/1 var(--font-titulo);
+  letter-spacing: 0.6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton--primario { background: var(--primary); color: var(--on-primary); }
+.boton--primario:hover { background: var(--primary-hover); }
+.boton--secundario { background: var(--surface); color: var(--primary-deep); border-color: var(--border); }
+.boton--secundario:hover { background: var(--background-alt); }
+.boton--chico { height: 40px; padding: 3px 16px 0; font-size: 20px; }
+.boton--chico svg { margin-top: -3px; }
+
+/* Campos ----------------------------------------------------------------- */
+
+.control {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 15px;
+}
+.control:focus, .control:focus-within {
+  border-color: var(--primary);
+  outline: 4px solid var(--primary-ring);
+  outline-offset: 0;
+}
+
+.aviso {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.aviso--error { background: var(--danger-soft); color: var(--danger); font-weight: 600; }
+
+/* Tarjetas y tablas ------------------------------------------------------ */
+
+.tarjeta {
+  min-width: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.tabla-envoltura { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabla th {
+  position: sticky;
+  top: 0;
+  padding: 10px 12px;
+  background: var(--background-alt);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.tabla td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.tabla tr:last-child td { border-bottom: 0; }
+.tabla tbody tr:hover td { background: var(--background-alt); }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla .vacia { padding: 24px; text-align: center; color: var(--text-support); }
+.nowrap { white-space: nowrap; }
+
+/* Insignias de estado: confirmado → success, pendiente → warning, error →
+   danger (regla 7 de CLAUDE.md). Siempre con icono y texto. */
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.insignia--aprobada { background: var(--success-soft); color: var(--success); }
+.insignia--pendiente { background: var(--warning-soft); color: var(--warning); }
+.insignia--rechazada, .insignia--suspendida { background: var(--danger-soft); color: var(--danger); }
+.insignia--perfil_incompleto, .insignia--neutra { background: var(--background-muted); color: var(--text-secondary); }
+
+/* Etiqueta con icono: rol, dispositivo. */
+.con-icono { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.con-icono svg { color: var(--primary-deep); flex: none; }
+
+/* Tooltip compartido (lo maneja el script de layouts/Base.astro). */
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 260px;
+}
+.tooltip strong { display: block; font-size: 15px; }
+.tooltip span { opacity: 0.8; }

@@ -1,0 +1,25 @@
+---
+interface Props {
+  titulo?: string;
+  subtitulo?: string;
+}
+
+const { titulo, subtitulo } = Astro.props;
+---
+
+<article class="tarjeta">
+  {
+    titulo && (
+      <header>
+        <h3>{titulo}</h3>
+        {subtitulo && <p class="apoyo">{subtitulo}</p>}
+      </header>
+    )
+  }
+  <slot />
+</article>
+
+<style>
+  header { margin-bottom: 12px; }
+  h3 { margin: 0; font: 600 15px/1.4 var(--font-ui); }
+</style>

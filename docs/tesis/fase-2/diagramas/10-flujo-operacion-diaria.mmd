@@ -1,0 +1,17 @@
+flowchart TD
+    A([Inicio del día]) --> B[El conductor abre la pantalla «Hoy»]
+    B --> C[Nómina = inscripciones aceptadas que viajan<br/>ese día menos las inasistencias avisadas]
+    C --> D{¿Hay pasajeros<br/>en la nómina?}
+    D -- No --> X([Sin recorrido])
+    D -- Sí --> E[«Iniciar recorrido»:<br/>comienza a transmitir la ubicación]
+    E --> F{¿Ocurre una<br/>contingencia?}
+    F -- Sí --> G[Envía aviso a toda la nómina:<br/>motivo y demora estimada]
+    G --> H{¿Se cancela<br/>el recorrido?}
+    H -- Sí --> I[Viaje «cancelado»;<br/>se detiene la transmisión]
+    H -- No --> J
+    F -- No --> J[Recoge a los pasajeros<br/>en sus domicilios]
+    J --> K{¿Llegó al destino?}
+    K -- No --> F
+    K -- Sí --> L[«Finalizar recorrido»:<br/>viaje «finalizado»]
+    I --> M([Fin])
+    L --> M

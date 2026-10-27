@@ -42,7 +42,7 @@ class CupoHero extends StatelessWidget {
   /// Titular bajo el logotipo grande. Solo se ve en la versión alta.
   final String? headline;
 
-  static final LinearGradient _veloAlto = LinearGradient(
+  static LinearGradient get _veloAlto => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     stops: const [0, 0.22, 0.45, 1],
@@ -54,7 +54,7 @@ class CupoHero extends StatelessWidget {
     ],
   );
 
-  static final LinearGradient _veloCompacto = LinearGradient(
+  static LinearGradient get _veloCompacto => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     stops: const [0, 0.22, 0.45, 1],

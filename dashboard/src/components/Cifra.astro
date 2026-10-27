@@ -1,0 +1,52 @@
+---
+import { Minus, TrendingDown, TrendingUp } from '@lucide/astro';
+import { numero } from '../lib/formato';
+
+interface Props {
+  actual: number;
+  /** Valor del período anterior; null cuando no hay con qué comparar. */
+  previo: number | null;
+  dias: number;
+  nota: string;
+}
+
+const { actual, previo, dias, nota } = Astro.props;
+const dif = previo === null ? 0 : actual - previo;
+const tipo = dif > 0 ? 'sube' : dif < 0 ? 'baja' : 'igual';
+const Icono = dif > 0 ? TrendingUp : dif < 0 ? TrendingDown : Minus;
+---
+
+<div class="cifra">
+  <span class="valor">{numero(actual)}</span>
+  {
+    previo !== null && (
+      <>
+        <span class:list={['delta', tipo]} title={`Período anterior: ${numero(previo)}`}>
+          <Icono size={14} />
+          {dif > 0 ? '+' : ''}{numero(dif)}
+        </span>
+        <span class="nota">vs. {dias} días anteriores</span>
+      </>
+    )
+  }
+  <span class="nota completa">{nota}</span>
+</div>
+
+<style>
+  .cifra { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 16px; }
+  .valor { font-size: 40px; font-weight: 700; line-height: 1.1; }
+  .nota { font-size: 13px; color: var(--text-secondary); }
+  .completa { flex-basis: 100%; }
+  .delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .sube { background: var(--success-soft); color: var(--success); }
+  .baja { background: var(--danger-soft); color: var(--danger); }
+  .igual { background: var(--background-alt); color: var(--text-secondary); }
+</style>

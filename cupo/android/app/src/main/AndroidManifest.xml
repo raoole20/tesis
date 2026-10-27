@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Lo usa el servicio de ubicación de geolocator con enableWakeLock /
+         enableWifiLock (spike de rastreo, HU-011): sin él, con la pantalla
+         apagada Android puede dormir el procesador entre ubicaciones. Es un
+         permiso normal: se concede al instalar, sin preguntar. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:label="Cupo"

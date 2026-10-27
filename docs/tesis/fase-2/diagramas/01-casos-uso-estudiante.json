@@ -1,0 +1,17 @@
+{
+  "actor": "Estudiante",
+  "sistema": "Aplicación Cupo",
+  "casos": [
+    "Registrarse y elegir rol (HU-001)",
+    "Iniciar sesión (HU-002)",
+    "Fijar domicilio en el mapa (HU-003)",
+    "Buscar transporte por zona y turno (HU-007)",
+    "Solicitar cupo por días (HU-008)",
+    "Avisar inasistencia (HU-010)",
+    "Seguir la unidad en vivo (HU-011)",
+    "Recibir aviso de proximidad (HU-014)",
+    "Recibir aviso de contingencia (HU-015)",
+    "Consultar estado de cuenta (HU-013)",
+    "Renovar cupo del período (HU-016)"
+  ]
+}

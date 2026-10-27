@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../auth/presentation/auth_scope.dart';
+import '../../spike_rastreo/presentation/prueba_rastreo_screen.dart';
 import '../data/zonas_repository.dart';
 import '../domain/turno_del_conductor.dart';
 import '../domain/zona.dart';
@@ -219,13 +221,25 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: BotonSobreMapa(
-                          icono: LucideIcons.scan,
-                          mensaje: 'Ver todo el recorrido',
-                          onPressed: () => _encuadrar(turno.trazado),
-                        ),
+                      Row(
+                        children: [
+                          // Spike de HU-011: no existe en las compilaciones
+                          // de lanzamiento.
+                          if (kDebugMode)
+                            _BotonPruebaRastreo(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const PruebaRastreoScreen(),
+                                ),
+                              ),
+                            ),
+                          const Spacer(),
+                          BotonSobreMapa(
+                            icono: LucideIcons.scan,
+                            mensaje: 'Ver todo el recorrido',
+                            onPressed: () => _encuadrar(turno.trazado),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -879,6 +893,52 @@ class _MisZonas extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════ piezas ════════
+
+/// Entrada a «Prueba de rastreo» (spike de HU-011). Va sobre el mapa con el
+/// mismo marco que [BotonSobreMapa], pero con rótulo: es una herramienta de
+/// depuración y tiene que reconocerse sin adivinar el icono.
+class _BotonPruebaRastreo extends StatelessWidget {
+  const _BotonPruebaRastreo({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: AppSizes.iconButton,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(color: AppColors.border, width: AppSizes.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                LucideIcons.radar,
+                size: AppSizes.icon,
+                color: AppColors.primaryDeep,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Prueba de rastreo',
+                style: AppTypography.label.copyWith(
+                  color: AppColors.primaryDeep,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Asa de la hoja: indica que se arrastra.
 class _Asa extends StatelessWidget {

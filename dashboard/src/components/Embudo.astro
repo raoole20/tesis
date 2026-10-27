@@ -1,0 +1,62 @@
+---
+// Del registro al primer uso. Categorías ordenadas, una sola serie: un solo
+// color, valor y porcentaje escritos en la punta de cada barra.
+import type { Usuario } from '../lib/panel';
+import { numero, plural, porcentaje } from '../lib/formato';
+
+interface Props {
+  usuarios: Usuario[];
+}
+
+const { usuarios } = Astro.props;
+const base = usuarios.length;
+const pasos: [string, number][] = [
+  ['Registrados', base],
+  ['Perfil enviado', usuarios.filter((u) => u.estado !== 'perfil_incompleto').length],
+  ['Aprobados', usuarios.filter((u) => u.estado === 'aprobada').length],
+  ['Listos para usar', usuarios.filter((u) => u.onboarding_completo).length],
+];
+---
+
+<div class="embudo">
+  {
+    pasos.map(([nombre, n]) => (
+      <div class="fila">
+        <span class="nombre">{nombre}</span>
+        <div class="pista">
+          <div
+            class="barra"
+            tabindex="0"
+            style={`width: calc((100% - 72px) * ${base ? n / base : 0})`}
+            data-tip-valor={plural(n, 'usuario', 'usuarios')}
+            data-tip-etiqueta={`${nombre} · ${porcentaje(n, base)} % de los registrados`}
+          />
+          <span class="valor">
+            {numero(n)} <span>{porcentaje(n, base)} %</span>
+          </span>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .embudo { display: flex; flex-direction: column; gap: 14px; }
+  .fila { display: grid; grid-template-columns: 130px minmax(0, 1fr); align-items: center; gap: 12px; }
+  .nombre { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .pista { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .barra {
+    flex: none;
+    height: 24px;
+    min-width: 4px;
+    background: var(--primary);
+    border-radius: 0 4px 4px 0;
+  }
+  .barra:hover, .barra:global(.activa) { background: var(--primary-darkest); }
+  .valor { font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .valor span { font-weight: 500; color: var(--text-support); }
+
+  @media (max-width: 760px) {
+    .fila { grid-template-columns: 110px minmax(0, 1fr); }
+  }
+</style>

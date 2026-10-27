@@ -1,10 +1,13 @@
 {
+  "dart.flutterHotReloadOnSave": "all",
   "editor.formatOnSave": true,
   "editor.rulers": [80],
   "dart.previewFlutterUiGuides": true,
   "dart.lineLength": 80,
   "[dart]": {
+  "dart.flutterHotReloadOnSave": "all",
     "editor.defaultFormatter": "Dart-Code.dart-code",
-    "editor.codeActionsOnSave": { "source.fixAll": "explicit" }
+    "editor.codeActionsOnSave": {
+  "dart.flutterHotReloadOnSave": "all", "source.fixAll": "explicit" }
   }
 }

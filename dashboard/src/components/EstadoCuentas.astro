@@ -1,0 +1,112 @@
+---
+// Una barra apilada por rol, con los colores de estado de la marca. El ancho
+// de cada barra es proporcional a su total, así los dos roles se comparan.
+// Debajo de cada barra va el desglose escrito: el color nunca es el único
+// canal.
+import type { Usuario } from '../lib/panel';
+import { ESTADOS, ORDEN_ESTADOS, ROLES } from '../lib/catalogos';
+import { numero, plural, porcentaje } from '../lib/formato';
+
+interface Props {
+  usuarios: Usuario[];
+}
+
+const { usuarios } = Astro.props;
+
+const filas = (['estudiante', 'conductor'] as const).map((rol) => {
+  const del = usuarios.filter((u) => u.rol === rol);
+  return {
+    rol,
+    total: del.length,
+    partes: ORDEN_ESTADOS
+      .map((estado) => ({ estado, n: del.filter((u) => u.estado === estado).length }))
+      .filter((p) => p.n > 0),
+  };
+});
+const mayor = Math.max(1, ...filas.map((f) => f.total));
+---
+
+<div class="leyenda">
+  {
+    ORDEN_ESTADOS.map((k) => (
+      <span class="item">
+        <span class="muestra" style={`background: ${ESTADOS[k].color}`} />
+        {ESTADOS[k].nombre}
+      </span>
+    ))
+  }
+</div>
+
+<div class="filas">
+  {
+    filas.map((f) => {
+      const r = ROLES[f.rol];
+      const Icono = r.icono;
+      return (
+        <div>
+          <div class="cabecera">
+            <span class="con-icono nombre"><Icono size={16} />{r.plural}</span>
+            <span class="total">{plural(f.total, 'cuenta', 'cuentas')}</span>
+          </div>
+          {f.total ? (
+            <>
+              <div class="pista" style={`width: ${(f.total / mayor) * 100}%`}>
+                {f.partes.map((p) => {
+                  const e = ESTADOS[p.estado];
+                  // El número va adentro solo si el segmento es ancho de sobra.
+                  const cabe = p.n / mayor >= 0.12;
+                  return (
+                    <div
+                      class="segmento"
+                      tabindex="0"
+                      style={`flex: ${p.n} 1 0; background: ${e.color}; color: ${e.texto}`}
+                      data-tip-valor={`${numero(p.n)} · ${e.nombre}`}
+                      data-tip-etiqueta={`${porcentaje(p.n, f.total)} % de los ${r.plural.toLowerCase()}`}
+                    >
+                      {cabe && numero(p.n)}
+                    </div>
+                  );
+                })}
+              </div>
+              <p class="apoyo desglose">
+                {f.partes.map((p) => `${numero(p.n)} ${ESTADOS[p.estado].nombre.toLowerCase()}`).join(' · ')}
+              </p>
+            </>
+          ) : (
+            <p class="apoyo">Todavía no hay cuentas.</p>
+          )}
+        </div>
+      );
+    })
+  }
+</div>
+
+<style>
+  .leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .item { display: inline-flex; align-items: center; gap: 6px; }
+  .muestra { width: 12px; height: 12px; border-radius: 3px; }
+
+  .filas { display: flex; flex-direction: column; gap: 20px; }
+  .cabecera { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+  .nombre { font-weight: 700; }
+  .total { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+  .pista { display: flex; gap: 2px; height: 24px; }
+  .segmento {
+    display: grid;
+    place-items: center;
+    min-width: 4px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .segmento:last-child { border-radius: 0 4px 4px 0; }
+  .segmento:hover, .segmento:global(.activa) { filter: brightness(0.88); }
+  .desglose { margin-top: 6px; font-size: 12px; }
+</style>

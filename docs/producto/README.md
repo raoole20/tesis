@@ -50,6 +50,7 @@ declarado.
 | `hallazgos-de-campo.md` | no escrito — depende de la Fase 1 |
 | `especificacion-funcional.md` | no escrito |
 | [`modelo-de-datos.md`](modelo-de-datos.md) | **borrador parcial** — identidad y ubicacion (usuario, estudiante, conductor, zonas), sobre Supabase |
+| [`spike-rastreo.md`](spike-rastreo.md) | **construido, sin mediciones** — Spike 1: rastreo del conductor con la app minimizada y la pantalla apagada (HU-011, RNF-10) |
 
 El orden natural seria empezar por los hallazgos de campo, que alimentan a los
 otros dos. Del modelo de datos se adelanto unicamente la parte de identidad,

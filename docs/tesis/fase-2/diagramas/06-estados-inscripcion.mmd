@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> pendiente : el estudiante solicita cupo
+    pendiente --> aceptada : el conductor acepta y hay cupo libre
+    pendiente --> rechazada : el conductor rechaza
+    pendiente --> cancelada : el estudiante retira la solicitud
+    aceptada --> cancelada : el estudiante deja el servicio
+    aceptada --> vencida : no renovó antes de la fecha límite
+    aceptada --> aceptada : renueva el cupo del nuevo período
+    rechazada --> [*]
+    cancelada --> [*]
+    vencida --> [*]

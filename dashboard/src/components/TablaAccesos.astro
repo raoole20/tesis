@@ -1,0 +1,61 @@
+---
+import type { AccesoConUsuario } from '../lib/panel';
+import { dispositivo } from '../lib/panel';
+import { DISPOSITIVOS } from '../lib/catalogos';
+import { fechaHora, haceCuanto, numero } from '../lib/formato';
+import Persona from './Persona.astro';
+import Rol from './Rol.astro';
+
+interface Props {
+  /** Ya filtrados por período, del más reciente al más antiguo. */
+  accesos: AccesoConUsuario[];
+}
+
+const LIMITE = 100;
+const { accesos } = Astro.props;
+const visibles = accesos.slice(0, LIMITE);
+---
+
+<div class="tabla-envoltura alta">
+  <table class="tabla">
+    <thead>
+      <tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Dispositivo</th></tr>
+    </thead>
+    <tbody>
+      {
+        visibles.length ? (
+          visibles.map((a) => {
+            const d = dispositivo(a.user_agent);
+            const Icono = DISPOSITIVOS[d.tipo];
+            return (
+              <tr>
+                <td class="nowrap">
+                  <strong>{haceCuanto(a.ocurrido_en)}</strong>
+                  <br />
+                  <span class="apoyo">{fechaHora(a.ocurrido_en)}</span>
+                </td>
+                <td><Persona usuario={a.usuario} /></td>
+                <td><Rol rol={a.usuario.rol} /></td>
+                <td title={a.user_agent ?? 'Anterior a la bitácora: solo se conoce la hora.'}>
+                  <span class="con-icono"><Icono size={16} />{d.texto}</span>
+                </td>
+              </tr>
+            );
+          })
+        ) : (
+          <tr><td class="vacia" colspan="4">Nadie inició sesión en el período.</td></tr>
+        )
+      }
+    </tbody>
+  </table>
+</div>
+{
+  accesos.length > LIMITE && (
+    <p class="apoyo pie">Se muestran los {LIMITE} más recientes de {numero(accesos.length)}.</p>
+  )
+}
+
+<style>
+  .alta { max-height: 520px; overflow-y: auto; }
+  .pie { margin-top: 8px; text-align: center; }
+</style>

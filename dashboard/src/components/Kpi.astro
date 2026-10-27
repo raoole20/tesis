@@ -1,0 +1,60 @@
+---
+import type { Bus } from '@lucide/astro';
+import { numero } from '../lib/formato';
+
+interface Props {
+  icono: typeof Bus;
+  etiqueta: string;
+  valor: number;
+  nota?: string;
+  /** Pinta el icono en warning: hay algo esperando acción. */
+  alerta?: boolean;
+}
+
+const { icono: Icono, etiqueta, valor, nota, alerta = false } = Astro.props;
+---
+
+<div class:list={['kpi', { alerta }]}>
+  <span class="etiqueta">
+    <span class="icono"><Icono size={16} /></span>
+    {etiqueta}
+  </span>
+  <span class="valor">{numero(valor)}</span>
+  {nota && <span class="nota">{nota}</span>}
+</div>
+
+<style>
+  .kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .etiqueta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .icono {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--background-muted);
+    color: var(--primary-deep);
+  }
+  .alerta .icono { background: var(--warning-soft); color: var(--warning); }
+  .valor { font-size: 32px; font-weight: 700; line-height: 1.15; }
+  .nota { font-size: 12px; color: var(--text-support); }
+
+  @media (max-width: 760px) {
+    .valor { font-size: 28px; }
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import { LogOut, RefreshCw } from '@lucide/astro';
+
+interface Props {
+  email: string;
+}
+
+const { email } = Astro.props;
+---
+
+<header class="barra">
+  <div class="marca">
+    <span class="logo">Cupo</span>
+    <span class="rotulo">Panel</span>
+  </div>
+  <div class="acciones">
+    <span class="email">{email}</span>
+    <a class="icono" href={Astro.url.pathname + Astro.url.search} title="Actualizar" aria-label="Actualizar">
+      <RefreshCw size={20} />
+    </a>
+    <form method="post" action="/salir">
+      <button class="boton boton--secundario boton--chico" type="submit">
+        <LogOut size={16} /> Salir
+      </button>
+    </form>
+  </div>
+</header>
+
+<style>
+  .barra {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .marca { display: flex; align-items: baseline; gap: 12px; }
+  .rotulo {
+    font: 500 24px/1 var(--font-titulo);
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+  }
+  .acciones { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  form { margin: 0; }
+  .email {
+    color: var(--text-secondary);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .icono {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--primary-deep);
+  }
+  .icono:hover { background: var(--background-alt); }
+
+  @media (max-width: 760px) {
+    .barra { padding: 12px 16px; }
+    .email { display: none; }
+  }
+</style>

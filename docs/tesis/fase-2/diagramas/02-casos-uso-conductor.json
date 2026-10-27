@@ -1,0 +1,17 @@
+{
+  "actor": "Conductor",
+  "sistema": "Aplicación Cupo",
+  "casos": [
+    "Registrarse y elegir rol (HU-001)",
+    "Iniciar sesión (HU-002)",
+    "Registrar vehículo y enviar a revisión (HU-004)",
+    "Seleccionar zonas de cobertura (HU-005)",
+    "Publicar turnos y horarios (HU-006)",
+    "Evaluar solicitudes de cupo (HU-009)",
+    "Consultar nómina del día (HU-010)",
+    "Transmitir recorrido en vivo (HU-011)",
+    "Enviar aviso de contingencia (HU-015)",
+    "Registrar pagos (HU-013)",
+    "Abrir renovación de cupos (HU-016)"
+  ]
+}

@@ -1,0 +1,215 @@
+---
+import { Activity, Bus, Clock, GraduationCap, Users } from '@lucide/astro';
+import Base from '../layouts/Base.astro';
+import Barra from '../components/Barra.astro';
+import Cifra from '../components/Cifra.astro';
+import Embudo from '../components/Embudo.astro';
+import EstadoCuentas from '../components/EstadoCuentas.astro';
+import GraficoColumnas from '../components/GraficoColumnas.astro';
+import Kpi from '../components/Kpi.astro';
+import TablaAccesos from '../components/TablaAccesos.astro';
+import TablaUsuarios from '../components/TablaUsuarios.astro';
+import TablaZonas from '../components/TablaZonas.astro';
+import Tarjeta from '../components/Tarjeta.astro';
+import {
+  cargarPanel, enPeriodo, enPrevio, leerRango, nombreRango, periodo, RANGOS, serie,
+} from '../lib/panel';
+import { claveDe, hora, inicioDeClave, numero, plural, sumarDias } from '../lib/formato';
+
+const { supabase, usuario } = Astro.locals;
+const params = Astro.url.searchParams;
+const dias = leerRango(params.get('dias'));
+
+const { panel, error } = await cargarPanel(supabase, dias);
+
+// panel_admin() rechaza a quien no es administrador: se cierra esa sesión.
+if (error?.code === '42501') {
+  await supabase.auth.signOut();
+  return Astro.redirect('/login?error=permiso');
+}
+
+/** La URL actual con algunos parámetros cambiados. */
+function enlace(cambios: Record<string, string | number>, ancla = '') {
+  const u = new URL(Astro.url);
+  for (const [k, v] of Object.entries(cambios)) u.searchParams.set(k, String(v));
+  return `${u.pathname}${u.search}${ancla}`;
+}
+
+// Todo lo que sigue solo se usa si hay panel.
+const p = panel && periodo(panel, dias);
+const app = panel?.app ?? [];
+const estudiantes = app.filter((u) => u.rol === 'estudiante');
+const conductores = app.filter((u) => u.rol === 'conductor');
+const hace7 = inicioDeClave(sumarDias(claveDe(Date.now()), -6));
+const nuevos7 = app.filter((u) => new Date(u.creado_en) >= hace7).length;
+const activos7 = new Set(
+  (panel?.accesosApp ?? []).filter((a) => new Date(a.ocurrido_en) >= hace7).map((a) => a.usuario_id),
+).size;
+const sesiones = app.reduce((s, u) => s + u.sesiones_abiertas, 0);
+const pendientes = app.filter((u) => u.estado === 'pendiente').length;
+
+const registros = p ? app.filter((u) => enPeriodo(u.creado_en, p)) : [];
+const registrosPrevios = p?.previo ? app.filter((u) => enPrevio(u.creado_en, p)).length : null;
+const accesos = p && panel ? panel.accesosApp.filter((a) => enPeriodo(a.ocurrido_en, p)) : [];
+const accesosPrevios = p?.previo && panel
+  ? panel.accesosApp.filter((a) => enPrevio(a.ocurrido_en, p)).length
+  : null;
+---
+
+<Base titulo="Cupo · Panel">
+  <Barra email={usuario?.email ?? ''} />
+
+  <main>
+    {error && <p class="aviso aviso--error" role="alert">No se pudieron cargar los datos: {error.message}</p>}
+
+    {
+      panel && p && (
+        <>
+          <section id="estado">
+            <div class="cabecera">
+              <h2 class="titulo-seccion">Estado general</h2>
+              <span class="apoyo">Actualizado a las {hora(panel.generado_en)}</span>
+            </div>
+            <div class="kpis">
+              <Kpi icono={Users} etiqueta="Usuarios" valor={app.length}
+                nota={`${plural(nuevos7, 'nuevo', 'nuevos')} en 7 días`} />
+              <Kpi icono={GraduationCap} etiqueta="Estudiantes" valor={estudiantes.length}
+                nota={`${numero(estudiantes.filter((u) => u.domicilio_fijado).length)} con domicilio fijado`} />
+              <Kpi icono={Bus} etiqueta="Conductores" valor={conductores.length}
+                nota={`${numero(conductores.filter((u) => u.zonas_cubiertas > 0).length)} con zonas de trabajo`} />
+              <Kpi icono={Activity} etiqueta="Activos en 7 días" valor={activos7}
+                nota={plural(sesiones, 'sesión abierta', 'sesiones abiertas')} />
+              <Kpi icono={Clock} etiqueta="Por revisar" valor={pendientes} alerta={pendientes > 0}
+                nota={pendientes ? 'Perfiles esperando aprobación' : 'Nada pendiente'} />
+            </div>
+          </section>
+
+          <section id="actividad">
+            <div class="cabecera">
+              <h2 class="titulo-seccion">Actividad</h2>
+              <span class="apoyo">Sin contar administradores</span>
+            </div>
+
+            <nav class="segmentado" aria-label="Período">
+              {RANGOS.map((r) => (
+                <a href={enlace({ dias: r }, '#actividad')} aria-current={r === dias ? 'true' : undefined}>
+                  {nombreRango(r)}
+                </a>
+              ))}
+            </nav>
+
+            <div class="rejilla">
+              <Tarjeta titulo="Registros" subtitulo="Cuentas nuevas por día">
+                <Cifra actual={registros.length} previo={registrosPrevios} dias={dias}
+                  nota={`${plural(registros.filter((u) => u.rol === 'estudiante').length, 'estudiante', 'estudiantes')} · ${plural(registros.filter((u) => u.rol === 'conductor').length, 'conductor', 'conductores')}`} />
+                <GraficoColumnas datos={serie(registros.map((u) => u.creado_en), p)} unidades={['registro', 'registros']} />
+              </Tarjeta>
+
+              <Tarjeta titulo="Inicios de sesión" subtitulo="Logins por día">
+                <Cifra actual={accesos.length} previo={accesosPrevios} dias={dias}
+                  nota={plural(new Set(accesos.map((a) => a.usuario_id)).size, 'usuario distinto', 'usuarios distintos')} />
+                <GraficoColumnas datos={serie(accesos.map((a) => a.ocurrido_en), p)} unidades={['inicio de sesión', 'inicios de sesión']} />
+              </Tarjeta>
+            </div>
+
+            <Tarjeta titulo="Últimos inicios de sesión" subtitulo={accesos.length
+              ? `${plural(accesos.length, 'inicio de sesión', 'inicios de sesión')} en el período, del más reciente al más antiguo`
+              : 'Nadie inició sesión en el período'}>
+              <TablaAccesos accesos={accesos} />
+            </Tarjeta>
+          </section>
+
+          <section id="usuarios">
+            <div class="cabecera">
+              <h2 class="titulo-seccion">Usuarios</h2>
+              <span class="apoyo">Todas las cuentas, sin importar el período</span>
+            </div>
+
+            <div class="rejilla">
+              <Tarjeta titulo="Estado de las cuentas" subtitulo="Por rol">
+                <EstadoCuentas usuarios={app} />
+              </Tarjeta>
+              <Tarjeta titulo="Embudo de alta" subtitulo="Estudiantes y conductores, del registro al primer uso">
+                <Embudo usuarios={app} />
+              </Tarjeta>
+            </div>
+
+            <Tarjeta>
+              <TablaUsuarios usuarios={panel.usuarios} filtros={{
+                q: params.get('q') ?? '',
+                rol: params.get('rol') ?? '',
+                estado: params.get('estado') ?? '',
+                dias,
+              }} />
+            </Tarjeta>
+          </section>
+
+          <section id="zonas">
+            <div class="cabecera">
+              <h2 class="titulo-seccion">Zonas</h2>
+              <span class="apoyo">
+                {plural(panel.zonas.length, 'zona', 'zonas')} · {plural(panel.estudiantes_sin_zona, 'estudiante', 'estudiantes')} con domicilio fuera de toda zona
+              </span>
+            </div>
+            <Tarjeta>
+              <TablaZonas zonas={panel.zonas} />
+            </Tarjeta>
+          </section>
+        </>
+      )
+    }
+  </main>
+</Base>
+
+<style>
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  .cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+  }
+
+  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+  .rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+  .segmentado {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 4px;
+    gap: 4px;
+    background: var(--background-muted);
+    border-radius: 999px;
+  }
+  .segmentado a {
+    display: inline-grid;
+    place-items: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .segmentado a:hover { color: var(--ink); }
+  .segmentado a[aria-current='true'] { background: var(--primary); color: var(--on-primary); }
+
+  @media (max-width: 1000px) {
+    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    main { padding: 16px 16px 48px; gap: 32px; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rejilla { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

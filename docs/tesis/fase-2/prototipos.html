@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es-VE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipos de Cupo</title>
+<meta name="description" content="Fase II, actividad 2.4: prototipos de interfaz de usuario de la app móvil Cupo para mapas y paradas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Manrope:wght@400;500;600;700;800&family=Teko:wght@500;600&display=block" rel="stylesheet">
+<style>
+/* =====================================================================
+   Tokens de marca (CLAUDE.md). La fuente de verdad es OkLCH; el hex es
+   su expresión en sRGB, igual que en cupo/lib/theme/app_colors.dart.
+   ===================================================================== */
+:root {
+  /* Verde lago (primario) */
+  --primary: #007C8A;          /* oklch(0.460 0.09 195) */
+  --primary-hover: #006B78;    /* oklch(0.400 0.09 195) */
+  --primary-deep: #005F6C;     /* oklch(0.360 0.09 195) */
+  --primary-darkest: #003D4B;  /* oklch(0.240 0.09 195) */
+  --primary-soft: #E7F4F5;     /* oklch(0.965 0.018 195) */
+  --primary-ring: #007C8A24;   /* oklch(0.460 0.09 195 / 0.14) */
+  --on-primary: #FFFFFF;
+  /* Neutros */
+  --ink: #1C2224;              /* oklch(0.2 0.01 200) */
+  --text-secondary: #5F6A6C;   /* oklch(0.46 0.01 200) */
+  --text-support: #798487;     /* oklch(0.55 0.01 200) */
+  --text-support-soft: #889396;/* oklch(0.60 0.01 200) */
+  --border: #DDE0E0;           /* oklch(0.89 0.006 200) */
+  --background: #F9FCFC;       /* oklch(0.975 0.004 200) */
+  --background-alt: #F6F9F9;   /* oklch(0.965 0.004 200) */
+  --background-muted: #E3EEEE; /* oklch(0.94 0.012 195) */
+  --surface: #FFFFFF;
+  /* Semánticos */
+  --success: #18A06A;          /* oklch(0.55 0.13 150) */
+  --success-soft: #D3F9E3;     /* oklch(0.95 0.05 150) */
+  --warning: #C98A00;          /* oklch(0.62 0.14 88) */
+  --warning-soft: #FFEAC2;     /* oklch(0.95 0.06 88) */
+  --danger: #BD413F;           /* oklch(0.55 0.16 25) */
+  --danger-soft: #FFE2DE;      /* oklch(0.95 0.05 25) */
+
+  --radius: 12px;              /* AppTheme.radius */
+  --radius-md: 14px;           /* AppRadius.md: campos, opciones, bloques */
+  --radius-sheet: 28px;        /* AppRadius.sheet */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body { font-family: 'Manrope', sans-serif; color: var(--ink); background: var(--background-muted); }
+.ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; display: inline-block; vertical-align: middle; }
+
+/* ------------------------------------------------------------ galería */
+.page { max-width: 1760px; margin: 0 auto; padding: 48px 40px 96px; }
+.page-head { display: flex; flex-direction: column; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--primary); }
+.wordmark { font-family: 'Caveat', cursive; font-weight: 700; font-size: 44px; line-height: 1; color: var(--primary); }
+.page-title { font-family: 'Teko', sans-serif; font-weight: 600; font-size: 56px; line-height: .95; letter-spacing: .2px; }
+.page-sub { font-size: 16px; line-height: 1.5; color: var(--text-secondary); max-width: 820px; }
+.legend { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center;
+          padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+          max-width: max-content; }
+.legend-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-right: 4px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.section-title { font-family: 'Teko', sans-serif; font-weight: 600; font-size: 40px; line-height: 1;
+                 margin: 56px 0 24px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.grid { display: flex; flex-wrap: wrap; gap: 48px 40px; align-items: flex-start; }
+.fig { display: flex; flex-direction: column; gap: 14px; }
+.fig-cap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; max-width: 380px; }
+.fig-num { font-size: 13px; font-weight: 800; color: var(--primary); letter-spacing: .06em; }
+.fig-name { font-size: 15px; font-weight: 700; }
+.fig-hu { font-size: 12px; font-weight: 700; color: var(--primary-deep); background: var(--primary-soft);
+          border-radius: 999px; padding: 3px 10px; }
+.fig-phones { display: flex; gap: 24px; }
+.fig-sub { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.sub-cap { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.page-foot { margin-top: 64px; font-size: 13px; color: var(--text-support); }
+
+/* Modo captura: ?pantalla=NN deja una sola figura sobre blanco. */
+.captura body { background: var(--surface); }
+.captura .page { padding: 16px; max-width: none; }
+.captura .page-head, .captura .section-title, .captura .fig-cap, .captura .page-foot { display: none; }
+.captura .grid { display: block; }
+
+/* ------------------------------------------------------------- teléfono */
+.phone { width: 380px; height: 800px; padding: 10px; border-radius: 50px; background: var(--ink); flex: none; }
+.screen { position: relative; width: 360px; height: 780px; border-radius: 40px; overflow: hidden;
+          background: var(--surface); display: flex; flex-direction: column; }
+.sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 26px 0 30px; font-size: 13px; font-weight: 700; color: var(--ink); position: relative; z-index: 8; }
+.sb.over { position: absolute; top: 0; left: 0; right: 0; background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.sb-icons { display: flex; align-items: center; gap: 6px; }
+.sb-icons .ic { width: 15px; height: 15px; stroke-width: 2.4; }
+.batt { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; padding: 1.5px; }
+.batt::before { content: ""; display: block; height: 100%; width: 72%; background: currentColor; border-radius: 1px; }
+.batt::after { content: ""; position: absolute; right: -4px; top: 2.5px; width: 2px; height: 3.5px; background: currentColor; border-radius: 0 1px 1px 0; }
+.home-ind { position: absolute; left: 50%; bottom: 8px; width: 120px; height: 4px; margin-left: -60px;
+            border-radius: 99px; background: var(--ink); z-index: 30; }
+
+/* ---------------------------------------------------------- tipografía */
+.t-title { font-family: 'Teko', sans-serif; font-weight: 600; font-size: 34px; line-height: 1; letter-spacing: .2px; color: var(--ink); }
+.t-body { font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+.t-strong { font-size: 15px; font-weight: 700; line-height: 1.35; }
+.t-label { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.t-helper { font-size: 13px; line-height: 1.4; color: var(--text-support); }
+.t-helper.ink2 { color: var(--text-secondary); }
+.t-meta { font-size: 14px; line-height: 1.3; color: var(--text-secondary); }
+.t-meta.brandc { color: var(--primary-deep); }
+.t-meta-strong { font-size: 14px; font-weight: 700; line-height: 1.3; }
+.t-tm { font-size: 17px; font-weight: 700; line-height: 1.35; }
+.t-over { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-support); line-height: 1.3; }
+.t-link { font-size: 14px; font-weight: 700; color: var(--primary-deep); }
+.t-amount { font-size: 28px; font-weight: 700; line-height: 1.15; }
+.t-price { font-size: 18px; font-weight: 800; color: var(--primary-darkest); line-height: 1.2; }
+.center { text-align: center; }
+.right { text-align: right; }
+
+/* -------------------------------------------------------------- layout */
+.px { padding-left: 20px; padding-right: 20px; }
+.row { display: flex; align-items: center; }
+.row.base { align-items: baseline; }
+.row.top { align-items: flex-start; }
+.between { justify-content: space-between; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1; min-width: 0; }
+.clip { overflow: hidden; }
+.g4 { gap: 4px; } .g8 { gap: 8px; } .g12 { gap: 12px; } .g16 { gap: 16px; }
+.mt-2 { margin-top: 2px; } .mt-4 { margin-top: 4px; } .mt-6 { margin-top: 6px; } .mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; } .mt-20 { margin-top: 20px; } .mt-24 { margin-top: 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid2.g8 { gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.hr { height: 1px; background: var(--border); }
+.bt { border-top: 1px solid var(--border); }
+.bb { border-bottom: 1px solid var(--border); }
+
+/* -------------------------------------------------------- componentes */
+.back { width: 36px; height: 36px; border-radius: 50%; background: var(--background-muted); display: grid; place-items: center; color: var(--ink); }
+.back .ic { width: 18px; height: 18px; stroke-width: 2.2; }
+.back.on-map { position: absolute; z-index: 6; background: var(--surface); border: 1px solid var(--border); }
+.sh { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; height: 48px; }
+.sh-title { text-align: center; font-size: 14px; font-weight: 700; }
+.iconbtn { width: 44px; height: 44px; border-radius: var(--radius-md); border: 1px solid var(--border);
+           display: grid; place-items: center; color: var(--primary-deep); background: var(--surface); flex: none; }
+
+/* Botones de acción: píldora, rótulo en Teko (CupoButtonShell). */
+.btn { height: 56px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 10px;
+       font-family: 'Teko', sans-serif; font-weight: 500; font-size: 22px; line-height: 1; letter-spacing: .6px;
+       width: 100%; padding: 0 20px; flex: none; }
+.btn > span { padding-top: 3px; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+.btn-row { display: flex; gap: 12px; }
+.btn-row .btn { flex: 1; width: auto; }
+
+/* Campos (CupoField + CupoTextInput). */
+.field-label { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; display: block; }
+.input { min-height: 52px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+         display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 15px; line-height: 1.2; color: var(--ink); }
+.input .ph { color: var(--text-support-soft); }
+.input .ic { color: var(--text-support); width: 18px; height: 18px; }
+.input.focus { border-color: var(--primary); outline: 3px solid var(--primary-ring); }
+.input.tall { min-height: 60px; padding: 0 12px; }
+.caret { width: 1.5px; height: 20px; background: var(--primary); margin-left: -6px; }
+.helper { font-size: 13px; line-height: 1.4; color: var(--text-support); margin-top: 8px; }
+
+/* Opción seleccionable (CupoCheckTile / CupoChoiceTile). */
+.tile { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border);
+        border-radius: var(--radius-md); background: var(--surface); }
+.tile.on { background: var(--primary-soft); border-color: var(--primary); outline: 3px solid var(--primary-ring); }
+.tile.sm { padding: 10px; gap: 10px; min-height: 56px; }
+.tile.sm b { font-size: 14px; line-height: 1.25; font-weight: 700; }
+.tile.stack { flex-direction: column; align-items: stretch; gap: 0; }
+.tile.off { opacity: .55; }
+.mosaic { width: 40px; height: 40px; border-radius: var(--radius); background: var(--background-muted); color: var(--primary-deep);
+          display: grid; place-items: center; flex: none; }
+.mosaic.sm { width: 32px; height: 32px; border-radius: 10px; }
+.mosaic.sm .ic { width: 18px; height: 18px; }
+.tile.on .mosaic { background: var(--primary); color: var(--on-primary); }
+.check { color: var(--border); }
+.tile.on .check { color: var(--primary); }
+.ctile { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--border);
+         border-radius: var(--radius-md); background: var(--surface); }
+.ctile b { font-size: 14px; font-weight: 700; }
+.ctile.on { background: var(--primary-soft); border-color: var(--primary); outline: 3px solid var(--primary-ring); }
+.ctile.on .mosaic { background: var(--primary); color: var(--on-primary); }
+.ctile .ok { position: absolute; top: 10px; right: 10px; color: var(--primary); width: 18px; height: 18px; }
+.seg { display: flex; align-items: center; justify-content: center; gap: 6px; height: 48px; border: 1px solid var(--border);
+       border-radius: var(--radius-md); font-size: 14px; font-weight: 700; background: var(--surface); }
+.seg .ic { width: 16px; height: 16px; color: var(--primary-deep); }
+.seg.on { background: var(--primary-soft); border-color: var(--primary); outline: 3px solid var(--primary-ring); color: var(--primary-darkest); }
+
+/* Días de la semana. */
+.days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.day { height: 56px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface);
+       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.day b { font-size: 16px; font-weight: 800; line-height: 1.1; }
+.day small { font-size: 11px; font-weight: 600; color: var(--text-support); }
+.day.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); outline: 3px solid var(--primary-ring); }
+.day.on small { color: var(--primary-soft); }
+.days.low .day { height: 44px; }
+.days.ro .day.on { outline: none; }
+
+/* Etiquetas de estado (regla 7). */
+.tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius);
+       font-size: 13px; font-weight: 700; line-height: 1.3; white-space: nowrap; flex: none; }
+.tag .ic { width: 16px; height: 16px; }
+.tag-success { color: var(--success); background: var(--success-soft); }
+.tag-warning { color: var(--warning); background: var(--warning-soft); }
+.tag-danger { color: var(--danger); background: var(--danger-soft); }
+.tag-brand { color: var(--primary-deep); background: var(--primary-soft); }
+.tag-muted { color: var(--text-secondary); background: var(--background-muted); }
+.tag-line { color: var(--ink); background: var(--surface); border: 1px solid var(--border); padding: 3px 8px; }
+.tag-line .ic { color: var(--primary-deep); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 999px;
+        border: 1px solid var(--border); background: var(--background-alt); font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.chip .ic { width: 16px; height: 16px; color: var(--primary-deep); }
+.chip.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-darkest); }
+.tile .chips { gap: 6px; flex-wrap: nowrap; }
+.tile .chip { padding: 0 10px; }
+.tile.on .chip { background: var(--surface); }
+.tile.on .chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.card.alt { background: var(--background-alt); }
+.banner { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); align-items: flex-start; }
+.banner > .ic { margin-top: 1px; }
+.banner.info { background: var(--primary-soft); } .banner.info > .ic { color: var(--primary-deep); }
+.banner.warn { background: var(--warning-soft); } .banner.warn > .ic { color: var(--warning); }
+.banner.ok { background: var(--success-soft); } .banner.ok > .ic { color: var(--success); }
+.zona { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius); font-size: 13px; font-weight: 700; }
+.zona .ic { width: 16px; height: 16px; }
+.zona.ok { color: var(--success); background: var(--success-soft); }
+
+.info { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.35; color: var(--text-secondary); }
+.info .ic { width: 16px; height: 16px; color: var(--primary-deep); }
+.info.ink { color: var(--ink); font-size: 14px; }
+
+.list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.lrow { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.lrow.tight { padding: 7px 12px; }
+.lrow.today { background: var(--primary-soft); flex-wrap: wrap; }
+.lrow.today .btn { margin-top: 2px; }
+.lrow + .lrow { border-top: 1px solid var(--border); }
+.lrow.dim > *:not(.tag) { opacity: .6; }
+.dtile { width: 40px; height: 40px; border-radius: var(--radius); background: var(--background-muted); flex: none;
+         display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--primary-deep); }
+.dtile small { font-size: 9px; font-weight: 800; letter-spacing: .06em; line-height: 1; }
+.dtile b { font-size: 16px; font-weight: 800; line-height: 1.1; }
+.dtile.on { background: var(--primary); color: var(--on-primary); }
+.dtile.off { background: var(--background-alt); color: var(--text-support); border: 1px dashed var(--border); }
+
+.av { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-soft); color: var(--primary-deep);
+      display: grid; place-items: center; font-size: 13px; font-weight: 700; flex: none; }
+.av.sm { width: 36px; height: 36px; font-size: 12px; }
+.av.lg { width: 48px; height: 48px; font-size: 14px; }
+.foto { position: relative; border-radius: 50%; flex: none; display: block; }
+.foto > svg { display: block; border-radius: 50%; }
+.f-bg { fill: var(--primary-soft); } .f-fg { fill: var(--primary); }
+.foto.b .f-bg { fill: var(--background-muted); } .foto.b .f-fg { fill: var(--primary-deep); }
+.foto.c .f-bg { fill: var(--primary-soft); } .foto.c .f-fg { fill: var(--primary-darkest); }
+.foto .vb { position: absolute; right: -2px; bottom: -2px; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--success); color: var(--on-primary); border: 2px solid var(--surface); display: grid; place-items: center; }
+.foto .vb .ic { width: 10px; height: 10px; stroke-width: 3.5; }
+.roundbtn { width: 44px; height: 44px; border-radius: 50%; background: var(--background-muted); color: var(--primary-deep);
+            display: grid; place-items: center; flex: none; }
+
+/* Barra inferior (BottomNavigationBar del tema). */
+.nav { flex: none; height: 76px; border-top: 1px solid var(--border); background: var(--surface);
+       display: grid; grid-template-columns: repeat(4, 1fr); padding: 10px 8px 0; position: relative; z-index: 9; }
+.nav.abs { position: absolute; left: 0; right: 0; bottom: 0; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-support);
+            font-size: 12px; font-weight: 500; }
+.nav-item.on { color: var(--primary); font-weight: 700; }
+
+/* Hojas y paneles. */
+.panel { flex: none; background: var(--surface); border-top: 1px solid var(--border); padding: 16px 20px 28px; position: relative; z-index: 4; }
+.sheet { position: relative; z-index: 4; background: var(--surface); border: 1px solid var(--border); border-bottom: 0;
+         border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; }
+.sheet.abs { position: absolute; left: 0; right: 0; }
+.asa { width: 32px; height: 4px; border-radius: var(--radius); background: var(--border); margin: 10px auto 10px; }
+.actionbar { position: absolute; left: 0; right: 0; z-index: 8; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 20px; }
+
+/* Indicador de pasos (CupoStepIndicator). */
+.dots { display: flex; align-items: center; }
+.sdot { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: var(--on-primary);
+        display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.sdot .ic { width: 16px; height: 16px; }
+.sline { flex: 1; height: 2px; background: var(--primary); margin: 0 8px; }
+.snames { display: flex; justify-content: space-between; margin-top: 8px; }
+
+/* Seguimiento: tres hitos del viaje. */
+.track { display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; }
+.track::before { content: ""; position: absolute; top: 11px; left: 16.6%; right: 16.6%; height: 2px; background: var(--border); }
+.track::after { content: ""; position: absolute; top: 11px; left: 16.6%; width: 33.4%; height: 2px; background: var(--primary); }
+.tstep { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.tdot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 6px;
+        background: var(--background-muted); color: var(--text-support); border: 2px solid var(--surface); }
+.tdot .ic { width: 14px; height: 14px; stroke-width: 2.6; }
+.tstep.done .tdot { background: var(--primary); color: var(--on-primary); }
+.tstep.cur .tdot { background: var(--surface); border: 2px solid var(--primary); color: var(--primary); }
+.tstep b { font-size: 13px; font-weight: 700; }
+.tstep small { font-size: 12px; color: var(--text-support); }
+
+/* Mapa. */
+.map { position: relative; overflow: hidden; background: var(--background-alt); }
+.map.fill { position: absolute; inset: 0; }
+.mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mbtn { position: absolute; z-index: 5; width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--surface);
+        border: 1px solid var(--border); display: grid; place-items: center; color: var(--primary-deep); }
+.mhint { position: absolute; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface);
+         border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; font-weight: 700; }
+.mhint .ic { width: 16px; height: 16px; color: var(--primary-deep); }
+.mlegend { position: absolute; z-index: 5; display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--surface);
+           border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.mlegend i { display: inline-block; flex: none; }
+.mlegend i + span { margin-right: 6px; }
+.lg-zone { width: 12px; height: 12px; border-radius: 3px; background: var(--primary-soft); border: 1.5px solid var(--primary); }
+.lg-zone.hi { background: color-mix(in srgb, var(--primary) 22%, var(--surface)); border: 2px solid var(--primary-deep); }
+.lg-home { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+.lg-stop { width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--primary); }
+.lg-unit { width: 12px; height: 12px; border-radius: 50%; background: var(--success); }
+.lg-urbe { width: 12px; height: 12px; border-radius: 3px; background: var(--primary-darkest); }
+.lg-route { width: 18px; height: 5px; border-radius: 3px; background: var(--primary); }
+.lg-radius { width: 14px; height: 14px; border-radius: 50%; background: var(--primary-ring); border: 1.5px dashed var(--primary); }
+
+/* Geometría del mapa: todo color sale de un token. */
+.m-land { fill: var(--background-alt); }
+.m-grid { stroke: var(--border); stroke-width: 1; fill: none; stroke-linecap: round; }
+.m-lake { fill: var(--background-muted); }
+.m-av-o { stroke: var(--border); fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-av-i { stroke: var(--surface); fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-zone { fill: var(--primary-soft); fill-opacity: .85; stroke: var(--primary); stroke-width: 1.5; stroke-linejoin: round; }
+.m-zone.hi { fill: var(--primary); fill-opacity: .22; stroke: var(--primary-deep); stroke-width: 2.5; }
+.m-zone.off { fill: var(--primary-soft); fill-opacity: .55; stroke: var(--text-support-soft); stroke-width: 1; }
+.m-zlabel { font: 600 11px 'Manrope', sans-serif; fill: var(--primary-darkest); text-anchor: middle;
+            paint-order: stroke; stroke: var(--primary-soft); stroke-width: 3px; stroke-linejoin: round; }
+.m-zlabel.hi { font-weight: 800; stroke: none; }
+.m-zlabel.off { fill: var(--text-secondary); font-weight: 600; stroke: none; }
+.m-avlabel { font: 600 9px 'Manrope', sans-serif; fill: var(--text-support); paint-order: stroke; stroke: var(--background-alt);
+             stroke-width: 3px; stroke-linejoin: round; letter-spacing: .02em; }
+.m-lakelabel { font: 700 10px 'Manrope', sans-serif; fill: var(--text-support); letter-spacing: .2em; text-transform: uppercase; }
+.m-route-o { stroke: var(--surface); stroke-width: 9; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-route { stroke: var(--primary); stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-route.faint { stroke-opacity: .5; stroke-width: 4; }
+.m-route-o.faint { stroke-width: 7; }
+.m-radius { fill: var(--primary-ring); stroke: var(--primary); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.m-pin { fill: var(--primary); stroke: var(--surface); stroke-width: 2; }
+.m-ic { fill: none; stroke: var(--on-primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.m-unit { fill: var(--success); stroke: var(--surface); stroke-width: 2; }
+.m-urbe { fill: var(--primary-darkest); stroke: var(--surface); stroke-width: 2; }
+.m-poi { font: 800 11px 'Manrope', sans-serif; fill: var(--primary-darkest); paint-order: stroke; stroke: var(--background-alt);
+         stroke-width: 3px; stroke-linejoin: round; letter-spacing: .04em; }
+.m-stop { fill: var(--surface); stroke: var(--primary); stroke-width: 2; }
+.m-stop.done { fill: var(--primary); stroke: var(--surface); }
+.m-stop.skip { fill: var(--background-alt); stroke: var(--text-support-soft); stroke-dasharray: 3 3; }
+.m-stop-n { font: 700 12px 'Manrope', sans-serif; fill: var(--primary-deep); text-anchor: middle; }
+.m-stop-n.done { fill: var(--on-primary); }
+.m-stop-n.skip { fill: var(--text-support); }
+.m-dot { fill: var(--success); stroke: var(--surface); stroke-width: 2; }
+.m-callout rect { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+.m-callout text { font: 700 11px 'Manrope', sans-serif; fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+
+/* Notificación del sistema (HU-014). */
+.notif { position: absolute; left: 12px; right: 12px; top: 46px; z-index: 9; background: var(--surface); border: 1px solid var(--border);
+         border-radius: 20px; padding: 12px 14px 14px; }
+.notif-head { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-support); }
+.notif-head b { color: var(--ink); font-weight: 700; }
+.app-tile { width: 18px; height: 18px; border-radius: 5px; background: var(--primary); display: grid; place-items: center; }
+
+/* Saludo flotante del conductor. */
+.greet { position: absolute; z-index: 6; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+         background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+
+.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.thumb { height: 48px; border-radius: 10px; background: var(--background-muted); color: var(--primary-deep); display: flex;
+         align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.thumb .ic { width: 16px; height: 16px; }
+.stepper { display: flex; align-items: center; justify-content: space-between; height: 52px; border: 1px solid var(--border);
+           border-radius: var(--radius-md); padding: 0 6px; background: var(--surface); }
+.stepper b { font-size: 18px; font-weight: 800; }
+.sbtn { width: 40px; height: 40px; border-radius: 50%; background: var(--background-muted); color: var(--primary-deep); display: grid; place-items: center; }
+.sbtn .ic { width: 18px; height: 18px; }
+.amount b { font-size: 20px; font-weight: 800; }
+</style>
+<script>
+  // ?pantalla=NN deja una sola figura, sin cabeceras: es como se capturan
+  // los PNG del Capítulo IV.
+  (function () {
+    var p = new URLSearchParams(location.search).get('pantalla');
+    if (!p) return;
+    document.documentElement.classList.add('captura');
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.fig').forEach(function (f) { if (f.dataset.n !== p) f.remove(); });
+      document.querySelectorAll('.section-title').forEach(function (s) { s.remove(); });
+    });
+  })();
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><!-- Iconos de Lucide (lucide-static 0.525.0, licencia ISC) --><symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7" /> <path d="M19 12H5" /></symbol><symbol id="i-arrow-left-right" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4" /> <path d="M4 7h16" /> <path d="m16 21 4-4-4-4" /> <path d="M20 17H4" /></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="m12 5 7 7-7 7" /></symbol><symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m4.9 4.9 14.2 14.2" /></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2" /> <circle cx="12" cy="12" r="2" /> <path d="M6 12h.01M18 12h.01" /></symbol><symbol id="i-bus" viewBox="0 0 24 24"><path d="M8 6v6" /> <path d="M15 6v6" /> <path d="M2 12h19.6" /> <path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3" /> <circle cx="7" cy="18" r="2" /> <path d="M9 18h5" /> <circle cx="16" cy="18" r="2" /></symbol><symbol id="i-calendar-check" viewBox="0 0 24 24"><path d="M8 2v4" /> <path d="M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18" /> <path d="m9 16 2 2 4-4" /></symbol><symbol id="i-calendar-clock" viewBox="0 0 24 24"><path d="M16 14v2.2l1.6 1" /> <path d="M16 2v4" /> <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" /> <path d="M3 10h5" /> <path d="M8 2v4" /> <circle cx="16" cy="16" r="6" /></symbol><symbol id="i-calendar-days" viewBox="0 0 24 24"><path d="M8 2v4" /> <path d="M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18" /> <path d="M8 14h.01" /> <path d="M12 14h.01" /> <path d="M16 14h.01" /> <path d="M8 18h.01" /> <path d="M12 18h.01" /> <path d="M16 18h.01" /></symbol><symbol id="i-car-front" viewBox="0 0 24 24"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8" /> <path d="M7 14h.01" /> <path d="M17 14h.01" /> <rect width="18" height="8" x="3" y="10" rx="2" /> <path d="M5 18v2" /> <path d="M19 18v2" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol><symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m9 12 2 2 4-4" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 6v6l4 2" /> <circle cx="12" cy="12" r="10" /></symbol><symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6" /> <path d="M18.09 10.37A6 6 0 1 1 10.34 18" /> <path d="M7 6h1v4" /> <path d="m16.71 13.88.7.71-2.82 2.82" /></symbol><symbol id="i-construction" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="8" rx="1" /> <path d="M17 14v7" /> <path d="M7 14v7" /> <path d="M17 3v3" /> <path d="M7 3v3" /> <path d="M10 14 2.3 6.3" /> <path d="m14 6 7.7 7.7" /> <path d="m8 6 8 8" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /> <circle cx="5" cy="12" r="1" /></symbol><symbol id="i-fuel" viewBox="0 0 24 24"><line x1="3" x2="15" y1="22" y2="22" /> <line x1="4" x2="14" y1="9" y2="9" /> <path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18" /> <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5" /></symbol><symbol id="i-graduation-cap" viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></symbol><symbol id="i-heart-pulse" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /> <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" /></symbol><symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14" /> <path d="M5 2h14" /> <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /> <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></symbol><symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /> <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></symbol><symbol id="i-id-card" viewBox="0 0 24 24"><path d="M16 10h2" /> <path d="M16 14h2" /> <path d="M6.17 15a3 3 0 0 1 5.66 0" /> <circle cx="9" cy="11" r="2" /> <rect x="2" y="5" width="20" height="14" rx="2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle cx="9" cy="9" r="2" /> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-landmark" viewBox="0 0 24 24"><path d="M10 18v-7" /> <path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z" /> <path d="M14 18v-7" /> <path d="M18 18v-7" /> <path d="M3 22h18" /> <path d="M6 18v-7" /></symbol><symbol id="i-locate-fixed" viewBox="0 0 24 24"><line x1="2" x2="5" y1="12" y2="12" /> <line x1="19" x2="22" y1="12" y2="12" /> <line x1="12" x2="12" y1="2" y2="5" /> <line x1="12" x2="12" y1="19" y2="22" /> <circle cx="12" cy="12" r="7" /> <circle cx="12" cy="12" r="3" /></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /> <circle cx="12" cy="10" r="3" /></symbol><symbol id="i-maximize-2" viewBox="0 0 24 24"><path d="M15 3h6v6" /> <path d="m21 3-7 7" /> <path d="m3 21 7-7" /> <path d="M9 21H3v-6" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></symbol><symbol id="i-navigation" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11" /></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol><symbol id="i-pointer" viewBox="0 0 24 24"><path d="M22 14a8 8 0 0 1-8 8" /> <path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" /> <path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1" /> <path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10" /> <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" /></symbol><symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2" /> <path d="M17 3h2a2 2 0 0 1 2 2v2" /> <path d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path d="M7 21H5a2 2 0 0 1-2-2v-2" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path d="m9 12 2 2 4-4" /></symbol><symbol id="i-signal" viewBox="0 0 24 24"><path d="M2 20h.01" /> <path d="M7 20v-4" /> <path d="M12 20v-8" /> <path d="M17 20V8" /> <path d="M22 4v16" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><line x1="21" x2="14" y1="4" y2="4" /> <line x1="10" x2="3" y1="4" y2="4" /> <line x1="21" x2="12" y1="12" y2="12" /> <line x1="8" x2="3" y1="12" y2="12" /> <line x1="21" x2="16" y1="20" y2="20" /> <line x1="12" x2="3" y1="20" y2="20" /> <line x1="14" x2="14" y1="2" y2="6" /> <line x1="8" x2="8" y1="10" y2="14" /> <line x1="16" x2="16" y1="18" y2="22" /></symbol><symbol id="i-smartphone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /> <path d="M12 18h.01" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /> <path d="M12 2v2" /> <path d="M12 20v2" /> <path d="m4.93 4.93 1.41 1.41" /> <path d="m17.66 17.66 1.41 1.41" /> <path d="M2 12h2" /> <path d="M20 12h2" /> <path d="m6.34 17.66-1.41 1.41" /> <path d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M12 2v8" /> <path d="m4.93 10.93 1.41 1.41" /> <path d="M2 18h2" /> <path d="M20 18h2" /> <path d="m19.07 10.93-1.41 1.41" /> <path d="M22 22H2" /> <path d="m8 6 4-4 4 4" /> <path d="M16 18a4 4 0 0 0-8 0" /></symbol><symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2" /> <line x1="12" x2="15" y1="14" y2="11" /> <circle cx="12" cy="14" r="8" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></symbol><symbol id="i-user-x" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <circle cx="9" cy="7" r="4" /> <line x1="17" x2="22" y1="8" y2="13" /> <line x1="22" x2="17" y1="8" y2="13" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" /></symbol><symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" /> <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" /></symbol><symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 20h.01" /> <path d="M2 8.82a15 15 0 0 1 20 0" /> <path d="M5 12.859a10 10 0 0 1 14 0" /> <path d="M8.5 16.429a5 5 0 0 1 7 0" /></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol></svg>
+<main class="page">
+  <header class="page-head">
+    <div class="brand"><svg width="30" height="30" viewBox="0 0 66 66" style="color:var(--primary);flex:none" aria-hidden="true"><circle cx="33" cy="33" r="10" fill="currentColor"/><path d="M33 9a24 24 0 0 1 0 48" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"/></svg><span class="wordmark">Cupo</span></div>
+    <h1 class="page-title">Prototipos de interfaz para mapas y paradas</h1>
+    <p class="page-sub">Fase II, actividad 2.4. Trece pantallas de alta fidelidad de la aplicación móvil, construidas con el
+      sistema de diseño de Cupo: verde lago como acento, Teko para títulos y botones, Manrope para el resto, iconos Lucide y
+      jerarquía por bordes, sin sombras. Los mapas son esquemáticos: muestran la lógica de zonas, domicilios, paradas y
+      unidad sobre una Maracaibo estilizada, no la cartografía real.</p>
+    <div class="legend">
+      <span class="legend-title">Convenciones de los mapas</span>
+      <span class="legend-item"><i class="lg-zone" style="display:inline-block"></i>Zona de cobertura</span>
+      <span class="legend-item"><i class="lg-zone hi" style="display:inline-block"></i>Zona elegida o detectada</span>
+      <span class="legend-item"><i class="lg-home" style="display:inline-block"></i>Domicilio del estudiante</span>
+      <span class="legend-item"><i class="lg-stop" style="display:inline-block"></i>Parada numerada</span>
+      <span class="legend-item"><i class="lg-route" style="display:inline-block"></i>Recorrido</span>
+      <span class="legend-item"><i class="lg-unit" style="display:inline-block"></i>Unidad en vivo</span>
+      <span class="legend-item"><i class="lg-radius" style="display:inline-block"></i>Radio de proximidad</span>
+      <span class="legend-item"><i class="lg-urbe" style="display:inline-block"></i>URBE</span>
+    </div>
+  </header>
+
+  <h2 class="section-title">Estudiante</h2>
+  <div class="grid">
+
+<!-- ================================================= 01 Fijar domicilio -->
+<figure class="fig" data-n="01">
+  <figcaption class="fig-cap"><span class="fig-num">01</span><span class="fig-name">Fijar domicilio en el mapa</span><span class="fig-hu">HU-003</span></figcaption>
+  <div class="fig-phones">
+    <div class="fig-sub">
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+        <div class="px">
+          <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span><span class="sh-title">Completa tu perfil</span><span></span></div>
+          <div class="mt-8">
+            <div class="dots"><span class="sdot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="sline"></span><span class="sdot">2</span></div>
+            <div class="snames"><span class="t-meta brandc">Tus estudios</span><span class="t-meta-strong">Tu casa</span></div>
+          </div>
+          <h1 class="t-title mt-16">¿Dónde vives?</h1>
+          <p class="t-body mt-4">Toca el mapa para marcar tu casa, o usa tu ubicación.</p>
+        </div>
+        <div class="map grow mt-16 bt">
+          <svg class="mapsvg" viewBox="0 0 360 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="250"/><path class="m-grid" d="M-94.4 -47.9L39.5 -64.3M93.1 -70.9L307.5 -97.2M334.3 -100.5L414.7 -110.4M-91.2 -21.1L-37.6 -27.7M-10.8 -31L69.6 -40.8M96.4 -44.1L391.2 -80.3M-61.1 2.4L421.3 -56.8M-84.6 32.5L129.8 6.2M156.6 2.9L210.2 -3.7M237 -7L290.6 -13.6M317.4 -16.9L397.8 -26.7M-81.3 59.3L-54.5 56M-27.7 52.7L159.9 29.7M186.7 26.4L213.5 23.1M240.3 19.8L320.7 9.9M374.3 3.4L427.9 -3.2M-78 86.1L404.4 26.9M-74.7 112.9L-21.1 106.3M5.7 103L59.3 96.5M86.1 93.2L246.9 73.4M300.5 66.8L434.5 50.4M-71.4 139.7L143 113.4M169.8 110.1L411 80.5M-68.1 166.5L226.7 130.3M253.5 127L441.1 104M-64.8 193.3L15.6 183.4M42.4 180.1L256.8 153.8M310.4 147.2L444.3 130.8M-61.5 220.1L179.6 190.5M206.4 187.2L286.8 177.3M313.6 174L447.6 157.6M-58.3 246.9L-31.5 243.6M-4.7 240.3L450.9 184.4M-55 273.7L79 257.2M105.8 254L159.4 247.4M186.2 244.1L347 224.3M-24.9 297.2L28.7 290.6M55.5 287.3L296.7 257.7M323.5 254.4L403.9 244.6M430.7 241.3L457.5 238M-48.4 327.3L380.4 274.6M407.2 271.4L460.8 264.8M-45.1 354.1L142.5 331.1M169.3 327.8L356.9 304.7M383.7 301.4L410.5 298.2M-94.4 -47.9L-91.2 -21.1M-81.3 59.3L-78 86.1M-71.4 139.7L-68.1 166.5M-64.8 193.3L-45.1 354.1M-64.4 -24.4L-54.5 56M-51.2 82.8L-44.6 136.4M-41.3 163.2L-28.2 270.4M-24.9 297.2L-18.3 350.8M-40.8 -54.5L-21.1 106.3M-17.8 133.1L-4.7 240.3M-1.4 267.1L8.5 347.5M-14.1 -57.8L-0.9 49.4M5.7 103L22.1 237M25.4 263.8L28.7 290.6M32 317.4L35.3 344.2M12.7 -61.1L48.9 233.7M52.2 260.5L58.8 314.1M39.5 -64.3L49.4 16.1M52.7 42.9L88.9 337.6M66.3 -67.6L99.3 200.4M102.5 227.2L105.8 254M109.1 280.8L115.7 334.3M93.1 -70.9L112.9 89.9M119.5 143.5L135.9 277.5M139.2 304.3L142.5 331.1M119.9 -74.2L143 113.4M146.3 140.2L152.8 193.8M156.1 220.6L162.7 274.2M166 301L169.3 327.8M146.7 -77.5L186.2 244.1M189.5 270.9L196.1 324.5M173.5 -80.8L183.4 -0.4M186.7 26.4L193.3 80M196.6 106.8L203.2 160.4M206.4 187.2L209.7 214M213 240.8L222.9 321.2M200.3 -84.1L213.5 23.1M220.1 76.7L246.4 291.1M227.1 -87.4L260 180.6M263.3 207.4L266.6 234.2M273.2 287.8L276.5 314.6M253.9 -90.7L257.2 -63.9M263.8 -10.3L280.3 123.7M283.6 150.5L286.8 177.3M290.1 204.1L303.3 311.3M280.7 -94L284 -67.2M287.3 -40.4L330.1 308M307.5 -97.2L310.8 -70.4M314.1 -43.6L330.6 90.3M333.9 117.1L337.1 143.9M340.4 170.7L356.9 304.7M334.3 -100.5L337.6 -73.7M340.9 -46.9L347.5 6.7M350.8 33.5L357.4 87.1M360.7 113.9L377.1 247.8M380.4 274.6L383.7 301.4M361.1 -103.8L397.3 191M407.2 271.4L410.5 298.2M391.2 -80.3L420.8 160.9M424.1 187.7L437.3 294.9M414.7 -110.4L424.6 -30M427.9 -3.2L434.5 50.4M437.8 77.2L441.1 104M444.3 130.8L447.6 157.6M450.9 184.4L454.2 211.2"/><path class="m-av-o" style="stroke-width:7" d="M39 -522.4 C25.5 -474.4 -12 -298.9 -42 -234.4 C-72 -169.9 -110.7 -175.9 -141 -135.4 C-171.3 -94.9 -198.3 -46.9 -223.8 8.6 C-249.3 64.1 -280.2 136.1 -294 197.6 C-307.8 259.1 -309 311.6 -306.6 377.6 C-304.2 443.6 -298.2 523.1 -279.6 593.6 C-261 664.1 -228.6 731.6 -195 800.6 C-161.4 869.6 -111 928.1 -78 1007.6 C-45 1087.1 -10.5 1232.6 3 1277.6 M-168 -522.4 C-167.4 -459.4 -166.6 -238.9 -164.4 -144.4 C-162.1 -49.9 -160.2 -21.4 -154.5 44.6 C-148.8 110.6 -134.2 217.1 -130.2 251.6 M-1005 415.4 C-960 412.7 -825 405.5 -735 399.2 C-645 392.9 -536.4 386.9 -465 377.6 C-393.6 368.3 -333 349.1 -306.6 343.4 M-306.6 343.4 C-273 337.4 -171.6 316.7 -105 307.4 C-38.4 298.1 19.5 293 93 287.6 C166.5 282.2 295.5 277.1 336 275 M-123 177.8 C-87 176 16.5 170 93 167 C169.5 164 295.5 161 336 159.8 M85.8 -522.4 C84.6 -447.4 80.4 -180.4 78.6 -72.4 C76.8 35.6 73.8 50.6 75 125.6 C76.2 200.6 80.4 290.6 85.8 377.6 C91.2 464.6 94.2 572.6 107.4 647.6 C120.6 722.6 146.4 737.6 165 827.6 C183.6 917.6 210 1127.6 219 1187.6 M237 -522.4 C234.6 -447.4 226.8 -186.4 222.6 -72.4 C218.4 41.6 214.2 71.6 211.8 161.6 C209.4 251.6 208.8 416.6 208.2 467.6 M-285 647.6 C-240 649.1 -118.5 656.6 -15 656.6 C88.5 656.6 277.5 649.1 336 647.6 M-306.6 458.6 C-273 458.9 -176.1 461.3 -105 460.4 C-33.9 459.5 46.5 453.2 120 453.2 C193.5 453.2 300 459.2 336 460.4 M-141 -135.4 C-104.4 -136.9 -0.9 -141.4 78.6 -144.4 C158.1 -147.4 293.1 -151.9 336 -153.4 M-1005 170.6 C-945 170.6 -763.5 166.1 -645 170.6 C-526.5 175.1 -352.5 193.1 -294 197.6"/><path class="m-av-i" style="stroke-width:3.5" d="M39 -522.4 C25.5 -474.4 -12 -298.9 -42 -234.4 C-72 -169.9 -110.7 -175.9 -141 -135.4 C-171.3 -94.9 -198.3 -46.9 -223.8 8.6 C-249.3 64.1 -280.2 136.1 -294 197.6 C-307.8 259.1 -309 311.6 -306.6 377.6 C-304.2 443.6 -298.2 523.1 -279.6 593.6 C-261 664.1 -228.6 731.6 -195 800.6 C-161.4 869.6 -111 928.1 -78 1007.6 C-45 1087.1 -10.5 1232.6 3 1277.6 M-168 -522.4 C-167.4 -459.4 -166.6 -238.9 -164.4 -144.4 C-162.1 -49.9 -160.2 -21.4 -154.5 44.6 C-148.8 110.6 -134.2 217.1 -130.2 251.6 M-1005 415.4 C-960 412.7 -825 405.5 -735 399.2 C-645 392.9 -536.4 386.9 -465 377.6 C-393.6 368.3 -333 349.1 -306.6 343.4 M-306.6 343.4 C-273 337.4 -171.6 316.7 -105 307.4 C-38.4 298.1 19.5 293 93 287.6 C166.5 282.2 295.5 277.1 336 275 M-123 177.8 C-87 176 16.5 170 93 167 C169.5 164 295.5 161 336 159.8 M85.8 -522.4 C84.6 -447.4 80.4 -180.4 78.6 -72.4 C76.8 35.6 73.8 50.6 75 125.6 C76.2 200.6 80.4 290.6 85.8 377.6 C91.2 464.6 94.2 572.6 107.4 647.6 C120.6 722.6 146.4 737.6 165 827.6 C183.6 917.6 210 1127.6 219 1187.6 M237 -522.4 C234.6 -447.4 226.8 -186.4 222.6 -72.4 C218.4 41.6 214.2 71.6 211.8 161.6 C209.4 251.6 208.8 416.6 208.2 467.6 M-285 647.6 C-240 649.1 -118.5 656.6 -15 656.6 C88.5 656.6 277.5 649.1 336 647.6 M-306.6 458.6 C-273 458.9 -176.1 461.3 -105 460.4 C-33.9 459.5 46.5 453.2 120 453.2 C193.5 453.2 300 459.2 336 460.4 M-141 -135.4 C-104.4 -136.9 -0.9 -141.4 78.6 -144.4 C158.1 -147.4 293.1 -151.9 336 -153.4 M-1005 170.6 C-945 170.6 -763.5 166.1 -645 170.6 C-526.5 175.1 -352.5 193.1 -294 197.6"/><path class="m-lake" d="M349.5 -1062.4 C348.8 -927.4 348.1 -405.4 345 -252.4 C341.9 -99.4 335.7 -183.4 330.6 -144.4 C325.5 -105.4 315.6 -57.4 314.4 -18.4 C313.2 20.6 324.6 50.6 323.4 89.6 C322.2 128.6 308.7 167.6 307.2 215.6 C305.7 263.6 310.5 326.6 314.4 377.6 C318.3 428.6 329.1 476.6 330.6 521.6 C332.1 566.6 326.1 604.1 323.4 647.6 C320.7 691.1 313.2 737.6 314.4 782.6 C315.6 827.6 325.5 865.1 330.6 917.6 C335.7 970.1 341.9 962.6 345 1097.6 C348.1 1232.6 348.8 1622.6 349.5 1727.6 L4000 1727.6 L4000 -1062.4 Z"/><text class="m-lakelabel" transform="translate(346 150) rotate(90)" text-anchor="middle">Lago de Maracaibo</text><path class="m-zone " d="M-112.2 -117.4 L73.2 -128.2 L80.4 82.4 L3 93.2 L-101.4 91.4 L-123 -16.6 Z"/><path class="m-zone " d="M111 -117.4 L292.8 -137.2 L307.2 -16.6 L298.2 86 L120 91.4 L100.2 -16.6 Z"/><path class="m-zone " d="M-321 44.6 L-148.2 33.8 L-137.4 154.4 L-148.2 240.8 L-312 248 L-330 143.6 Z"/><path class="m-zone hi" d="M44.4 109.4 L165 102.2 L292.8 111.2 L291 194 L255 244.4 L170.4 244.4 L49.8 244.4 L57 170.6 Z"/><path class="m-zone " d="M-274.2 267.8 L-112.2 257 L26.4 262.4 L31.8 377.6 L-11.4 437 L-112.2 446 L-268.8 438.8 L-285 356 Z"/><path class="m-zone " d="M49.8 266 L175.8 260.6 L289.2 257 L294.6 433.4 L175.8 442.4 L55.2 442.4 L40.8 356 Z"/><path class="m-zone " d="M-272.4 539.6 L-112.2 528.8 L31.8 543.2 L28.2 748.4 L-123 762.8 L-261.6 741.2 Z"/><path class="m-zone " d="M55.2 467.6 L175.8 460.4 L296.4 467.6 L301.8 658.4 L175.8 667.4 L57 662 Z"/><path class="m-zone " d="M62.4 701.6 L201 689 L301.8 703.4 L307.2 824 L292.8 932 L129 944.6 L53.4 872.6 Z"/><text class="m-zlabel hi" x="175.8" y="225">Tierra Negra</text><circle class="m-pin" cx="156" cy="140" r="22"/><use href="#i-house" class="m-ic" x="146" y="130" width="20" height="20"/></svg>
+          <span class="mhint" style="top:12px;left:12px"><svg class="ic" aria-hidden="true"><use href="#i-pointer"/></svg>Toca para mover el pin</span>
+          <span class="mbtn" style="top:12px;right:12px"><svg class="ic" aria-hidden="true"><use href="#i-locate-fixed"/></svg></span>
+        </div>
+        <div class="panel">
+          <div class="row between"><span class="t-label">Tu casa</span><span class="t-helper">Lat. 10,6651 · Long. −71,6153</span></div>
+          <div class="zona ok mt-8"><svg class="ic" aria-hidden="true"><use href="#i-circle-check"/></svg>Zona detectada: Tierra Negra</div>
+          <label class="field-label mt-12">Punto de referencia (opcional)</label>
+          <div class="input">Calle 72 con Av. 3E, rejas verdes</div>
+          <div class="btn btn-primary mt-16"><span>Confirmar mi domicilio</span></div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <span class="sub-cap">a) Zona detectada</span>
+    </div>
+    <div class="fig-sub">
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>9:42</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+        <div class="px">
+          <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span><span class="sh-title">Completa tu perfil</span><span></span></div>
+          <div class="mt-8">
+            <div class="dots"><span class="sdot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="sline"></span><span class="sdot">2</span></div>
+            <div class="snames"><span class="t-meta brandc">Tus estudios</span><span class="t-meta-strong">Tu casa</span></div>
+          </div>
+          <h1 class="t-title mt-16">¿Dónde vives?</h1>
+          <p class="t-body mt-4">Toca el mapa para marcar tu casa, o usa tu ubicación.</p>
+        </div>
+        <div class="map grow mt-16 bt">
+          <svg class="mapsvg" viewBox="0 0 360 214" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="214"/><path class="m-grid" d="M-85 -56.4L-61.2 -59.4M-37.4 -62.3L-13.6 -65.2M34.1 -71.1L224.6 -94.5M248.4 -97.4L391.4 -114.9M-82.1 -32.6L37 -47.2M60.8 -50.2L179.9 -64.8M203.7 -67.7L394.3 -91.1M-79.2 -8.8L87.5 -29.3M135.2 -35.1L397.2 -67.3M-76.3 15L42.8 0.4M90.5 -5.4L257.2 -25.9M281 -28.8L400.1 -43.5M-49.5 35.9L188.7 6.7M212.5 3.7L284 -5M331.6 -10.9L403.1 -19.7M-70.4 62.7L-46.6 59.7M-22.8 56.8L48.7 48M96.3 42.2L144 36.3M191.6 30.5L263.1 21.7M286.9 18.8L406 4.2M-67.5 86.5L-19.9 80.6M4 77.7L123.1 63.1M146.9 60.2L266 45.5M313.6 39.7L408.9 28M-64.6 110.3L54.5 95.7M78.4 92.8L411.8 51.8M-61.7 134.1L-37.8 131.2M-14 128.3L57.5 119.5M81.3 116.6L105.1 113.7M128.9 110.7L176.6 104.9M200.4 102L343.3 84.4M367.1 81.5L391 78.6M-58.7 158L-34.9 155M-11.1 152.1L274.8 117M322.4 111.2L417.7 99.5M-32 178.8L39.5 170.1M63.3 167.1L110.9 161.3M134.8 158.4L301.5 137.9M349.2 132L420.6 123.3M-52.9 205.6L18.6 196.8M42.4 193.9L256.8 167.6M280.6 164.6L399.7 150M-50 229.4L69.2 214.8M93 211.9L426.5 170.9M-47 253.2L24.4 244.5M48.3 241.5L119.7 232.8M191.2 224L357.9 203.5M381.8 200.6L429.4 194.7M-44.1 277.1L51.2 265.4M98.8 259.5L217.9 244.9M241.8 242L384.7 224.4M408.5 221.5L432.3 218.6M-41.2 300.9L435.2 242.4M-38.3 324.7L-14.4 321.8M9.4 318.8L176.1 298.4M223.8 292.5L342.9 277.9M366.7 275L438.2 266.2M-85 -56.4L-79.2 -8.8M-76.3 15L-67.5 86.5M-64.6 110.3L-47 253.2M-61.2 -59.4L-58.3 -35.5M-52.5 12.1L-14.4 321.8M-37.4 -62.3L-34.5 -38.5M-31.6 -14.6L-25.7 33M-19.9 80.6L3.5 271.2M6.5 295L9.4 318.8M-10.7 -41.4L-7.7 -17.6M-1.9 30.1L15.7 173M18.6 196.8L33.2 315.9M10.2 -68.1L21.9 27.1M24.9 51L42.4 193.9M45.3 217.7L57 313M34.1 -71.1L75 262.4M77.9 286.3L80.9 310.1M57.9 -74L72.5 45.1M75.4 68.9L84.2 140.4M87.1 164.2L95.9 235.7M98.8 259.5L104.7 307.1M81.7 -76.9L84.6 -53.1M87.5 -29.3L90.5 -5.4M93.4 18.4L96.3 42.2M99.2 66L119.7 232.8M122.6 256.6L128.5 304.2M105.5 -79.8L126 86.9M131.8 134.6L152.3 301.3M129.3 -82.8L141 12.5M144 36.3L152.7 107.8M155.7 131.6L158.6 155.4M161.5 179.3L164.4 203.1M170.3 250.7L176.1 298.4M153.2 -85.7L161.9 -14.2M164.9 9.6L173.6 81.1M176.6 104.9L182.4 152.5M185.3 176.3L200 295.5M179.9 -64.8L182.8 -41M185.8 -17.1L188.7 6.7M191.6 30.5L194.5 54.3M197.5 78.1L200.4 102M203.3 125.8L220.9 268.7M200.8 -91.5L215.4 27.6M218.4 51.4L230.1 146.7M238.8 218.1L247.6 289.6M224.6 -94.5L236.3 0.8M242.2 48.5L250.9 119.9M253.9 143.7L268.5 262.9M248.4 -97.4L257.2 -25.9M263.1 21.7L274.8 117M277.7 140.8L286.5 212.3M289.4 236.1L295.2 283.8M272.3 -100.3L278.1 -52.7M284 -5L292.7 66.4M295.7 90.3L313.2 233.2M316.1 257L319.1 280.8M296.1 -103.2L304.9 -31.8M307.8 -8L313.6 39.7M322.4 111.2L334.1 206.4M337 230.3L342.9 277.9M319.9 -106.2L346.2 108.2M349.2 132L352.1 155.9M355 179.7L363.8 251.2M343.7 -109.1L349.6 -61.4M352.5 -37.6L358.4 10M361.3 33.8L375.9 152.9M378.8 176.8L390.5 272.1M367.6 -112L385.1 30.9M388 54.7L396.8 126.2M399.7 150L402.6 173.8M405.6 197.7L414.3 269.1M391.4 -114.9L411.8 51.8M417.7 99.5L426.5 170.9M429.4 194.7L438.2 266.2"/><path class="m-av-o" style="stroke-width:7" d="M434 -493.8 C424.7 -460.7 398.9 -339.8 378.2 -295.4 C357.5 -251 330.9 -255.1 310 -227.2 C289.1 -199.3 270.5 -166.2 253 -128 C235.4 -89.8 214.1 -40.2 204.6 2.2 C195.1 44.6 194.3 80.7 195.9 126.2 C197.6 171.7 201.7 226.4 214.5 275 C227.3 323.6 249.7 370.1 272.8 417.6 C295.9 465.1 330.7 505.4 353.4 560.2 C376.1 615 399.9 715.2 409.2 746.2 M291.4 -493.8 C291.8 -450.4 292.3 -298.5 293.9 -233.4 C295.4 -168.3 296.8 -148.7 300.7 -103.2 C304.6 -57.7 314.6 15.6 317.4 39.4 M-285.2 152.2 C-254.2 150.4 -161.2 145.4 -99.2 141.1 C-37.2 136.7 37.6 132.6 86.8 126.2 C136 119.8 177.7 106.6 195.9 102.6 M195.9 102.6 C219.1 98.5 288.9 84.2 334.8 77.8 C380.7 71.4 420.6 67.9 471.2 64.2 C521.8 60.5 610.7 57 638.6 55.5 M322.4 -11.4 C347.2 -12.7 418.5 -16.8 471.2 -18.9 C523.9 -20.9 610.7 -23 638.6 -23.8 M466.2 -493.8 C465.4 -442.1 462.5 -258.2 461.3 -183.8 C460 -109.4 458 -99.1 458.8 -47.4 C459.6 4.3 462.5 66.3 466.2 126.2 C470 186.1 472 260.5 481.1 312.2 C490.2 363.9 508 374.2 520.8 436.2 C533.6 498.2 551.8 642.9 558 684.2 M570.4 -493.8 C568.7 -442.1 563.4 -262.3 560.5 -183.8 C557.6 -105.3 554.7 -84.6 553 -22.6 C551.4 39.4 551 153.1 550.6 188.2 M210.8 312.2 C241.8 313.2 325.5 318.4 396.8 318.4 C468.1 318.4 598.3 313.2 638.6 312.2 M195.9 182 C219.1 182.2 285.8 183.9 334.8 183.2 C383.8 182.6 439.2 178.3 489.8 178.3 C540.4 178.3 613.8 182.4 638.6 183.2 M310 -227.2 C335.2 -228.2 406.5 -231.3 461.3 -233.4 C516 -235.5 609 -238.6 638.6 -239.6 M-285.2 -16.4 C-243.9 -16.4 -118.8 -19.5 -37.2 -16.4 C44.4 -13.3 164.3 -0.9 204.6 2.2"/><path class="m-av-i" style="stroke-width:3.5" d="M434 -493.8 C424.7 -460.7 398.9 -339.8 378.2 -295.4 C357.5 -251 330.9 -255.1 310 -227.2 C289.1 -199.3 270.5 -166.2 253 -128 C235.4 -89.8 214.1 -40.2 204.6 2.2 C195.1 44.6 194.3 80.7 195.9 126.2 C197.6 171.7 201.7 226.4 214.5 275 C227.3 323.6 249.7 370.1 272.8 417.6 C295.9 465.1 330.7 505.4 353.4 560.2 C376.1 615 399.9 715.2 409.2 746.2 M291.4 -493.8 C291.8 -450.4 292.3 -298.5 293.9 -233.4 C295.4 -168.3 296.8 -148.7 300.7 -103.2 C304.6 -57.7 314.6 15.6 317.4 39.4 M-285.2 152.2 C-254.2 150.4 -161.2 145.4 -99.2 141.1 C-37.2 136.7 37.6 132.6 86.8 126.2 C136 119.8 177.7 106.6 195.9 102.6 M195.9 102.6 C219.1 98.5 288.9 84.2 334.8 77.8 C380.7 71.4 420.6 67.9 471.2 64.2 C521.8 60.5 610.7 57 638.6 55.5 M322.4 -11.4 C347.2 -12.7 418.5 -16.8 471.2 -18.9 C523.9 -20.9 610.7 -23 638.6 -23.8 M466.2 -493.8 C465.4 -442.1 462.5 -258.2 461.3 -183.8 C460 -109.4 458 -99.1 458.8 -47.4 C459.6 4.3 462.5 66.3 466.2 126.2 C470 186.1 472 260.5 481.1 312.2 C490.2 363.9 508 374.2 520.8 436.2 C533.6 498.2 551.8 642.9 558 684.2 M570.4 -493.8 C568.7 -442.1 563.4 -262.3 560.5 -183.8 C557.6 -105.3 554.7 -84.6 553 -22.6 C551.4 39.4 551 153.1 550.6 188.2 M210.8 312.2 C241.8 313.2 325.5 318.4 396.8 318.4 C468.1 318.4 598.3 313.2 638.6 312.2 M195.9 182 C219.1 182.2 285.8 183.9 334.8 183.2 C383.8 182.6 439.2 178.3 489.8 178.3 C540.4 178.3 613.8 182.4 638.6 183.2 M310 -227.2 C335.2 -228.2 406.5 -231.3 461.3 -233.4 C516 -235.5 609 -238.6 638.6 -239.6 M-285.2 -16.4 C-243.9 -16.4 -118.8 -19.5 -37.2 -16.4 C44.4 -13.3 164.3 -0.9 204.6 2.2"/><path class="m-lake" d="M647.9 -865.8 C647.4 -772.8 647 -413.2 644.8 -307.8 C642.6 -202.4 638.4 -260.3 634.9 -233.4 C631.4 -206.5 624.5 -173.5 623.7 -146.6 C622.9 -119.7 630.7 -99.1 629.9 -72.2 C629.1 -45.3 619.8 -18.5 618.8 14.6 C617.7 47.7 621 91.1 623.7 126.2 C626.4 161.3 633.8 194.4 634.9 225.4 C635.9 256.4 631.8 282.2 629.9 312.2 C628.1 342.2 622.9 374.2 623.7 405.2 C624.5 436.2 631.4 462 634.9 498.2 C638.4 534.4 642.6 529.2 644.8 622.2 C647 715.2 647.4 983.9 647.9 1056.2 L4000 1056.2 L4000 -865.8 Z"/><path class="m-zone " d="M329.8 -214.8 L457.6 -222.2 L462.5 -77.2 L409.2 -69.7 L337.3 -71 L322.4 -145.4 Z"/><path class="m-zone " d="M483.6 -214.8 L608.8 -228.4 L618.8 -145.4 L612.6 -74.7 L489.8 -71 L476.2 -145.4 Z"/><path class="m-zone " d="M186 -103.2 L305 -110.6 L312.5 -27.6 L305 32 L192.2 36.9 L179.8 -35 Z"/><path class="m-zone " d="M437.7 -58.6 L520.8 -63.5 L608.8 -57.3 L607.6 -0.3 L582.8 34.4 L524.5 34.4 L441.4 34.4 L446.4 -16.4 Z"/><path class="m-zone " d="M218.2 50.6 L329.8 43.1 L425.3 46.8 L429 126.2 L399.3 167.1 L329.8 173.3 L222 168.4 L210.8 111.3 Z"/><path class="m-zone " d="M441.4 49.3 L528.2 45.6 L606.4 43.1 L610.1 164.6 L528.2 170.8 L445.2 170.8 L435.2 111.3 Z"/><path class="m-zone " d="M219.5 237.8 L329.8 230.4 L429 240.3 L426.6 381.6 L322.4 391.6 L226.9 376.7 Z"/><path class="m-zone " d="M445.2 188.2 L528.2 183.2 L611.3 188.2 L615 319.6 L528.2 325.8 L446.4 322.1 Z"/><path class="m-zone " d="M450.1 349.4 L545.6 340.7 L615 350.6 L618.8 433.7 L608.8 508.1 L496 516.8 L443.9 467.2 Z"/><text class="m-avlabel" text-anchor="middle" transform="translate(195.9 126.2) rotate(-86)" dy="3">Circunvalación 2</text><text class="m-zlabel " x="320.5" y="114.9">La Limpia</text><circle class="m-pin" cx="124" cy="120" r="22"/><use href="#i-house" class="m-ic" x="114" y="110" width="20" height="20"/></svg>
+          <span class="mhint" style="top:12px;left:12px"><svg class="ic" aria-hidden="true"><use href="#i-pointer"/></svg>Toca para mover el pin</span>
+          <span class="mbtn" style="top:12px;right:12px"><svg class="ic" aria-hidden="true"><use href="#i-locate-fixed"/></svg></span>
+        </div>
+        <div class="panel">
+          <div class="row between"><span class="t-label">Tu casa</span><span class="t-helper">Lat. 10,6820 · Long. −71,7104</span></div>
+          <div class="banner warn mt-8"><svg class="ic" aria-hidden="true"><use href="#i-triangle-alert"/></svg><div class="grow"><div class="t-meta-strong">Tu sector aún no tiene cobertura</div><div class="t-helper ink2 mt-2">Guardamos tu casa igual y te avisamos cuando un conductor cubra tu zona.</div></div></div>
+          <label class="field-label mt-12">Punto de referencia (opcional)</label>
+          <div class="input"><span class="ph">Frente a la panadería, casa azul…</span></div>
+          <div class="btn btn-primary mt-16"><span>Confirmar mi domicilio</span></div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <span class="sub-cap">b) Sin cobertura</span>
+    </div>
+  </div>
+</figure>
+
+<!-- ============================================== 02 Resultados de búsqueda -->
+<figure class="fig" data-n="02">
+  <figcaption class="fig-cap"><span class="fig-num">02</span><span class="fig-name">Resultados de búsqueda</span><span class="fig-hu">HU-007</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>11:02</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="row between mt-8">
+        <div><div class="t-over">3 transportistas en tu zona</div><h1 class="t-title mt-2">Tierra Negra</h1></div>
+        <span class="iconbtn"><svg class="ic" aria-hidden="true"><use href="#i-sliders-horizontal"/></svg></span>
+      </div>
+      <div class="chips mt-12">
+        <span class="chip on"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg>Tarde</span>
+        <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg>Lun · Mar · Jue</span>
+      </div>
+      <div class="col g12 mt-16">
+        <article class="card">
+          <div class="row g12">
+            <span class="foto a" style="width:48px;height:48px"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg><span class="vb"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span></span>
+            <div class="grow"><div class="t-strong">Luis Chacón</div><div class="t-helper">Toyota Hiace blanca</div></div>
+            <div class="right"><div class="t-price">$5,00</div><div class="t-helper">por semana</div></div>
+          </div>
+          <div class="info mt-12"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>Ida 12:10 pm · regreso 5:15 pm</div>
+          <div class="info mt-4"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg>Tierra Negra · La Limpia · Las Delicias</div>
+          <div class="row between mt-12"><span class="tag tag-line"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left-right"/></svg>Ida y regreso</span><span class="tag tag-brand"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>4 de 14 libres</span></div>
+        </article>
+        <article class="card">
+          <div class="row g12">
+            <span class="foto b" style="width:48px;height:48px"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg><span class="vb"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span></span>
+            <div class="grow"><div class="t-strong">Yorman Fuenmayor</div><div class="t-helper">Chevrolet Express azul</div></div>
+            <div class="right"><div class="t-price">$3,50</div><div class="t-helper">por semana</div></div>
+          </div>
+          <div class="info mt-12"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>Regreso 5:15 pm desde la URBE</div>
+          <div class="info mt-4"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg>Tierra Negra · El Milagro</div>
+          <div class="row between mt-12"><span class="tag tag-line"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg>Solo regreso</span><span class="tag tag-brand"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>6 de 12 libres</span></div>
+        </article>
+        <article class="card">
+          <div class="row g12">
+            <span class="foto c" style="width:48px;height:48px"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg><span class="vb"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span></span>
+            <div class="grow"><div class="t-strong">Nairobis Pirela</div><div class="t-helper">Chevrolet Spark gris</div></div>
+            <div class="right"><div class="t-price">$9,00</div><div class="t-helper">por quincena</div></div>
+          </div>
+          <div class="info mt-12"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>Ida 12:25 pm · llega 12:55 pm</div>
+          <div class="info mt-4"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg>Tierra Negra · Las Delicias</div>
+          <div class="row between mt-12"><span class="tag tag-line"><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg>Solo ida</span><span class="tag tag-warning"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>Queda 1 cupo</span></div>
+        </article>
+      </div>
+    </div>
+    <nav class="nav"><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg>Inicio</span><span class="nav-item on"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>Buscar</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg>Mi semana</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg>Cuenta</span></nav>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ================================================== 03 Detalle del turno -->
+<figure class="fig" data-n="03">
+  <figcaption class="fig-cap"><span class="fig-num">03</span><span class="fig-name">Detalle del turno y solicitud</span><span class="fig-hu">HU-008</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="map" style="height:262px;flex:none">
+      <svg class="mapsvg" viewBox="0 0 360 262" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="262"/><path class="m-grid" d="M-103.2 -32.2L39.8 -49.8M63.6 -52.7L158.9 -64.4M182.7 -67.3L278 -79M301.8 -82L397.1 -93.7M-76.4 -11.4L-52.6 -14.3M-28.8 -17.2L-4.9 -20.1M42.7 -26L400 -69.8M-97.3 15.4L-49.7 9.5M-2 3.7L45.6 -2.2M69.4 -5.1L260 -28.5M283.8 -31.4L307.6 -34.3M331.5 -37.3L379.1 -43.1M-94.4 39.2L-22.9 30.4M24.7 24.6L262.9 -4.7M286.8 -7.6L358.2 -16.4M382 -19.3L405.9 -22.2M-67.6 60.1L146.8 33.8M194.4 27.9L265.9 19.2M289.7 16.2L408.8 1.6M-88.5 86.9L-17.1 78.1M6.7 75.2L30.6 72.2M54.4 69.3L102 63.5M125.9 60.5L221.1 48.8M245 45.9L268.8 43M292.6 40.1L411.7 25.4M-85.6 110.7L81.1 90.2M105 87.3L247.9 69.7M271.7 66.8L414.6 49.3M-82.7 134.5L227 96.5M250.8 93.6L417.6 73.1M-79.8 158.3L420.5 96.9M-76.8 182.1L89.9 161.7M113.7 158.7L256.7 141.2M280.5 138.3L328.1 132.4M375.8 126.6L423.4 120.7M-73.9 206L-50.1 203M-26.3 200.1L116.7 182.6M140.5 179.6L211.9 170.9M235.8 167.9L283.4 162.1M307.2 159.2L331 156.2M354.9 153.3L426.3 144.5M-71 229.8L71.9 212.2M95.8 209.3L262.5 188.8M310.2 183L357.8 177.1M381.6 174.2L429.3 168.4M-68.1 253.6L360.7 201M384.5 198L432.2 192.2M-65.1 277.4L6.3 268.7M30.1 265.7L173.1 248.2M196.9 245.3L363.6 224.8M387.5 221.9L435.1 216M-62.2 301.2L128.4 277.8M152.2 274.9L271.3 260.3M295.1 257.4L438 239.8M-59.3 325.1L107.5 304.6M131.3 301.7L274.2 284.1M298 281.2L393.3 269.5M417.1 266.6L441 263.6M-56.4 348.9L-32.5 346M-8.7 343L86.6 331.3M110.4 328.4L205.7 316.7M229.5 313.8L348.6 299.2M372.4 296.2L420.1 290.4M-53.4 372.7L41.8 361M89.5 355.2L113.3 352.2M161 346.4L232.4 337.6M256.2 334.7L399.2 317.1M423 314.2L446.8 311.3M-100.2 -8.4L-71 229.8M-68.1 253.6L-59.3 325.1M-56.4 348.9L-53.4 372.7M-79.3 -35.2L-76.4 -11.4M-73.5 12.5L-70.6 36.3M-64.7 83.9L-47.2 226.9M-44.2 250.7L-41.3 274.5M-35.5 322.1L-29.6 369.8M-55.5 -38.1L-52.6 -14.3M-49.7 9.5L-40.9 81M-38 104.8L-17.5 271.6M-14.6 295.4L-5.8 366.9M-31.7 -41L-11.2 125.7M-5.4 173.4L-2.4 197.2M0.5 221L9.3 292.5M12.2 316.3L18 363.9M-7.9 -43.9L0.9 27.5M9.7 99L18.4 170.4M21.4 194.3L27.2 241.9M30.1 265.7L38.9 337.2M15.9 -46.9L36.4 119.9M39.3 143.7L51 239M54 262.8L56.9 286.6M59.8 310.4L62.7 334.3M39.8 -49.8L63.2 140.8M66.1 164.6L83.6 307.5M63.6 -52.7L69.4 -5.1M72.4 18.7L84.1 114M89.9 161.7L98.7 233.1M101.6 257L104.5 280.8M107.5 304.6L110.4 328.4M87.4 -55.6L96.2 15.8M102 63.5L105 87.3M107.9 111.1L116.7 182.6M119.6 206.4L122.5 230.2M125.4 254L137.1 349.3M111.2 -58.6L114.2 -34.7M117.1 -10.9L149.3 251.1M152.2 274.9L155.1 298.7M158 322.6L161 346.4M135.1 -61.5L140.9 -13.9M146.8 33.8L149.7 57.6M152.6 81.4L161.4 152.9M164.3 176.7L167.2 200.5M173.1 248.2L178.9 295.8M181.8 319.6L184.8 343.5M158.9 -64.4L205.7 316.7M188.5 -19.7L197.3 51.8M200.2 75.6L206.1 123.2M214.9 194.7L232.4 337.6M206.5 -70.3L212.4 -22.6M215.3 1.2L224.1 72.7M227 96.5L229.9 120.3M232.8 144.1L244.5 239.4M247.5 263.2L256.2 334.7M230.3 -73.2L250.8 93.6M253.7 117.4L259.6 165M262.5 188.8L265.4 212.7M268.4 236.5L280.1 331.8M254.2 -76.1L295.1 257.4M298 281.2L303.9 328.8M286.8 -7.6L292.6 40.1M295.5 63.9L316 230.6M318.9 254.5L324.8 302.1M301.8 -82L307.6 -34.3M310.6 -10.5L351.5 323M325.6 -84.9L334.4 -13.4M340.2 34.2L363.6 224.8M366.6 248.6L375.3 320.1M349.4 -87.8L384.5 198M387.5 221.9L390.4 245.7M393.3 269.5L399.2 317.1M373.3 -90.7L382 -19.3M385 4.5L414.2 242.8M417.1 266.6L423 314.2M397.1 -93.7L400 -69.8M402.9 -46L438 239.8"/><path class="m-av-o" style="stroke-width:5.5" d="M200 -128 C194 -106.7 177.3 -28.7 164 0 C150.7 28.7 133.5 26 120 44 C106.5 62 94.5 83.3 83.2 108 C71.9 132.7 58.1 164.7 52 192 C45.9 219.3 45.3 242.7 46.4 272 C47.5 301.3 50.1 336.7 58.4 368 C66.7 399.3 81.1 429.3 96 460 C110.9 490.7 133.3 516.7 148 552 C162.7 587.3 178 652 184 672 M108 -128 C108.3 -100 108.6 -2 109.6 40 C110.6 82 111.5 94.7 114 124 C116.5 153.3 123 200.7 124.8 216 M-264 288.8 C-244 287.6 -184 284.4 -144 281.6 C-104 278.8 -55.7 276.1 -24 272 C7.7 267.9 34.7 259.3 46.4 256.8 M46.4 256.8 C61.3 254.1 106.4 244.9 136 240.8 C165.6 236.7 191.3 234.4 224 232 C256.7 229.6 314 227.3 332 226.4 M128 183.2 C144 182.4 190 179.7 224 178.4 C258 177.1 314 175.7 332 175.2 M220.8 -128 C220.3 -94.7 218.4 24 217.6 72 C216.8 120 215.5 126.7 216 160 C216.5 193.3 218.4 233.3 220.8 272 C223.2 310.7 224.5 358.7 230.4 392 C236.3 425.3 247.7 432 256 472 C264.3 512 276 605.3 280 632 M288 -128 C286.9 -94.7 283.5 21.3 281.6 72 C279.7 122.7 277.9 136 276.8 176 C275.7 216 275.5 289.3 275.2 312 M56 392 C76 392.7 130 396 176 396 C222 396 306 392.7 332 392 M46.4 308 C61.3 308.1 104.4 309.2 136 308.8 C167.6 308.4 203.3 305.6 236 305.6 C268.7 305.6 316 308.3 332 308.8 M120 44 C136.3 43.3 182.3 41.3 217.6 40 C252.9 38.7 312.9 36.7 332 36 M-264 180 C-237.3 180 -156.7 178 -104 180 C-51.3 182 26 190 52 192"/><path class="m-av-i" style="stroke-width:2.5" d="M200 -128 C194 -106.7 177.3 -28.7 164 0 C150.7 28.7 133.5 26 120 44 C106.5 62 94.5 83.3 83.2 108 C71.9 132.7 58.1 164.7 52 192 C45.9 219.3 45.3 242.7 46.4 272 C47.5 301.3 50.1 336.7 58.4 368 C66.7 399.3 81.1 429.3 96 460 C110.9 490.7 133.3 516.7 148 552 C162.7 587.3 178 652 184 672 M108 -128 C108.3 -100 108.6 -2 109.6 40 C110.6 82 111.5 94.7 114 124 C116.5 153.3 123 200.7 124.8 216 M-264 288.8 C-244 287.6 -184 284.4 -144 281.6 C-104 278.8 -55.7 276.1 -24 272 C7.7 267.9 34.7 259.3 46.4 256.8 M46.4 256.8 C61.3 254.1 106.4 244.9 136 240.8 C165.6 236.7 191.3 234.4 224 232 C256.7 229.6 314 227.3 332 226.4 M128 183.2 C144 182.4 190 179.7 224 178.4 C258 177.1 314 175.7 332 175.2 M220.8 -128 C220.3 -94.7 218.4 24 217.6 72 C216.8 120 215.5 126.7 216 160 C216.5 193.3 218.4 233.3 220.8 272 C223.2 310.7 224.5 358.7 230.4 392 C236.3 425.3 247.7 432 256 472 C264.3 512 276 605.3 280 632 M288 -128 C286.9 -94.7 283.5 21.3 281.6 72 C279.7 122.7 277.9 136 276.8 176 C275.7 216 275.5 289.3 275.2 312 M56 392 C76 392.7 130 396 176 396 C222 396 306 392.7 332 392 M46.4 308 C61.3 308.1 104.4 309.2 136 308.8 C167.6 308.4 203.3 305.6 236 305.6 C268.7 305.6 316 308.3 332 308.8 M120 44 C136.3 43.3 182.3 41.3 217.6 40 C252.9 38.7 312.9 36.7 332 36 M-264 180 C-237.3 180 -156.7 178 -104 180 C-51.3 182 26 190 52 192"/><path class="m-lake" d="M338 -368 C337.7 -308 337.4 -76 336 -8 C334.6 60 331.9 22.7 329.6 40 C327.3 57.3 322.9 78.7 322.4 96 C321.9 113.3 326.9 126.7 326.4 144 C325.9 161.3 319.9 178.7 319.2 200 C318.5 221.3 320.7 249.3 322.4 272 C324.1 294.7 328.9 316 329.6 336 C330.3 356 327.6 372.7 326.4 392 C325.2 411.3 321.9 432 322.4 452 C322.9 472 327.3 488.7 329.6 512 C331.9 535.3 334.6 532 336 592 C337.4 652 337.7 825.3 338 872 L4000 872 L4000 -368 Z"/><text class="m-lakelabel" transform="translate(346 157.2) rotate(90)" text-anchor="middle">Lago de Maracaibo</text><path class="m-zone " d="M60.8 223.2 L132.8 218.4 L194.4 220.8 L196.8 272 L177.6 298.4 L132.8 302.4 L63.2 299.2 L56 262.4 Z"/><path class="m-zone " d="M204.8 222.4 L260.8 220 L311.2 218.4 L313.6 296.8 L260.8 300.8 L207.2 300.8 L200.8 262.4 Z"/><path class="m-zone hi" d="M202.4 152.8 L256 149.6 L312.8 153.6 L312 190.4 L296 212.8 L258.4 212.8 L204.8 212.8 L208 180 Z"/><text class="m-avlabel" text-anchor="middle" transform="translate(112 112) rotate(87)" dy="3">Av. Guajira</text><text class="m-avlabel" text-anchor="middle" transform="translate(280 228.8) rotate(-3)" dy="3">Av. La Limpia</text><text class="m-avlabel" text-anchor="middle" transform="translate(164 180.8) rotate(-2.9)" dy="3">Av. 5 de Julio</text><text class="m-avlabel" text-anchor="middle" transform="translate(217.6 112) rotate(-89)" dy="3">Av. Delicias</text><text class="m-avlabel" text-anchor="middle" transform="translate(280 112) rotate(-87.4)" dy="3">Av. Bella Vista</text><text class="m-zlabel hi" x="260.8" y="206.4">Tierra Negra</text><rect class="m-urbe" x="62.8" y="54" width="36" height="36" rx="12"/><use href="#i-graduation-cap" class="m-ic" x="70.8" y="62" width="20" height="20"/><text class="m-poi" x="104.8" y="76">URBE</text><circle class="m-pin" cx="252" cy="166.4" r="22"/><use href="#i-house" class="m-ic" x="242" y="156.4" width="20" height="20"/></svg>
+      <div class="sb over"><span>11:04</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+      <span class="back on-map" style="top:48px;left:16px"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span>
+      <div class="mlegend" style="right:12px;top:48px"><i class="lg-zone"></i><span>Zonas del turno</span><i class="lg-home"></i><span>Tu casa</span></div>
+    </div>
+    <div class="sheet grow col" style="margin-top:-28px;padding:20px 20px 0">
+      <div class="row between"><span class="t-over">Tarde · lunes a viernes</span><span class="tag tag-brand"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>4 de 14 libres</span></div>
+      <h1 class="t-title mt-4">Turno de la tarde</h1>
+      <div class="row g12 mt-12">
+        <span class="foto a" style="width:44px;height:44px"><svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg><span class="vb"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span></span>
+        <div class="grow"><div class="t-strong">Luis Chacón</div><div class="t-helper">Toyota Hiace · AB123CD</div></div>
+        <span class="tag tag-success"><svg class="ic" aria-hidden="true"><use href="#i-shield-check"/></svg>Verificado</span>
+      </div>
+      <div class="grid3 mt-16">
+        <div class="card alt" style="padding:10px 12px"><div class="info"><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg>Ida</div><div class="t-meta-strong mt-4">12:10 pm</div><div class="t-helper">a la URBE</div></div>
+        <div class="card alt" style="padding:10px 12px"><div class="info"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg>Regreso</div><div class="t-meta-strong mt-4">5:15 pm</div><div class="t-helper">a tu casa</div></div>
+        <div class="card alt" style="padding:10px 12px"><div class="info"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg>Tarifa</div><div class="t-meta-strong mt-4">$5,00</div><div class="t-helper">por semana</div></div>
+      </div>
+      <div class="t-label mt-16">¿Qué días vas?</div>
+      <div class="t-helper mt-2">Marca los días en que tienes clases.</div>
+      <div class="days mt-12">
+        <div class="day on"><b>L</b><small>Lun</small></div>
+        <div class="day on"><b>M</b><small>Mar</small></div>
+        <div class="day"><b>M</b><small>Mié</small></div>
+        <div class="day on"><b>J</b><small>Jue</small></div>
+        <div class="day"><b>V</b><small>Vie</small></div>
+      </div>
+      <div class="banner info mt-16"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg><div class="t-helper ink2">Luis verá dónde queda tu casa y tus días para aceptarte. No pagas nada todavía.</div></div>
+      <div class="grow"></div>
+      <div class="btn btn-primary" style="margin:16px 0 28px"><span>Solicitar cupo</span></div>
+    </div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ========================================================= 04 Mi semana -->
+<figure class="fig" data-n="04">
+  <figcaption class="fig-cap"><span class="fig-num">04</span><span class="fig-name">Mi semana</span><span class="fig-hu">HU-010</span><span class="fig-hu">HU-016</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>11:20</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="row between mt-8">
+        <div><div class="t-over">Semana del 7 al 11 de diciembre</div><h1 class="t-title mt-2">Mi semana</h1></div>
+        <span class="av lg">GM</span>
+      </div>
+      <div class="banner warn mt-12"><svg class="ic" aria-hidden="true"><use href="#i-calendar-clock"/></svg>
+        <div class="grow"><div class="t-meta-strong">Renueva tu cupo</div>
+          <div class="t-helper ink2 mt-2">Confirma antes del viernes 11 de diciembre si sigues el próximo período. Si no, el puesto queda libre.</div>
+          <div class="t-link mt-8">Renovar mi cupo</div></div>
+      </div>
+      <div class="row between mt-16"><span class="t-tm">Turno de la tarde</span><span class="t-helper">con Luis Chacón</span></div>
+      <div class="list mt-8">
+        <div class="lrow"><div class="dtile"><small>LUN</small><b>7</b></div><div class="grow"><div class="t-meta-strong">Recorrido cancelado</div><div class="t-helper">Luis avisó: vía cerrada</div></div><span class="tag tag-danger">Cancelado</span></div>
+        <div class="lrow today"><div class="dtile on"><small>MAR</small><b>8</b></div><div class="grow"><div class="t-meta-strong">Hoy, ida y regreso</div><div class="t-helper ink2">Te recoge 12:16 pm</div></div><span class="tag tag-success">Confirmado</span>
+          <div class="btn btn-secondary"><svg class="ic" aria-hidden="true"><use href="#i-user-x"/></svg><span>No voy hoy</span></div></div>
+        <div class="lrow dim tight"><div class="dtile off"><small>MIÉ</small><b>9</b></div><div class="grow"><div class="t-meta-strong">Sin clases</div></div></div>
+        <div class="lrow"><div class="dtile"><small>JUE</small><b>10</b></div><div class="grow"><div class="t-meta-strong">Avisaste que no vas</div><div class="t-helper">Luis ya lo ve en su nómina</div></div><span class="tag tag-muted">No voy</span></div>
+        <div class="lrow dim tight"><div class="dtile off"><small>VIE</small><b>11</b></div><div class="grow"><div class="t-meta-strong">Sin clases</div></div></div>
+      </div>
+    </div>
+    <nav class="nav"><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg>Inicio</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>Buscar</span><span class="nav-item on"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg>Mi semana</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg>Cuenta</span></nav>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ===================================================== 05 Viaje en vivo -->
+<figure class="fig" data-n="05">
+  <figcaption class="fig-cap"><span class="fig-num">05</span><span class="fig-name">Viaje en vivo y proximidad</span><span class="fig-hu">HU-011</span><span class="fig-hu">HU-014</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="map fill"><svg class="mapsvg" viewBox="0 0 360 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="780"/><path class="m-grid" d="M-163.4 -26.6L-68.2 -38.3M-44.3 -41.2L408.3 -96.8M-136.7 -5.7L-65.2 -14.4M-41.4 -17.4L315.9 -61.2M339.7 -64.2L411.2 -72.9M-157.6 21.1L-133.8 18.2M-109.9 15.2L-62.3 9.4M-38.5 6.5L56.8 -5.2M80.6 -8.2L152.1 -16.9M175.9 -19.9L199.7 -22.8M223.5 -25.7L366.5 -43.3M390.3 -46.2L414.1 -49.1M-130.8 42L250.3 -4.8M274.1 -7.8L393.2 -22.4M-127.9 65.8L157.9 30.7M181.8 27.8L420 -1.5M-148.8 92.5L-29.7 77.9M-5.9 75L17.9 72.1M65.6 66.2L89.4 63.3M113.2 60.4L208.5 48.7M232.3 45.7L422.9 22.3M-122.1 113.4L-98.2 110.5M-74.4 107.6L-26.8 101.7M-3 98.8L20.9 95.9M68.5 90L187.6 75.4M211.4 72.5L235.2 69.6M259.1 66.6L425.8 46.2M-119.1 137.3L47.6 116.8M71.4 113.9L166.7 102.2M190.5 99.2L309.6 84.6M357.3 78.8L428.7 70M-116.2 161.1L-68.6 155.2M-44.8 152.3L74.3 137.7M98.2 134.8L122 131.8M145.8 128.9L217.3 120.1M264.9 114.3L288.7 111.4M312.6 108.4L336.4 105.5M360.2 102.6L384 99.7M407.8 96.7L431.7 93.8M-137.1 187.8L434.6 117.6M-134.2 211.6L-15.1 197M32.6 191.2L56.4 188.2M80.2 185.3L104 182.4M127.8 179.5L151.7 176.5M175.5 173.6L437.5 141.4M-83.6 229.6L-59.8 226.7M-36 223.8L440.4 165.3M-104.5 256.4L-80.7 253.4M-56.9 250.5L-33.1 247.6M-9.2 244.7L14.6 241.7M38.4 238.8L133.7 227.1M252.8 212.5L276.6 209.6M300.4 206.6L348.1 200.8M371.9 197.9L443.4 189.1M-125.4 283.1L17.5 265.6M41.3 262.6L231.9 239.2M255.7 236.3L446.3 212.9M-122.5 306.9L-98.7 304M-74.8 301.1L44.3 286.5M68.1 283.5L139.5 274.8M163.4 271.8L187.2 268.9M211 266L282.5 257.2M306.3 254.3L330.1 251.4M353.9 248.4L449.2 236.7M-119.6 330.8L118.6 301.5M190.1 292.7L237.7 286.9M261.6 284L285.4 281M309.2 278.1L356.9 272.3M380.7 269.3L428.3 263.5M-116.6 354.6L-92.8 351.6M-69 348.7L121.6 325.3M145.4 322.4L359.8 296.1M383.6 293.1L407.4 290.2M431.2 287.3L455.1 284.4M-113.7 378.4L-89.9 375.5M-66.1 372.5L29.2 360.8M53 357.9L124.5 349.1M148.3 346.2L219.8 337.4M243.6 334.5L291.2 328.7M315.1 325.7L338.9 322.8M362.7 319.9L458 308.2M-63.2 396.4L246.5 358.3M270.3 355.4L341.8 346.6M365.6 343.7L460.9 332M-60.2 420.2L-12.6 414.3M35.1 408.5L178 390.9M201.8 388L440 358.8M-104.9 449.9L466.8 379.7M-102 473.7L-78.2 470.8M-30.6 464.9L64.7 453.2M88.6 450.3L374.4 415.2M422 409.3L469.7 403.5M-75.3 494.6L20 482.9M43.8 479.9L67.7 477M115.3 471.2L162.9 465.3M186.8 462.4L234.4 456.6M305.9 447.8L472.6 427.3M-96.2 521.3L-24.7 512.5M-0.9 509.6L22.9 506.7M46.8 503.8L332.6 468.7M356.4 465.7L475.5 451.1M-93.2 545.1L168.8 513M192.6 510L383.2 486.6M407 483.7L478.5 474.9M-90.3 569L124.1 542.6M147.9 539.7L171.7 536.8M195.5 533.9L481.4 498.8M-87.4 592.8L31.7 578.2M55.5 575.2L79.4 572.3M150.8 563.5L317.6 543.1M365.2 537.2L484.3 522.6M-84.5 616.6L249 575.7M272.8 572.7L320.5 566.9M368.1 561L463.4 549.3M-81.5 640.4L85.2 620M109 617L204.3 605.3M252 599.5L490.2 570.2M-78.6 664.2L135.8 637.9M159.6 635L445.4 599.9M469.3 597L493.1 594M-75.7 688.1L43.4 673.4M91.1 667.6L138.7 661.7M162.5 658.8L257.8 647.1M281.6 644.2L329.3 638.3M353.1 635.4L472.2 620.8M-72.8 711.9L-48.9 709M-25.1 706L165.4 682.6M189.3 679.7L213.1 676.8M236.9 673.9L427.5 650.5M451.3 647.5L498.9 641.7M-69.8 735.7L144.5 709.4M168.4 706.5L216 700.6M239.8 697.7L263.7 694.8M287.5 691.8L501.9 665.5M-66.9 759.5L28.4 747.8M52.2 744.9L123.6 736.1M147.5 733.2L242.8 721.5M290.4 715.7L409.5 701M433.3 698.1L481 692.3M-40.2 780.4L102.8 762.9M150.4 757L245.7 745.3M269.5 742.4L412.4 724.9M436.2 721.9L507.7 713.2M-37.2 804.2L58 792.5M81.9 789.6L510.6 737M-58.1 831L-10.5 825.1M13.3 822.2L37.1 819.3M84.8 813.4L108.6 810.5M156.2 804.7L299.2 787.1M323 784.2L442.1 769.6M489.7 763.7L513.6 760.8M-55.2 854.8L111.5 834.3M135.3 831.4L397.4 799.2M421.2 796.3L468.8 790.5M492.7 787.5L516.5 784.6M-4.7 872.8L43 866.9M66.8 864L424.1 820.1M471.8 814.3L519.4 808.4M-163.4 -26.6L-154.7 44.9M-151.7 68.7L-134.2 211.6M-128.3 259.3L-119.6 330.8M-116.6 354.6L-104.9 449.9M-102 473.7L-99.1 497.5M-96.2 521.3L-64 783.4M-139.6 -29.5L-130.8 42M-127.9 65.8L-116.2 161.1M-113.3 184.9L-110.4 208.7M-107.4 232.5L-104.5 256.4M-101.6 280.2L-89.9 375.5M-87 399.3L-84 423.1M-81.1 446.9L-75.3 494.6M-60.6 613.7L-28.5 875.7M-115.8 -32.4L-107 39M-104.1 62.9L-57.3 444M-54.4 467.8L-51.5 491.6M-48.5 515.5L-45.6 539.3M-39.8 586.9L-33.9 634.6M-31 658.4L-16.4 777.5M-10.5 825.1L-7.6 849M-92 -35.3L-21.8 536.4M-18.9 560.2L-13 607.8M-10.1 631.7L19.2 869.9M-68.2 -38.3L-53.5 80.8M-47.7 128.5L-38.9 199.9M-36 223.8L-18.4 366.7M-15.5 390.5L-12.6 414.3M-6.7 462L2 533.4M5 557.3L40.1 843.1M-44.3 -41.2L-20.9 149.4M-18 173.2L28.8 554.3M31.7 578.2L63.9 840.2M-20.5 -44.1L-3 98.8M-0 122.6L2.9 146.5M5.8 170.3L23.4 313.2M26.3 337L46.8 503.8M49.7 527.6L55.5 575.2M58.5 599.1L76 742M78.9 765.8L84.8 813.4M87.7 837.3L90.6 861.1M3.3 -47L6.2 -23.2M9.2 0.6L12.1 24.4M15 48.2L20.9 95.9M23.8 119.7L29.6 167.3M32.6 191.2L47.2 310.3M53 357.9L61.8 429.4M64.7 453.2L96.9 715.2M99.8 739.1L114.5 858.2M27.1 -50L30.1 -26.1M33 -2.3L41.8 69.1M44.7 93L50.5 140.6M53.5 164.4L59.3 212.1M62.2 235.9L73.9 331.2M76.9 355L79.8 378.8M85.6 426.5L109 617M111.9 640.8L138.3 855.2M50.9 -52.9L53.9 -29.1M62.6 42.4L65.6 66.2M71.4 113.9L83.1 209.1M86 233L100.7 352.1M103.6 375.9L112.4 447.4M115.3 471.2L132.8 614.1M135.8 637.9L150.4 757M156.2 804.7L159.2 828.5M77.7 -32L98.2 134.8M104 182.4L112.8 253.9M118.6 301.5L136.2 444.4M145 515.9L156.7 611.2M159.6 635L162.5 658.8M165.4 682.6L185.9 849.4M98.6 -58.7L104.4 -11.1M107.4 12.7L127.8 179.5M130.8 203.3L139.5 274.8M142.5 298.6L148.3 346.2M151.2 370L160 441.5M168.8 513L186.3 655.9M189.3 679.7L192.2 703.5M201 775L206.8 822.6M122.4 -61.7L140 81.3M142.9 105.1L154.6 200.4M157.5 224.2L160.4 248M163.4 271.8L186.8 462.4M189.7 486.2L216 700.6M224.8 772.1L233.6 843.5M146.2 -64.6L155 6.9M160.9 54.5L163.8 78.3M166.7 102.2L175.5 173.6M178.4 197.4L187.2 268.9M193 316.5L257.4 840.6M170.1 -67.5L178.8 3.9M181.8 27.8L196.4 146.9M199.3 170.7L243.2 528M246.1 551.8L254.9 623.3M260.7 670.9L263.7 694.8M266.6 718.6L275.4 790M278.3 813.9L281.2 837.7M193.9 -70.4L196.8 -46.6M199.7 -22.8L202.7 1M205.6 24.8L208.5 48.7M211.4 72.5L226 191.6M229 215.4L275.8 596.6M278.7 620.4L305 834.8M217.7 -73.4L235.2 69.6M241.1 117.2L246.9 164.8M249.9 188.7L270.3 355.4M273.3 379.2L302.5 617.4M308.4 665.1L320.1 760.4M323 784.2L328.8 831.8M241.5 -76.3L279.5 233.4M285.4 281L288.3 304.8M291.2 328.7L294.2 352.5M297.1 376.3L300 400.1M302.9 424L335.1 686M338 709.8L341 733.6M343.9 757.5L352.7 828.9M265.3 -79.2L294.6 159M297.5 182.8L303.4 230.5M309.2 278.1L332.6 468.7M335.5 492.5L344.3 564M347.2 587.8L350.2 611.6M356 659.2L358.9 683.1M361.9 706.9L376.5 826M289.2 -82.1L306.7 60.8M312.6 108.4L321.3 179.9M324.3 203.7L330.1 251.4M333 275.2L344.7 370.5M347.7 394.3L374 608.7M376.9 632.5L382.8 680.1M385.7 704L388.6 727.8M394.5 775.4L400.3 823.1M313 -85.1L336.4 105.5M339.3 129.3L342.2 153.1M348.1 200.8L351 224.6M353.9 248.4L359.8 296.1M362.7 319.9L403.7 653.4M406.6 677.2L424.1 820.1M336.8 -88L345.6 -16.5M348.5 7.3L354.4 54.9M357.3 78.8L360.2 102.6M363.1 126.4L371.9 197.9M374.8 221.7L395.3 388.4M398.2 412.3L404.1 459.9M412.8 531.4L415.8 555.2M418.7 579L439.2 745.8M442.1 769.6L447.9 817.2M360.6 -90.9L389.9 147.3M392.8 171.1L398.6 218.8M401.6 242.6L439.6 552.3M445.4 599.9L457.1 695.2M465.9 766.6L468.8 790.5M384.4 -93.8L410.8 120.6M413.7 144.4L425.4 239.7M431.2 287.3L442.9 382.6M445.9 406.4L460.5 525.5M463.4 549.3L483.9 716.1M492.7 787.5L495.6 811.4M411.2 -72.9L434.6 117.6M437.5 141.4L443.4 189.1M446.3 212.9L455.1 284.4M458 308.2L460.9 332M463.8 355.8L469.7 403.5M472.6 427.3L484.3 522.6M487.2 546.4L501.9 665.5M504.8 689.3L510.6 737"/><path class="m-av-o" style="stroke-width:7" d="M218 -57.6 C210.2 -29.9 188.5 71.5 171.2 108.8 C153.8 146.1 131.5 142.6 114 166 C96.5 189.4 80.9 217.1 66.1 249.2 C51.4 281.3 33.5 322.9 25.6 358.4 C17.6 393.9 16.9 424.3 18.3 462.4 C19.7 500.5 23.1 546.5 33.9 587.2 C44.6 627.9 63.3 666.9 82.8 706.8 C102.2 746.7 131.3 780.5 150.4 826.4 C169.4 872.3 189.4 956.4 197.2 982.4 M98.4 -57.6 C98.7 -21.2 99.1 106.2 100.4 160.8 C101.7 215.4 102.9 231.9 106.2 270 C109.5 308.1 117.9 369.7 120.2 389.6 M-385.2 484.2 C-359.2 482.7 -281.2 478.5 -229.2 474.9 C-177.2 471.2 -114.5 467.8 -73.2 462.4 C-32 457 3 445.9 18.3 442.6 M18.3 442.6 C37.7 439.2 96.3 427.2 134.8 421.8 C173.2 416.5 206.7 413.5 249.2 410.4 C291.6 407.3 366.2 404.3 389.6 403.1 M124.4 347 C145.2 345.9 205 342.5 249.2 340.7 C293.4 339 366.2 337.3 389.6 336.6 M245 -57.6 C244.3 -14.3 241.9 140 240.8 202.4 C239.8 264.8 238.1 273.5 238.8 316.8 C239.5 360.1 241.9 412.1 245 462.4 C248.1 512.7 249.9 575.1 257.5 618.4 C265.1 661.7 280 670.4 290.8 722.4 C301.5 774.4 316.8 895.7 322 930.4 M332.4 -57.6 C331 -14.3 326.5 136.5 324 202.4 C321.6 268.3 319.2 285.6 317.8 337.6 C316.4 389.6 316.1 484.9 315.7 514.4 M30.8 618.4 C56.8 619.3 127 623.6 186.8 623.6 C246.6 623.6 355.8 619.3 389.6 618.4 M18.3 509.2 C37.7 509.4 93.7 510.8 134.8 510.2 C175.8 509.7 222.3 506.1 264.8 506.1 C307.2 506.1 368.8 509.5 389.6 510.2 M114 166 C135.1 165.1 194.9 162.5 240.8 160.8 C286.8 159.1 364.8 156.5 389.6 155.6 M-385.2 342.8 C-350.6 342.8 -245.7 340.2 -177.2 342.8 C-108.8 345.4 -8.2 355.8 25.6 358.4"/><path class="m-av-i" style="stroke-width:3.5" d="M218 -57.6 C210.2 -29.9 188.5 71.5 171.2 108.8 C153.8 146.1 131.5 142.6 114 166 C96.5 189.4 80.9 217.1 66.1 249.2 C51.4 281.3 33.5 322.9 25.6 358.4 C17.6 393.9 16.9 424.3 18.3 462.4 C19.7 500.5 23.1 546.5 33.9 587.2 C44.6 627.9 63.3 666.9 82.8 706.8 C102.2 746.7 131.3 780.5 150.4 826.4 C169.4 872.3 189.4 956.4 197.2 982.4 M98.4 -57.6 C98.7 -21.2 99.1 106.2 100.4 160.8 C101.7 215.4 102.9 231.9 106.2 270 C109.5 308.1 117.9 369.7 120.2 389.6 M-385.2 484.2 C-359.2 482.7 -281.2 478.5 -229.2 474.9 C-177.2 471.2 -114.5 467.8 -73.2 462.4 C-32 457 3 445.9 18.3 442.6 M18.3 442.6 C37.7 439.2 96.3 427.2 134.8 421.8 C173.2 416.5 206.7 413.5 249.2 410.4 C291.6 407.3 366.2 404.3 389.6 403.1 M124.4 347 C145.2 345.9 205 342.5 249.2 340.7 C293.4 339 366.2 337.3 389.6 336.6 M245 -57.6 C244.3 -14.3 241.9 140 240.8 202.4 C239.8 264.8 238.1 273.5 238.8 316.8 C239.5 360.1 241.9 412.1 245 462.4 C248.1 512.7 249.9 575.1 257.5 618.4 C265.1 661.7 280 670.4 290.8 722.4 C301.5 774.4 316.8 895.7 322 930.4 M332.4 -57.6 C331 -14.3 326.5 136.5 324 202.4 C321.6 268.3 319.2 285.6 317.8 337.6 C316.4 389.6 316.1 484.9 315.7 514.4 M30.8 618.4 C56.8 619.3 127 623.6 186.8 623.6 C246.6 623.6 355.8 619.3 389.6 618.4 M18.3 509.2 C37.7 509.4 93.7 510.8 134.8 510.2 C175.8 509.7 222.3 506.1 264.8 506.1 C307.2 506.1 368.8 509.5 389.6 510.2 M114 166 C135.1 165.1 194.9 162.5 240.8 160.8 C286.8 159.1 364.8 156.5 389.6 155.6 M-385.2 342.8 C-350.6 342.8 -245.7 340.2 -177.2 342.8 C-108.8 345.4 -8.2 355.8 25.6 358.4"/><path class="m-lake" d="M397.4 -369.6 C396.9 -291.6 396.6 10 394.8 98.4 C392.9 186.8 389.4 138.3 386.4 160.8 C383.5 183.3 377.8 211.1 377.1 233.6 C376.4 256.1 383 273.5 382.3 296 C381.6 318.5 373.8 341.1 372.9 368.8 C372.1 396.5 374.8 432.9 377.1 462.4 C379.3 491.9 385.6 519.6 386.4 545.6 C387.3 571.6 383.8 593.3 382.3 618.4 C380.7 643.5 376.4 670.4 377.1 696.4 C377.8 722.4 383.5 744.1 386.4 774.4 C389.4 804.7 392.9 800.4 394.8 878.4 C396.6 956.4 396.9 1181.7 397.4 1242.4 L4000 1242.4 L4000 -369.6 Z"/><text class="m-avlabel" text-anchor="middle" transform="translate(44.3 618.4) rotate(67.8)" dy="3">Circunvalación 2</text><text class="m-avlabel" text-anchor="middle" transform="translate(103.6 254.4) rotate(87)" dy="3">Av. Guajira</text><text class="m-avlabel" text-anchor="middle" transform="translate(322 406.2) rotate(-3)" dy="3">Av. La Limpia</text><text class="m-avlabel" text-anchor="middle" transform="translate(171.2 343.8) rotate(-2.9)" dy="3">Av. 5 de Julio</text><text class="m-avlabel" text-anchor="middle" transform="translate(240.8 254.4) rotate(-89)" dy="3">Av. Delicias</text><text class="m-avlabel" text-anchor="middle" transform="translate(251.2 545.6) rotate(85.4)" dy="3">Av. Delicias</text><text class="m-avlabel" text-anchor="middle" transform="translate(322 254.4) rotate(-87.4)" dy="3">Av. Bella Vista</text><path class="m-route-o faint" d="M337.6 338.6 L329.8 338.6"/><path class="m-route faint" d="M337.6 338.6 L329.8 338.6"/><path class="m-route-o " d="M329.8 338.6 L311.6 337.6 L285.6 325.1 L241.9 330.3 L246 410.4 L176.4 417.7 L92.1 431.2 L23.5 441.6 L22.4 389.6 L28.7 348 L47.4 296 L66.1 249.2 L80.7 219 L63 202.4"/><path class="m-route " d="M329.8 338.6 L311.6 337.6 L285.6 325.1 L241.9 330.3 L246 410.4 L176.4 417.7 L92.1 431.2 L23.5 441.6 L22.4 389.6 L28.7 348 L47.4 296 L66.1 249.2 L80.7 219 L63 202.4"/><circle class="m-radius" cx="285.6" cy="325.1" r="52"/><rect class="m-urbe" x="45" y="184.4" width="36" height="36" rx="12"/><use href="#i-graduation-cap" class="m-ic" x="53" y="192.4" width="20" height="20"/><text class="m-poi" x="87" y="206.4">URBE</text><circle class="m-pin" cx="285.6" cy="325.1" r="22"/><use href="#i-house" class="m-ic" x="275.6" y="315.1" width="20" height="20"/><g class="m-callout "><rect x="256.5" y="277.1" width="58.1" height="22" rx="8"/><text x="285.6" y="289.6">Tu casa</text></g><circle class="m-unit" cx="329.8" cy="338.6" r="18"/><use href="#i-bus" class="m-ic" x="319.8" y="328.6" width="20" height="20"/></svg></div>
+    <div class="sb over"><span>12:13</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="notif">
+      <div class="notif-head"><span class="app-tile"><svg width="12" height="12" viewBox="0 0 66 66" style="color:var(--on-primary);flex:none" aria-hidden="true"><circle cx="33" cy="33" r="10" fill="currentColor"/><path d="M33 9a24 24 0 0 1 0 48" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"/></svg></span><b>Cupo</b><span>· ahora</span></div>
+      <div class="t-meta-strong mt-6">Tu transporte está cerca</div>
+      <div class="t-helper ink2 mt-2">La unidad de Luis está a unos 800 m de tu casa. Sal a esperarla.</div>
+    </div>
+    <span class="mbtn" style="top:166px;right:16px"><svg class="ic" aria-hidden="true"><use href="#i-scan"/></svg></span>
+    <div class="sheet abs" style="bottom:0;padding:0 20px 28px">
+      <div class="asa"></div>
+      <div class="row between"><span class="tag tag-success"><svg class="ic" aria-hidden="true"><use href="#i-navigation"/></svg>En camino</span><span class="t-helper">Actualizado hace 5 s</span></div>
+      <h1 class="t-title mt-8">Luis va hacia tu casa</h1>
+      <div class="t-meta mt-4">A unos 800 m · pasa por ti cerca de las 12:16 pm</div>
+      <div class="track mt-16">
+        <div class="tstep done"><span class="tdot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><b>Salió</b><small>12:10 pm</small></div>
+        <div class="tstep cur"><span class="tdot"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg></span><b>Tu casa</b><small>12:16 pm</small></div>
+        <div class="tstep"><span class="tdot"><svg class="ic" aria-hidden="true"><use href="#i-graduation-cap"/></svg></span><b>URBE</b><small>12:52 pm</small></div>
+      </div>
+      <div class="hr mt-16"></div>
+      <div class="row g12 mt-12">
+        <span class="foto a" style="width:40px;height:40px"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg></span>
+        <div class="grow"><div class="t-meta-strong">Luis Chacón</div><div class="t-helper">Toyota Hiace blanca · AB123CD</div></div>
+        <span class="roundbtn"><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg></span>
+      </div>
+    </div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- =================================================== 06 Estado de cuenta -->
+<figure class="fig" data-n="06">
+  <figcaption class="fig-cap"><span class="fig-num">06</span><span class="fig-name">Estado de cuenta</span><span class="fig-hu">HU-013</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>4:30</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="mt-8"><div class="t-over">Turno de la tarde · Luis Chacón</div><h1 class="t-title mt-2">Estado de cuenta</h1></div>
+      <div class="card mt-12">
+        <div class="row between"><span class="t-meta">Por pagar</span><span class="tag tag-warning"><svg class="ic" aria-hidden="true"><use href="#i-hourglass"/></svg>Pendiente</span></div>
+        <div class="t-amount mt-4">$5,00</div>
+        <div class="t-helper">Cobro semanal · semana del 7 al 11 dic</div>
+      </div>
+      <div class="t-label mt-16">Cómo le pagas a Luis</div>
+      <div class="tile mt-8">
+        <span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-smartphone"/></svg></span>
+        <div class="grow"><div class="t-strong">Pago Móvil</div><div class="t-helper">Banesco · 0414-612 3456 · V-14785236</div></div>
+      </div>
+      <div class="t-helper mt-8">Le pagas directo a Luis; Cupo solo lleva el registro.</div>
+      <div class="t-tm mt-16">Períodos</div>
+      <div class="list mt-8">
+        <div class="lrow"><div class="grow"><div class="t-meta-strong">7 al 11 dic</div><div class="t-helper">$5,00 · vence el viernes 11</div></div><span class="tag tag-warning">Pendiente</span></div>
+        <div class="lrow"><div class="grow"><div class="t-meta-strong">30 nov al 4 dic</div><div class="t-helper">Pago Móvil · 4 dic</div></div><span class="tag tag-success"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Pagado</span></div>
+        <div class="lrow"><div class="grow"><div class="t-meta-strong">23 al 27 nov</div><div class="t-helper">Dólares en efectivo · 27 nov</div></div><span class="tag tag-success"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Pagado</span></div>
+        <div class="lrow"><div class="grow"><div class="t-meta-strong">16 al 20 nov</div><div class="t-helper">Zelle · 20 nov</div></div><span class="tag tag-success"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Pagado</span></div>
+      </div>
+    </div>
+    <nav class="nav"><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg>Inicio</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>Buscar</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg>Mi semana</span><span class="nav-item on"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg>Cuenta</span></nav>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+  </div>
+
+  <h2 class="section-title">Conductor</h2>
+  <div class="grid">
+
+<!-- ================================================== 07 Zonas de trabajo -->
+<figure class="fig" data-n="07">
+  <figcaption class="fig-cap"><span class="fig-num">07</span><span class="fig-name">Zonas de trabajo</span><span class="fig-hu">HU-005</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>8:15</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px" style="padding-top:8px;padding-bottom:16px">
+      <h1 class="t-title">Tus zonas de trabajo</h1>
+      <p class="t-body mt-4">Marca los sectores donde recoges estudiantes. Te van a encontrar los que viven en ellos.</p>
+    </div>
+    <div class="map bt bb" style="height:232px;flex:none">
+      <svg class="mapsvg" viewBox="0 0 360 232" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="232"/><path class="m-grid" d="M-103.6 -51.3L-55.9 -57.1M-32.1 -60.1L-8.3 -63M15.5 -65.9L229.9 -92.2M253.7 -95.2L277.6 -98.1M301.4 -101L396.7 -112.7M-76.8 -30.4L-29.2 -36.2M-5.4 -39.2L209 -65.5M256.7 -71.3L399.6 -88.9M-97.7 -3.6L-2.5 -15.3M21.4 -18.3L45.2 -21.2M69 -24.1L211.9 -41.7M235.8 -44.6L283.4 -50.4M307.2 -53.4L402.5 -65.1M-94.8 20.2L-71 17.3M-47.2 14.3L286.3 -26.6M310.1 -29.5L405.4 -41.2M-91.9 44L51 26.5M122.5 17.7L265.4 0.1M336.9 -8.6L408.4 -17.4M-89 67.8L-41.3 62M-17.5 59L54 50.3M77.8 47.3L244.5 26.9M268.4 23.9L339.8 15.2M387.5 9.3L411.3 6.4M-86 91.6L-62.2 88.7M-38.4 85.8L176 59.5M199.8 56.5L271.3 47.8M295.1 44.8L342.7 39M366.6 36.1L414.2 30.2M-83.1 115.5L83.6 95M107.5 92.1L417.1 54M-80.2 139.3L420.1 77.9M-77.3 163.1L-5.8 154.3M18 151.4L89.5 142.6M113.3 139.7L423 101.7M-74.3 186.9L211.5 151.8M235.3 148.9L283 143.1M306.8 140.1L402.1 128.4M-71.4 210.7L23.9 199M47.7 196.1L357.4 158.1M381.2 155.2L428.8 149.3M-44.7 231.6L50.6 219.9M74.4 217L169.7 205.3M217.4 199.5L431.8 173.1M-65.6 258.4L5.9 249.6M29.7 246.7L125 235M148.8 232.1L434.7 197M-62.6 282.2L56.5 267.6M80.3 264.7L342.3 232.5M366.1 229.6L390 226.6M413.8 223.7L437.6 220.8M-59.7 306L35.6 294.3M59.4 291.4L83.2 288.5M107 285.6L154.7 279.7M178.5 276.8L273.8 265.1M297.6 262.2L321.4 259.2M345.2 256.3L440.5 244.6M-56.8 329.9L205.2 297.7M252.9 291.8L324.4 283.1M348.2 280.1L443.5 268.4M-103.6 -51.3L-56.8 329.9M-79.8 -54.2L-56.4 136.4M-50.5 184L-47.6 207.8M-44.7 231.6L-33 326.9M-55.9 -57.1L-50.1 -9.5M-41.3 62L-17.9 252.5M-15 276.4L-9.1 324M-32.1 -60.1L-23.3 11.4M-20.4 35.2L-17.5 59M-14.6 82.9L5.9 249.6M11.8 297.3L14.7 321.1M-8.3 -63L12.2 103.8M20.9 175.2L38.5 318.2M15.5 -65.9L33.1 77M36 100.8L59.4 291.4M39.3 -68.8L77.4 240.8M80.3 264.7L86.1 312.3M63.2 -71.8L86.6 118.8M89.5 142.6L107 285.6M87 -74.7L133.8 306.5M110.8 -77.6L116.7 -30M119.6 -6.1L128.4 65.3M131.3 89.1L134.2 113M137.1 136.8L148.8 232.1M151.8 255.9L157.6 303.5M134.6 -80.5L181.4 300.6M164.3 -35.8L190.6 178.6M196.5 226.2L205.2 297.7M182.3 -86.4L211.5 151.8M214.4 175.7L226.1 270.9M214.9 -17.8L229.5 101.3M232.4 125.1L235.3 148.9M238.3 172.7L252.9 291.8M229.9 -92.2L232.8 -68.4M238.7 -20.8L244.5 26.9M247.5 50.7L250.4 74.5M256.2 122.2L276.7 288.9M253.7 -95.2L259.6 -47.5M268.4 23.9L283 143.1M285.9 166.9L288.8 190.7M291.8 214.5L300.5 286M277.6 -98.1L312.7 187.8M318.5 235.4L324.4 283.1M301.4 -101L310.1 -29.5M313.1 -5.7L336.5 184.8M339.4 208.7L348.2 280.1M325.2 -103.9L336.9 -8.6M339.8 15.2L351.5 110.5M357.4 158.1L360.3 181.9M366.1 229.6L372 277.2M349 -106.9L360.7 -11.6M363.6 12.2L384.1 179M390 226.6L392.9 250.5M372.8 -109.8L390.4 33.1M393.3 57L410.9 199.9M413.8 223.7L419.6 271.4M396.7 -112.7L408.4 -17.4M411.3 6.4L417.1 54M420.1 77.9L428.8 149.3M431.8 173.1L443.5 268.4"/><path class="m-av-o" style="stroke-width:5.5" d="M194.4 -278.5 C187.5 -254 168.3 -164.3 153 -131.3 C137.7 -98.3 117.9 -101.4 102.4 -80.7 C86.9 -60 73.1 -35.5 60.1 -7.1 C47 21.3 31.3 58.1 24.2 89.5 C17.1 120.9 16.5 147.8 17.8 181.5 C19 215.2 22.1 255.9 31.6 291.9 C41.1 327.9 57.6 362.4 74.8 397.7 C92 433 117.7 462.9 134.6 503.5 C151.5 544.1 169.1 618.5 176 641.5 M88.6 -278.5 C88.9 -246.3 89.3 -133.6 90.4 -85.3 C91.6 -37 92.6 -22.4 95.5 11.3 C98.4 45 105.8 99.5 107.9 117.1 M-339.2 200.8 C-316.2 199.4 -247.2 195.8 -201.2 192.5 C-155.2 189.3 -99.7 186.3 -63.2 181.5 C-26.7 176.7 4.3 166.9 17.8 164 M17.8 164 C34.9 161 86.8 150.4 120.8 145.6 C154.8 140.9 184.4 138.3 222 135.5 C259.6 132.7 325.5 130.1 346.2 129.1 M111.6 79.4 C130 78.5 182.9 75.4 222 73.9 C261.1 72.3 325.5 70.8 346.2 70.2 M218.3 -278.5 C217.7 -240.2 215.6 -103.7 214.6 -48.5 C213.7 6.7 212.2 14.4 212.8 52.7 C213.4 91 215.6 137 218.3 181.5 C221.1 226 222.6 281.2 229.4 319.5 C236.1 357.8 249.3 365.5 258.8 411.5 C268.3 457.5 281.8 564.8 286.4 595.5 M295.6 -278.5 C294.4 -240.2 290.4 -106.8 288.2 -48.5 C286.1 9.8 283.9 25.1 282.7 71.1 C281.5 117.1 281.2 201.4 280.9 227.5 M28.8 319.5 C51.8 320.3 113.9 324.1 166.8 324.1 C219.7 324.1 316.3 320.3 346.2 319.5 M17.8 222.9 C34.9 223.1 84.5 224.3 120.8 223.8 C157.1 223.4 198.2 220.1 235.8 220.1 C273.4 220.1 327.8 223.2 346.2 223.8 M102.4 -80.7 C121.1 -81.5 174 -83.8 214.6 -85.3 C255.3 -86.8 324.3 -89.1 346.2 -89.9 M-339.2 75.7 C-308.5 75.7 -215.8 73.4 -155.2 75.7 C-94.6 78 -5.7 87.2 24.2 89.5"/><path class="m-av-i" style="stroke-width:2.5" d="M194.4 -278.5 C187.5 -254 168.3 -164.3 153 -131.3 C137.7 -98.3 117.9 -101.4 102.4 -80.7 C86.9 -60 73.1 -35.5 60.1 -7.1 C47 21.3 31.3 58.1 24.2 89.5 C17.1 120.9 16.5 147.8 17.8 181.5 C19 215.2 22.1 255.9 31.6 291.9 C41.1 327.9 57.6 362.4 74.8 397.7 C92 433 117.7 462.9 134.6 503.5 C151.5 544.1 169.1 618.5 176 641.5 M88.6 -278.5 C88.9 -246.3 89.3 -133.6 90.4 -85.3 C91.6 -37 92.6 -22.4 95.5 11.3 C98.4 45 105.8 99.5 107.9 117.1 M-339.2 200.8 C-316.2 199.4 -247.2 195.8 -201.2 192.5 C-155.2 189.3 -99.7 186.3 -63.2 181.5 C-26.7 176.7 4.3 166.9 17.8 164 M17.8 164 C34.9 161 86.8 150.4 120.8 145.6 C154.8 140.9 184.4 138.3 222 135.5 C259.6 132.7 325.5 130.1 346.2 129.1 M111.6 79.4 C130 78.5 182.9 75.4 222 73.9 C261.1 72.3 325.5 70.8 346.2 70.2 M218.3 -278.5 C217.7 -240.2 215.6 -103.7 214.6 -48.5 C213.7 6.7 212.2 14.4 212.8 52.7 C213.4 91 215.6 137 218.3 181.5 C221.1 226 222.6 281.2 229.4 319.5 C236.1 357.8 249.3 365.5 258.8 411.5 C268.3 457.5 281.8 564.8 286.4 595.5 M295.6 -278.5 C294.4 -240.2 290.4 -106.8 288.2 -48.5 C286.1 9.8 283.9 25.1 282.7 71.1 C281.5 117.1 281.2 201.4 280.9 227.5 M28.8 319.5 C51.8 320.3 113.9 324.1 166.8 324.1 C219.7 324.1 316.3 320.3 346.2 319.5 M17.8 222.9 C34.9 223.1 84.5 224.3 120.8 223.8 C157.1 223.4 198.2 220.1 235.8 220.1 C273.4 220.1 327.8 223.2 346.2 223.8 M102.4 -80.7 C121.1 -81.5 174 -83.8 214.6 -85.3 C255.3 -86.8 324.3 -89.1 346.2 -89.9 M-339.2 75.7 C-308.5 75.7 -215.8 73.4 -155.2 75.7 C-94.6 78 -5.7 87.2 24.2 89.5"/><path class="m-lake" d="M353.1 -554.5 C352.7 -485.5 352.4 -218.7 350.8 -140.5 C349.2 -62.3 346 -105.2 343.4 -85.3 C340.8 -65.4 335.8 -40.8 335.2 -20.9 C334.5 -1 340.4 14.4 339.8 34.3 C339.1 54.2 332.2 74.2 331.5 98.7 C330.7 123.2 333.2 155.4 335.2 181.5 C337.2 207.6 342.7 232.1 343.4 255.1 C344.2 278.1 341.1 297.3 339.8 319.5 C338.4 341.7 334.5 365.5 335.2 388.5 C335.8 411.5 340.8 430.7 343.4 457.5 C346 484.3 349.2 480.5 350.8 549.5 C352.4 618.5 352.7 817.8 353.1 871.5 L4000 871.5 L4000 -554.5 Z"/><path class="m-zone off" d="M117.1 -71.5 L211.9 -77 L215.6 30.6 L176 36.1 L122.6 35.2 L111.6 -20 Z"/><path class="m-zone off" d="M231.2 -71.5 L324.1 -81.6 L331.5 -20 L326.9 32.5 L235.8 35.2 L225.7 -20 Z"/><path class="m-zone off" d="M10.4 11.3 L98.7 5.8 L104.2 67.4 L98.7 111.6 L15 115.3 L5.8 61.9 Z"/><path class="m-zone hi" d="M197.2 44.4 L258.8 40.7 L324.1 45.3 L323.2 87.7 L304.8 113.4 L261.6 113.4 L199.9 113.4 L203.6 75.7 Z"/><path class="m-zone hi" d="M34.3 125.4 L117.1 119.9 L188 122.6 L190.7 181.5 L168.6 211.9 L117.1 216.5 L37.1 212.8 L28.8 170.5 Z"/><path class="m-zone hi" d="M199.9 124.5 L264.3 121.7 L322.3 119.9 L325 210 L264.3 214.6 L202.7 214.6 L195.3 170.5 Z"/><path class="m-zone off" d="M35.2 264.3 L117.1 258.8 L190.7 266.1 L188.9 371 L111.6 378.4 L40.8 367.3 Z"/><path class="m-zone off" d="M202.7 227.5 L264.3 223.8 L326 227.5 L328.7 325 L264.3 329.6 L203.6 326.9 Z"/><path class="m-zone off" d="M206.4 347.1 L277.2 340.7 L328.7 348 L331.5 409.7 L324.1 464.9 L240.4 471.3 L201.8 434.5 Z"/><text class="m-zlabel off" x="55.5" y="66.2">El Amparo</text><text class="m-zlabel hi" x="264.3" y="105.5">Tierra Negra</text><text class="m-zlabel hi" x="110.2" y="174.1">La Limpia</text><text class="m-zlabel hi" x="253.4" y="172">Las Delicias</text></svg>
+      <span class="mhint" style="top:12px;left:12px"><svg class="ic" aria-hidden="true"><use href="#i-pointer"/></svg>Toca una zona para elegirla</span>
+      <span class="mbtn" style="top:12px;right:12px"><svg class="ic" aria-hidden="true"><use href="#i-maximize-2"/></svg></span>
+      <span class="mbtn" style="top:64px;right:12px"><svg class="ic" aria-hidden="true"><use href="#i-scan"/></svg></span>
+    </div>
+    <div class="px grow clip col g8" style="padding-top:16px">
+      <div class="tile on"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div class="grow"><div class="t-strong">La Limpia</div><div class="t-helper">Maracaibo</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+      <div class="tile on"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div class="grow"><div class="t-strong">Las Delicias</div><div class="t-helper">Maracaibo</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+      <div class="tile"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div class="grow"><div class="t-strong">San Francisco</div><div class="t-helper">San Francisco</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle"/></svg></div>
+      <div class="tile on"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div class="grow"><div class="t-strong">Tierra Negra</div><div class="t-helper">Maracaibo</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+      <div class="tile"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div class="grow"><div class="t-strong">Zona Sur</div><div class="t-helper">Maracaibo</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle"/></svg></div>
+    </div>
+    <div class="panel">
+      <div class="t-helper center">3 zonas elegidas</div>
+      <div class="btn btn-primary mt-12"><span>Guardar mis zonas</span></div>
+    </div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ======================================================== 08 Crear turno -->
+<figure class="fig" data-n="08">
+  <figcaption class="fig-cap"><span class="fig-num">08</span><span class="fig-name">Crear turno</span><span class="fig-hu">HU-006</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>7:45</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span><span class="sh-title">Nuevo turno</span><span></span></div>
+      <h1 class="t-title mt-8">Publica un turno</h1>
+      <p class="t-helper mt-4">Lo verán los estudiantes de tus 3 zonas.</p>
+      <label class="field-label mt-16">Bloque</label>
+      <div class="grid3">
+        <div class="ctile"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-sunrise"/></svg></span><b>Mañana</b></div>
+        <div class="ctile on"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></span><b>Tarde</b><svg class="ic ok" style="width:18px;height:18px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+        <div class="ctile"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></span><b>Noche</b></div>
+      </div>
+      <div class="grid2 mt-16">
+        <div><label class="field-label">Hora de ida</label><div class="input">12:10 pm<span class="grow"></span><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg></div></div>
+        <div><label class="field-label">Hora de regreso</label><div class="input">5:15 pm<span class="grow"></span><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg></div></div>
+      </div>
+      <label class="field-label mt-16">Sentido del servicio</label>
+      <div class="grid3">
+        <div class="seg"><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg>Ida</div>
+        <div class="seg"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg>Regreso</div>
+        <div class="seg on"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left-right"/></svg>Ambos</div>
+      </div>
+      <label class="field-label mt-16">Días</label>
+      <div class="days low">
+        <div class="day on"><b>L</b></div><div class="day on"><b>M</b></div><div class="day on"><b>M</b></div><div class="day on"><b>J</b></div><div class="day"><b>V</b></div>
+      </div>
+      <div class="grid2 mt-16">
+        <div><label class="field-label">Cupos</label><div class="stepper"><span class="sbtn"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></span><b>12</b><span class="sbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span></div></div>
+        <div><label class="field-label">Tarifa</label><div class="input"><b>$ 5,00</b><span class="grow"></span><span class="t-helper">/semana</span></div></div>
+      </div>
+      <div class="helper">Máximo 14 cupos: la capacidad de tu Toyota Hiace.</div>
+    </div>
+    <div class="panel"><div class="btn btn-primary"><span>Publicar turno</span></div></div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- =================================================== 09 Solicitud de cupo -->
+<figure class="fig" data-n="09">
+  <figcaption class="fig-cap"><span class="fig-num">09</span><span class="fig-name">Evaluar solicitud de cupo</span><span class="fig-hu">HU-009</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="map" style="height:292px;flex:none">
+      <svg class="mapsvg" viewBox="0 0 360 292" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="292"/><path class="m-grid" d="M-87.7 -41L-40.1 -46.9M-16.2 -49.8L7.6 -52.7M31.4 -55.6L79.1 -61.5M102.9 -64.4L150.5 -70.3M174.3 -73.2L269.6 -84.9M293.4 -87.8L317.3 -90.7M341.1 -93.7L412.5 -102.4M-84.8 -17.2L-13.3 -26M10.5 -28.9L105.8 -40.6M129.6 -43.5L296.4 -64M320.2 -66.9L367.8 -72.8M391.7 -75.7L415.5 -78.6M-81.8 6.6L-58 3.7M-34.2 0.8L-10.4 -2.2M13.4 -5.1L84.9 -13.9M132.5 -19.7L156.4 -22.6M204 -28.5L323.1 -43.1M346.9 -46L418.4 -54.8M-78.9 30.4L-55.1 27.5M-31.3 24.6L16.4 18.7M40.2 15.8L111.6 7M135.5 4.1L230.8 -7.6M254.6 -10.5L349.9 -22.2M373.7 -25.1L421.3 -31M-76 54.3L43.1 39.6M66.9 36.7L209.9 19.2M233.7 16.2L257.5 13.3M281.3 10.4L305.1 7.5M329 4.5L424.2 -7.2M-73.1 78.1L236.6 40.1M260.4 37.1L379.5 22.5M-70.1 101.9L49 87.3M72.8 84.4L96.6 81.4M144.2 75.6L191.9 69.7M215.7 66.8L430.1 40.5M-67.2 125.7L-43.4 122.8M4.2 117L75.7 108.2M99.5 105.3L147.2 99.4M171 96.5L385.4 70.2M409.2 67.2L433 64.3M-64.3 149.5L54.8 134.9M78.6 132L197.7 117.4M221.6 114.4L316.8 102.7M340.7 99.8L435.9 88.1M-61.4 173.4L33.9 161.7M57.7 158.7L153 147M176.8 144.1L248.3 135.3M272.1 132.4L343.6 123.6M367.4 120.7L438.9 111.9M-34.6 194.3L84.5 179.6M108.3 176.7L227.4 162.1M275 156.2L441.8 135.8M-55.5 221L111.2 200.5M158.9 194.7L182.7 191.8M206.5 188.8L301.8 177.1M325.6 174.2L444.7 159.6M-52.6 244.8L66.5 230.2M90.3 227.3L447.6 183.4M-49.7 268.7L93.3 251.1M117.1 248.2L355.3 218.9M379.1 216L450.6 207.2M-46.7 292.5L24.7 283.7M48.5 280.8L120 272M167.6 266.2L191.5 263.2M239.1 257.4L262.9 254.5M286.7 251.5L429.7 234M-43.8 316.3L170.6 290M194.4 287L218.2 284.1M242 281.2L385 263.6M408.8 260.7L456.4 254.9M-40.9 340.1L125.8 319.6M149.7 316.7L221.1 307.9M268.8 302.1L459.3 278.7M-38 363.9L57.3 352.2M81.1 349.3L271.7 325.9M295.5 323L462.3 302.5M-35 387.8L60.2 376.1M84.1 373.1L203.2 358.5M227 355.6L250.8 352.7M274.6 349.7L369.9 338M393.7 335.1L417.6 332.2M441.4 329.3L465.2 326.3M-84.8 -17.2L-67.2 125.7M-64.3 149.5L-49.7 268.7M-46.7 292.5L-40.9 340.1M-38 363.9L-35 387.8M-63.9 -43.9L-49.3 75.2M-40.5 146.6L-28.8 241.9M-25.9 265.7L-22.9 289.5M-20 313.4L-14.2 361M-40.1 -46.9L-19.6 119.9M-16.7 143.7L-10.8 191.3M-5 239L9.7 358.1M-16.2 -49.8L-7.5 21.7M-4.5 45.5L21.8 259.9M24.7 283.7L36.4 379M7.6 -52.7L16.4 18.7M19.3 42.6L36.8 185.5M39.8 209.3L48.5 280.8M51.5 304.6L60.2 376.1M31.4 -55.6L34.3 -31.8M37.3 -8L54.8 134.9M60.7 182.6L63.6 206.4M69.4 254L84.1 373.1M55.2 -58.6L58.2 -34.7M61.1 -10.9L69.9 60.5M72.8 84.4L78.6 132M81.6 155.8L107.9 370.2M79.1 -61.5L87.8 10M90.8 33.8L99.5 105.3M102.5 129.1L111.2 200.5M114.2 224.4L128.8 343.5M102.9 -64.4L108.7 -16.8M111.6 7L120.4 78.5M126.3 126.1L146.7 292.9M149.7 316.7L155.5 364.4M126.7 -67.3L158.9 194.7M161.8 218.5L173.5 313.8M176.4 337.6L179.3 361.4M150.5 -70.3L159.3 1.2M162.2 25L176.8 144.1M179.8 167.9L182.7 191.8M188.5 239.4L191.5 263.2M194.4 287L203.2 358.5M174.3 -73.2L218.2 284.1M224.1 331.8L227 355.6M201.1 -52.3L218.6 90.6M221.6 114.4L233.3 209.7M239.1 257.4L250.8 352.7M222 -79L239.5 63.9M245.4 111.5L251.2 159.2M254.2 183L257.1 206.8M260 230.6L262.9 254.5M265.9 278.3L271.7 325.9M248.7 -58.1L251.6 -34.3M254.6 -10.5L275 156.2M278 180.1L298.4 346.8M272.5 -61.1L293 105.7M295.9 129.5L298.9 153.3M301.8 177.1L304.7 201M310.6 248.6L313.5 272.4M316.4 296.2L322.3 343.9M293.4 -87.8L296.4 -64M299.3 -40.2L302.2 -16.4M305.1 7.5L328.5 198M331.5 221.9L334.4 245.7M337.3 269.5L340.2 293.3M343.2 317.1L346.1 341M317.3 -90.7L334.8 52.2M340.7 99.8L361.1 266.6M364.1 290.4L369.9 338M341.1 -93.7L346.9 -46M355.7 25.4L376.2 192.2M379.1 216L393.7 335.1M364.9 -96.6L382.5 46.3M385.4 70.2L388.3 94M391.2 117.8L397.1 165.4M400 189.3L417.6 332.2M388.7 -99.5L397.5 -28.1M409.2 67.2L415.1 114.9M418 138.7L438.4 305.4M412.5 -102.4L418.4 -54.8M424.2 -7.2L441.8 135.8M447.6 183.4L453.5 231.1M456.4 254.9L462.3 302.5"/><path class="m-av-o" style="stroke-width:7" d="M156 -328 C147 -296 122 -179 102 -136 C82 -93 56.2 -97 36 -70 C15.8 -43 -2.2 -11 -19.2 26 C-36.2 63 -56.8 111 -66 152 C-75.2 193 -76 228 -74.4 272 C-72.8 316 -68.8 369 -56.4 416 C-44 463 -22.4 508 0 554 C22.4 600 56 639 78 692 C100 745 123 842 132 872 M18 -328 C18.4 -286 18.9 -139 20.4 -76 C21.9 -13 23.2 6 27 50 C30.8 94 40.5 165 43.2 188 M-540 297.2 C-510 295.4 -420 290.6 -360 286.4 C-300 282.2 -227.6 278.2 -180 272 C-132.4 265.8 -92 253 -74.4 249.2 M-74.4 249.2 C-52 245.2 15.6 231.4 60 225.2 C104.4 219 143 215.6 192 212 C241 208.4 327 205 354 203.6 M48 138.8 C72 137.6 141 133.6 192 131.6 C243 129.6 327 127.6 354 126.8 M187.2 -328 C186.4 -278 183.6 -100 182.4 -28 C181.2 44 179.2 54 180 104 C180.8 154 183.6 214 187.2 272 C190.8 330 192.8 402 201.6 452 C210.4 502 227.6 512 240 572 C252.4 632 270 772 276 812 M288 -328 C286.4 -278 281.2 -104 278.4 -28 C275.6 48 272.8 68 271.2 128 C269.6 188 269.2 298 268.8 332 M-60 452 C-30 453 51 458 120 458 C189 458 315 453 354 452 M-74.4 326 C-52 326.2 12.6 327.8 60 327.2 C107.4 326.6 161 322.4 210 322.4 C259 322.4 330 326.4 354 327.2 M36 -70 C60.4 -71 129.4 -74 182.4 -76 C235.4 -78 325.4 -81 354 -82 M-540 134 C-500 134 -379 131 -300 134 C-221 137 -105 149 -66 152"/><path class="m-av-i" style="stroke-width:3.5" d="M156 -328 C147 -296 122 -179 102 -136 C82 -93 56.2 -97 36 -70 C15.8 -43 -2.2 -11 -19.2 26 C-36.2 63 -56.8 111 -66 152 C-75.2 193 -76 228 -74.4 272 C-72.8 316 -68.8 369 -56.4 416 C-44 463 -22.4 508 0 554 C22.4 600 56 639 78 692 C100 745 123 842 132 872 M18 -328 C18.4 -286 18.9 -139 20.4 -76 C21.9 -13 23.2 6 27 50 C30.8 94 40.5 165 43.2 188 M-540 297.2 C-510 295.4 -420 290.6 -360 286.4 C-300 282.2 -227.6 278.2 -180 272 C-132.4 265.8 -92 253 -74.4 249.2 M-74.4 249.2 C-52 245.2 15.6 231.4 60 225.2 C104.4 219 143 215.6 192 212 C241 208.4 327 205 354 203.6 M48 138.8 C72 137.6 141 133.6 192 131.6 C243 129.6 327 127.6 354 126.8 M187.2 -328 C186.4 -278 183.6 -100 182.4 -28 C181.2 44 179.2 54 180 104 C180.8 154 183.6 214 187.2 272 C190.8 330 192.8 402 201.6 452 C210.4 502 227.6 512 240 572 C252.4 632 270 772 276 812 M288 -328 C286.4 -278 281.2 -104 278.4 -28 C275.6 48 272.8 68 271.2 128 C269.6 188 269.2 298 268.8 332 M-60 452 C-30 453 51 458 120 458 C189 458 315 453 354 452 M-74.4 326 C-52 326.2 12.6 327.8 60 327.2 C107.4 326.6 161 322.4 210 322.4 C259 322.4 330 326.4 354 327.2 M36 -70 C60.4 -71 129.4 -74 182.4 -76 C235.4 -78 325.4 -81 354 -82 M-540 134 C-500 134 -379 131 -300 134 C-221 137 -105 149 -66 152"/><path class="m-lake" d="M363 -688 C362.5 -598 362.1 -250 360 -148 C357.9 -46 353.8 -102 350.4 -76 C347 -50 340.4 -18 339.6 8 C338.8 34 346.4 54 345.6 80 C344.8 106 335.8 132 334.8 164 C333.8 196 337 238 339.6 272 C342.2 306 349.4 338 350.4 368 C351.4 398 347.4 423 345.6 452 C343.8 481 338.8 512 339.6 542 C340.4 572 347 597 350.4 632 C353.8 667 357.9 662 360 752 C362.1 842 362.5 1102 363 1172 L4000 1172 L4000 -688 Z"/><path class="m-zone off" d="M55.2 -58 L178.8 -65.2 L183.6 75.2 L132 82.4 L62.4 81.2 L48 9.2 Z"/><path class="m-zone off" d="M204 -58 L325.2 -71.2 L334.8 9.2 L328.8 77.6 L210 81.2 L196.8 9.2 Z"/><path class="m-zone hi" d="M-52.8 198.8 L55.2 191.6 L147.6 195.2 L151.2 272 L122.4 311.6 L55.2 317.6 L-49.2 312.8 L-60 257.6 Z"/><path class="m-zone hi" d="M163.2 197.6 L247.2 194 L322.8 191.6 L326.4 309.2 L247.2 315.2 L166.8 315.2 L157.2 257.6 Z"/><path class="m-zone hi" d="M159.6 93.2 L240 88.4 L325.2 94.4 L324 149.6 L300 183.2 L243.6 183.2 L163.2 183.2 L168 134 Z"/><text class="m-avlabel" text-anchor="middle" transform="translate(276 207.2) rotate(-3)" dy="3">Av. La Limpia</text><text class="m-avlabel" text-anchor="middle" transform="translate(102 135.2) rotate(-2.9)" dy="3">Av. 5 de Julio</text><text class="m-zlabel hi" x="247.2" y="171.6">Tierra Negra</text><path class="m-route-o faint" d="M294 129.2 L264 128 L234 113.6 L183.6 119.6 L188.4 212 L108 220.4 L10.8 236 L-68.4 248 L-69.6 188 L-62.4 140 L-40.8 80 L-19.2 26 L-2.4 -8.8 L-22.8 -28"/><path class="m-route faint" d="M294 129.2 L264 128 L234 113.6 L183.6 119.6 L188.4 212 L108 220.4 L10.8 236 L-68.4 248 L-69.6 188 L-62.4 140 L-40.8 80 L-19.2 26 L-2.4 -8.8 L-22.8 -28"/><circle class="m-stop " cx="294" cy="129.2" r="14"/><text class="m-stop-n " x="294" y="133.4">1</text><circle class="m-stop " cx="234" cy="113.6" r="14"/><text class="m-stop-n " x="234" y="117.8">2</text><circle class="m-stop " cx="108" cy="220.4" r="14"/><text class="m-stop-n " x="108" y="224.6">3</text><circle class="m-stop " cx="10.8" cy="236" r="14"/><text class="m-stop-n " x="10.8" y="240.2">4</text><circle class="m-stop " cx="-62.4" cy="140" r="14"/><text class="m-stop-n " x="-62.4" y="144.2">5</text><circle class="m-pin" cx="180.0" cy="164.0" r="22"/><use href="#i-house" class="m-ic" x="170" y="154" width="20" height="20"/><g class="m-callout "><rect x="91.9" y="152" width="58.1" height="22" rx="8"/><text x="121" y="164.5">Valeria</text></g></svg>
+      <div class="sb over"><span>9:52</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+      <span class="back on-map" style="top:48px;left:16px"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span>
+      <div class="mlegend" style="right:12px;top:48px"><i class="lg-zone hi"></i><span>Tus zonas</span><i class="lg-stop"></i><span>Tus paradas</span><i class="lg-home"></i><span>Solicitante</span></div>
+    </div>
+    <div class="sheet grow col" style="margin-top:-28px;padding:20px 20px 0">
+      <div class="row between"><h1 class="t-title">Solicitud de cupo</h1><span class="tag tag-warning"><svg class="ic" aria-hidden="true"><use href="#i-hourglass"/></svg>Pendiente</span></div>
+      <div class="t-helper mt-2">Turno de la tarde · recibida hoy, 9:48 am</div>
+      <div class="row g12 mt-12">
+        <span class="foto b" style="width:52px;height:52px"><svg width="52" height="52" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg></span>
+        <div class="grow"><div class="t-strong">Valeria Nava</div><div class="t-helper">Ingeniería Industrial · URBE</div></div>
+      </div>
+      <div class="col g8 mt-12">
+        <div class="info ink"><svg class="ic" aria-hidden="true"><use href="#i-id-card"/></svg>C.I. V-29.874.102</div>
+        <div class="info ink"><svg class="ic" aria-hidden="true"><use href="#i-phone"/></svg>0424-635 1290</div>
+        <div class="info ink"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg>Tierra Negra · a 900 m de tu parada 2</div>
+      </div>
+      <div class="t-label mt-16">Días que pide</div>
+      <div class="days low ro mt-8">
+        <div class="day on"><b>L</b></div><div class="day"><b>M</b></div><div class="day on"><b>M</b></div><div class="day"><b>J</b></div><div class="day on"><b>V</b></div>
+      </div>
+      <div class="zona ok mt-16"><svg class="ic" aria-hidden="true"><use href="#i-circle-check"/></svg>Su casa está dentro de tus zonas</div>
+      <div class="info mt-12"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>Si la aceptas, te quedan 3 de 14 puestos.</div>
+      <div class="grow"></div>
+      <div class="btn-row" style="margin-bottom:28px">
+        <div class="btn btn-secondary"><span>Rechazar</span></div>
+        <div class="btn btn-primary"><span>Aceptar</span></div>
+      </div>
+    </div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ============================================================= 10 Hoy -->
+<figure class="fig" data-n="10">
+  <figcaption class="fig-cap"><span class="fig-num">10</span><span class="fig-name">«Hoy»: nómina y paradas</span><span class="fig-hu">HU-010</span><span class="fig-hu">HU-011</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="map fill"><svg class="mapsvg" viewBox="0 0 360 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-land" width="360" height="780"/><path class="m-grid" d="M-154.5 -43.4L116.5 -76.6M137.3 -79.2L304.1 -99.7M324.9 -102.2L408.3 -112.5M-89.4 -30.2L56.5 -48.1M77.4 -50.7L119 -55.8M139.9 -58.3L181.6 -63.5M202.4 -66L306.6 -78.8M327.5 -81.4L390 -89.1M-149.4 -1.7L-128.5 -4.2M-107.7 -6.8L79.9 -29.8M100.8 -32.4L267.5 -52.9M288.4 -55.4L350.9 -63.1M371.7 -65.6L413.4 -70.8M-146.8 19.2L20 -1.3M40.8 -3.9L270.1 -32M311.8 -37.1L332.6 -39.7M395.1 -47.4L416 -49.9M-144.2 40L105.9 9.3M126.7 6.8L397.7 -26.5M-141.7 60.9L-16.6 45.5M4.2 42.9L87.6 32.7M108.4 30.2L150.1 25M171 22.5L421.1 -8.2M-139.1 81.7L-14.1 66.4M6.8 63.8L27.6 61.2M69.3 56.1L423.7 12.6M-136.6 102.6L9.3 84.6M30.2 82.1L71.9 77M92.7 74.4L238.6 56.5M259.5 53.9L426.2 33.5M-134 123.4L-92.3 118.3M-71.5 115.7L95.3 95.2M116.1 92.7L137 90.1M157.8 87.6L262 74.8M282.9 72.2L345.4 64.5M366.2 62L428.8 54.3M-131.4 144.2L-68.9 136.6M-48.1 134L222.9 100.7M243.7 98.2L410.5 77.7M-108 162.5L-66.4 157.4M-45.5 154.8L58.7 142M79.6 139.5L433.9 96M-105.5 183.4L-84.6 180.8M-42.9 175.7L165.5 150.1M207.2 145L248.9 139.9M269.7 137.3L436.5 116.8M-123.8 206.8L-82.1 201.7M-61.2 199.1L-40.4 196.5M-19.5 194L334.8 150.5M418.2 140.2L439 137.7M-121.2 227.6L-100.4 225.1M-79.5 222.5L-58.7 219.9M-37.8 217.4L66.4 204.6M87.2 202L149.8 194.3M170.6 191.8L254 181.5M274.8 179L337.4 171.3M379 166.2L399.9 163.6M-97.8 245.9L319.1 194.7M339.9 192.2L423.3 181.9M-116.1 269.3L29.8 251.4M50.7 248.8L259.1 223.2M279.9 220.7L342.5 213M363.3 210.4L446.7 200.2M-113.5 290.1L-9.3 277.3M11.5 274.8L157.4 256.9M199.1 251.8L407.6 226.2M428.4 223.6L449.2 221M-111 311L118.3 282.8M139.2 280.3L222.5 270M243.4 267.5L368.4 252.1M389.3 249.6L431 244.4M-108.4 331.8L-25 321.6M-4.2 319L58.3 311.4M79.2 308.8L120.9 303.7M141.7 301.1L183.4 296M204.2 293.4L225.1 290.9M266.8 285.8L350.1 275.5M371 273L454.4 262.7M-105.8 352.7L-85 350.1M-64.2 347.6L227.6 311.7M248.5 309.2L415.2 288.7M436.1 286.1L456.9 283.6M-103.3 373.5L-82.4 371M-61.6 368.4L21.8 358.2M42.6 355.6L63.5 353M84.3 350.5L105.1 347.9M126 345.4L251 330M292.7 324.9L459.5 304.4M-100.7 394.4L3.5 381.6M24.3 379L128.5 366.2M149.4 363.6L295.3 345.7M316.1 343.2L462 325.3M-98.2 415.2L464.6 346.1M-95.6 436L467.2 366.9M-93.1 456.9L-51.4 451.8M-9.7 446.7L323.8 405.7M344.7 403.1L386.3 398M407.2 395.5L469.7 387.8M-48.8 472.6L-7.1 467.5M13.7 464.9L34.6 462.4M55.4 459.8L138.8 449.6M159.6 447L368.1 421.4M388.9 418.9L472.3 408.6M-87.9 498.6L-67.1 496M-46.2 493.5L58 480.7M78.8 478.1L120.5 473M141.3 470.4L224.7 460.2M245.6 457.6L308.1 450M328.9 447.4L412.3 437.2M433.2 434.6L474.8 429.5M-85.4 519.4L-22.8 511.7M-2 509.2L227.3 481M248.1 478.5L331.5 468.2M352.3 465.7L477.4 450.3M-82.8 540.3L125.6 514.7M146.5 512.1L271.5 496.8M292.4 494.2L459.1 473.7M-80.3 561.1L-38.6 556M-17.7 553.4L24 548.3M44.8 545.8L128.2 535.5M149 533L253.2 520.2M274.1 517.6L294.9 515M315.8 512.5L461.7 494.6M-77.7 582L235 543.6M297.5 535.9L422.5 520.5M443.4 518L485.1 512.9M-75.1 602.8L-12.6 595.1M29.1 590L300 556.7M341.7 551.6L383.4 546.5M404.3 543.9L487.6 533.7M-72.6 623.6L-30.9 618.5M-10 616L31.6 610.8M52.5 608.3L115 600.6M135.9 598L323.4 575M344.3 572.5L365.1 569.9M386 567.3L469.4 557.1M-70 644.5L13.4 634.2M34.2 631.7L55 629.1M75.9 626.6L263.5 603.5M284.3 601L326 595.9M346.8 593.3L492.8 575.4M-67.5 665.3L432.8 603.9M474.5 598.8L495.3 596.2M-64.9 686.2L-44.1 683.6M-23.2 681.1L18.5 675.9M39.3 673.4L122.7 663.1M143.5 660.6L164.4 658M185.2 655.5L206.1 652.9M226.9 650.3L414.5 627.3M435.3 624.7L497.9 617.1M-62.3 707L-41.5 704.5M-20.7 701.9L62.7 691.7M83.6 689.1L500.4 637.9M-59.8 727.9L-38.9 725.3M-18.1 722.7L23.6 717.6M44.4 715.1L86.1 709.9M107 707.4L127.8 704.8M148.7 702.3L232 692M273.7 686.9L419.6 669M440.5 666.4L503 658.8M-57.2 748.7L-36.4 746.1M-15.5 743.6L443 687.3M463.9 684.7L505.6 679.6M-54.7 769.5L132.9 746.5M153.8 743.9L362.2 718.4M383 715.8L487.3 703M-52.1 790.4L-10.4 785.3M10.4 782.7L52.1 777.6M73 775L93.8 772.5M114.6 769.9L156.3 764.8M177.2 762.2L323.1 744.3M364.8 739.2L510.7 721.3M-49.5 811.2L117.2 790.8M158.9 785.6L179.7 783.1M200.6 780.5L346.5 762.6M367.3 760L429.9 752.4M450.7 749.8L513.2 742.1M-26.1 829.5L203.1 801.4M224 798.8L265.7 793.7M286.5 791.1L515.8 763M-44.4 852.9L-23.6 850.4M-2.7 847.8L247.4 817.1M268.2 814.5L309.9 809.4M330.8 806.8L351.6 804.3M372.4 801.7L393.3 799.2M414.1 796.6L518.3 783.8M-41.9 873.8L-21 871.2M-0.2 868.6L104 855.8M124.9 853.3L208.3 843M229.1 840.5L333.3 827.7M354.2 825.1L395.8 820M416.7 817.5L520.9 804.7M-39.3 894.6L2.4 889.5M23.2 886.9L148.3 871.6M169.1 869L252.5 858.8M273.3 856.2L315 851.1M335.9 848.5L523.5 825.5M-154.5 -43.4L-151.9 -22.5M-149.4 -1.7L-136.6 102.6M-131.4 144.2L-98.2 415.2M-95.6 436L-85.4 519.4M-82.8 540.3L-80.3 561.1M-77.7 582L-54.7 769.5M-52.1 790.4L-39.3 894.6M-123.4 37.5L-115.7 100M-113.2 120.8L-110.6 141.7M-108 162.5L-56.9 579.4M-51.7 621.1L-46.6 662.8M-41.5 704.5L-18.5 892M-110.2 -27.6L-100 55.7M-97.4 76.6L-92.3 118.3M-89.8 139.1L-43.7 514.3M-38.6 556L-33.5 597.7M-30.9 618.5L-28.3 639.4M-25.8 660.2L-10.4 785.3M-7.9 806.1L-2.7 847.8M-91.9 -51L-61.2 199.1M-56.1 240.8L-51 282.5M-48.4 303.3L-43.3 345M-38.2 386.7L-35.6 407.5M-33.1 428.4L-30.5 449.2M-28 470.1L0.2 699.3M2.7 720.2L23.2 886.9M-71.1 -53.6L-66 -11.9M-63.4 8.9L-35.3 238.2M-32.7 259.1L-17.4 384.1M-14.8 405L0.6 530M3.1 550.9L28.7 759.3M31.3 780.1L44.1 884.4M-50.3 -56.1L-47.7 -35.3M-42.6 6.4L-40 27.2M-37.5 48.1L-34.9 68.9M-32.3 89.8L-22.1 173.1M-19.5 194L-17 214.8M-14.4 235.7L-9.3 277.3M-6.8 298.2L-4.2 319M0.9 360.7L3.5 381.6M6 402.4L11.2 444.1M13.7 464.9L64.9 881.8M-26.9 -37.9L-6.4 128.9M-3.8 149.7L1.3 191.4M3.9 212.3L16.7 316.5M19.2 337.3L47.4 566.6M49.9 587.4L52.5 608.3M55 629.1L85.8 879.2M-8.6 -61.3L-3.5 -19.6M-0.9 1.3L1.7 22.1M4.2 42.9L14.5 126.3M17 147.2L52.9 439M55.4 459.8L78.4 647.4M81 668.3L88.7 730.8M91.2 751.6L93.8 772.5M98.9 814.2L106.6 876.7M12.3 -63.8L17.4 -22.1M20 -1.3L27.6 61.2M30.2 82.1L78.8 478.1M81.4 498.9L83.9 519.8M89.1 561.5L114.6 769.9M117.2 790.8L119.8 811.6M122.3 832.4L127.4 874.1M33.1 -66.4L35.7 -45.5M38.2 -24.7L48.5 58.7M51 79.5L58.7 142M61.3 162.9L81.7 329.6M84.3 350.5L92 413M94.5 433.9L148.3 871.6M54 -68.9L66.8 35.3M69.3 56.1L74.4 97.8M79.6 139.5L102.6 327.1M107.7 368.8L125.6 514.7M128.2 535.5L130.7 556.4M133.3 577.2L146.1 681.4M148.7 702.3L169.1 869M74.8 -71.5L77.4 -50.7M79.9 -29.8L85 11.9M90.2 53.6L97.8 116.1M100.4 136.9L131.1 387.1M133.7 407.9L141.3 470.4M143.9 491.3L164.4 658M166.9 678.9L169.5 699.7M172.1 720.5L184.9 824.8M95.6 -74.1L100.8 -32.4M103.3 -11.5L113.6 71.8M121.2 134.4L136.6 259.4M139.2 280.3L154.5 405.3M157.1 426.2L159.6 447M162.2 467.9L177.5 592.9M182.7 634.6L187.8 676.3M192.9 718L208.3 843M116.5 -76.6L124.2 -14.1M126.7 6.8L137 90.1M139.5 111L152.3 215.2M154.9 236L157.4 256.9M160 277.7L167.7 340.2M170.2 361.1L177.9 423.6M180.5 444.5L193.3 548.7M198.4 590.4L229.1 840.5M142.5 -37.5L145 -16.7M147.6 4.2L165.5 150.1M168 170.9L178.3 254.3M180.8 275.2L183.4 296M186 316.8L201.3 441.9M203.9 462.7L209 504.4M214.1 546.1L219.2 587.8M221.8 608.7L234.6 712.9M239.7 754.6L249.9 837.9M163.3 -40.1L176.1 64.2M178.7 85L211.9 356M214.5 376.8L229.8 501.9M232.4 522.7L247.8 647.8M250.3 668.6L263.1 772.8M265.7 793.7L273.3 856.2M179 -84.3L184.1 -42.6M186.7 -21.8L194.4 40.8M199.5 82.4L202.1 103.3M204.6 124.1L225.1 290.9M227.6 311.7L240.4 415.9M243 436.8L248.1 478.5M250.7 499.3L260.9 582.7M263.5 603.5L278.8 728.6M281.4 749.4L294.2 853.7M199.9 -86.9L212.7 17.4M215.2 38.2L230.6 163.3M233.1 184.1L235.7 204.9M243.4 267.5L245.9 288.3M248.5 309.2L286.9 621.8M292 663.5L309.9 809.4M312.5 830.3L315 851.1M223.3 -68.6L248.9 139.9M251.4 160.7L269.3 306.6M279.6 390L284.7 431.7M287.2 452.5L335.9 848.5M241.6 -92L254.3 12.2M256.9 33.1L269.7 137.3M272.3 158.1L295.3 345.7M297.9 366.6L310.7 470.8M313.2 491.6L323.4 575M326 595.9L331.1 637.5M333.7 658.4L338.8 700.1M341.4 720.9L343.9 741.8M346.5 762.6L356.7 846M262.4 -94.5L290.5 134.7M295.7 176.4L311 301.5M313.6 322.3L318.7 364M321.3 384.9L326.4 426.5M328.9 447.4L331.5 468.2M334.1 489.1L336.6 509.9M339.2 530.8L341.7 551.6M344.3 572.5L346.8 593.3M349.4 614.1L367.3 760M369.9 780.9L375 822.6M288.4 -55.4L337 340.6M339.5 361.5L344.7 403.1M352.3 465.7L360 528.2M362.6 549.1L367.7 590.7M370.3 611.6L375.4 653.3M377.9 674.1L380.5 695M383 715.8L390.7 778.3M395.8 820L398.4 840.9M304.1 -99.7L342.5 213M347.6 254.7L350.1 275.5M352.7 296.4L378.3 504.8M380.9 525.6L386 567.3M388.5 588.2L419.2 838.3M324.9 -102.2L332.6 -39.7M335.2 -18.8L345.4 64.5M348 85.4L363.3 210.4M365.9 231.3L368.4 252.1M371 273L373.6 293.8M376.1 314.7L378.7 335.5M383.8 377.2L404.3 543.9M406.8 564.8L417.1 648.1M419.6 669L424.7 710.7M427.3 731.5L435 794.1M437.5 814.9L440.1 835.7M345.8 -104.8L358.6 -0.6M361.1 20.3L389.3 249.6M391.8 270.4L402.1 353.8M404.6 374.6L417.4 478.8M422.5 520.5L435.3 624.7M437.9 645.6L458.4 812.3M366.6 -107.3L371.7 -65.6M374.3 -44.8L394.8 121.9M397.3 142.8L407.6 226.2M410.1 247L420.4 330.4M422.9 351.2L425.5 372.1M428 392.9L440.8 497.1M443.4 518L458.7 643M461.3 663.9L466.4 705.6M469 726.4L476.7 788.9M479.2 809.8L481.8 830.6M387.5 -109.9L397.7 -26.5M402.8 15.2L418.2 140.2M420.7 161.1L443.8 348.7M446.3 369.5L448.9 390.3M451.4 411.2L489.8 723.8M492.4 744.7L502.6 828.1M408.3 -112.5L416 -49.9M418.5 -29.1L428.8 54.3M431.3 75.1L459.5 304.4M467.2 366.9L477.4 450.3M480 471.2L505.6 679.6M508.1 700.4L513.2 742.1M515.8 763L520.9 804.7"/><path class="m-av-o" style="stroke-width:5.5" d="M201.4 -4 C196.9 12 184.4 70.5 174.4 92 C164.4 113.5 151.5 111.5 141.4 125 C131.3 138.5 122.3 154.5 113.8 173 C105.3 191.5 95 215.5 90.4 236 C85.8 256.5 85.4 274 86.2 296 C87 318 89 344.5 95.2 368 C101.4 391.5 112.2 414 123.4 437 C134.6 460 151.4 479.5 162.4 506 C173.4 532.5 184.9 581 189.4 596 M132.4 -4 C132.6 17 132.9 90.5 133.6 122 C134.4 153.5 135 163 136.9 185 C138.8 207 143.7 242.5 145 254 M-146.6 308.6 C-131.6 307.7 -86.6 305.3 -56.6 303.2 C-26.6 301.1 9.6 299.1 33.4 296 C57.2 292.9 77.4 286.5 86.2 284.6 M86.2 284.6 C97.4 282.6 131.2 275.7 153.4 272.6 C175.6 269.5 194.9 267.8 219.4 266 C243.9 264.2 286.9 262.5 300.4 261.8 M147.4 229.4 C159.4 228.8 193.9 226.8 219.4 225.8 C244.9 224.8 286.9 223.8 300.4 223.4 M217 -4 C216.6 21 215.2 110 214.6 146 C214 182 213 187 213.4 212 C213.8 237 215.2 267 217 296 C218.8 325 219.8 361 224.2 386 C228.6 411 237.2 416 243.4 446 C249.6 476 258.4 546 261.4 566 M267.4 -4 C266.6 21 264 108 262.6 146 C261.2 184 259.8 194 259 224 C258.2 254 258 309 257.8 326 M93.4 386 C108.4 386.5 148.9 389 183.4 389 C217.9 389 280.9 386.5 300.4 386 M86.2 323 C97.4 323.1 129.7 323.9 153.4 323.6 C177.1 323.3 203.9 321.2 228.4 321.2 C252.9 321.2 288.4 323.2 300.4 323.6 M141.4 125 C153.6 124.5 188.1 123 214.6 122 C241.1 121 286.1 119.5 300.4 119 M-146.6 227 C-126.6 227 -66.1 225.5 -26.6 227 C12.9 228.5 70.9 234.5 90.4 236"/><path class="m-av-i" style="stroke-width:2.5" d="M201.4 -4 C196.9 12 184.4 70.5 174.4 92 C164.4 113.5 151.5 111.5 141.4 125 C131.3 138.5 122.3 154.5 113.8 173 C105.3 191.5 95 215.5 90.4 236 C85.8 256.5 85.4 274 86.2 296 C87 318 89 344.5 95.2 368 C101.4 391.5 112.2 414 123.4 437 C134.6 460 151.4 479.5 162.4 506 C173.4 532.5 184.9 581 189.4 596 M132.4 -4 C132.6 17 132.9 90.5 133.6 122 C134.4 153.5 135 163 136.9 185 C138.8 207 143.7 242.5 145 254 M-146.6 308.6 C-131.6 307.7 -86.6 305.3 -56.6 303.2 C-26.6 301.1 9.6 299.1 33.4 296 C57.2 292.9 77.4 286.5 86.2 284.6 M86.2 284.6 C97.4 282.6 131.2 275.7 153.4 272.6 C175.6 269.5 194.9 267.8 219.4 266 C243.9 264.2 286.9 262.5 300.4 261.8 M147.4 229.4 C159.4 228.8 193.9 226.8 219.4 225.8 C244.9 224.8 286.9 223.8 300.4 223.4 M217 -4 C216.6 21 215.2 110 214.6 146 C214 182 213 187 213.4 212 C213.8 237 215.2 267 217 296 C218.8 325 219.8 361 224.2 386 C228.6 411 237.2 416 243.4 446 C249.6 476 258.4 546 261.4 566 M267.4 -4 C266.6 21 264 108 262.6 146 C261.2 184 259.8 194 259 224 C258.2 254 258 309 257.8 326 M93.4 386 C108.4 386.5 148.9 389 183.4 389 C217.9 389 280.9 386.5 300.4 386 M86.2 323 C97.4 323.1 129.7 323.9 153.4 323.6 C177.1 323.3 203.9 321.2 228.4 321.2 C252.9 321.2 288.4 323.2 300.4 323.6 M141.4 125 C153.6 124.5 188.1 123 214.6 122 C241.1 121 286.1 119.5 300.4 119 M-146.6 227 C-126.6 227 -66.1 225.5 -26.6 227 C12.9 228.5 70.9 234.5 90.4 236"/><path class="m-lake" d="M304.9 -184 C304.6 -139 304.4 35 303.4 86 C302.3 137 300.3 109 298.6 122 C296.9 135 293.6 151 293.2 164 C292.8 177 296.6 187 296.2 200 C295.8 213 291.3 226 290.8 242 C290.3 258 291.9 279 293.2 296 C294.5 313 298.1 329 298.6 344 C299.1 359 297.1 371.5 296.2 386 C295.3 400.5 292.8 416 293.2 431 C293.6 446 296.9 458.5 298.6 476 C300.3 493.5 302.3 491 303.4 536 C304.4 581 304.6 711 304.9 746 L4000 746 L4000 -184 Z"/><text class="m-lakelabel" transform="translate(328.9 468) rotate(90)" text-anchor="middle">Lago de Maracaibo</text><path class="m-zone " d="M97 259.4 L151 255.8 L197.2 257.6 L199 296 L184.6 315.8 L151 318.8 L98.8 316.4 L93.4 288.8 Z"/><path class="m-zone " d="M205 258.8 L247 257 L284.8 255.8 L286.6 314.6 L247 317.6 L206.8 317.6 L202 288.8 Z"/><path class="m-zone " d="M203.2 206.6 L243.4 204.2 L286 207.2 L285.4 234.8 L273.4 251.6 L245.2 251.6 L205 251.6 L207.4 227 Z"/><text class="m-avlabel" text-anchor="middle" transform="translate(86.2 296) rotate(-86)" dy="3">Circunvalación 2</text><text class="m-avlabel" text-anchor="middle" transform="translate(101.2 386) rotate(67.8)" dy="3">Circunvalación 2</text><text class="m-avlabel" text-anchor="middle" transform="translate(135.4 176) rotate(87)" dy="3">Av. Guajira</text><text class="m-avlabel" text-anchor="middle" transform="translate(261.4 263.6) rotate(-3)" dy="3">Av. La Limpia</text><text class="m-avlabel" text-anchor="middle" transform="translate(174.4 227.6) rotate(-2.9)" dy="3">Av. 5 de Julio</text><text class="m-avlabel" text-anchor="middle" transform="translate(214.6 176) rotate(-89)" dy="3">Av. Delicias</text><text class="m-avlabel" text-anchor="middle" transform="translate(220.6 344) rotate(85.4)" dy="3">Av. Delicias</text><text class="m-avlabel" text-anchor="middle" transform="translate(261.4 176) rotate(-87.4)" dy="3">Av. Bella Vista</text><path class="m-route-o " d="M270.4 224.6 L255.4 224 L240.4 216.8 L215.2 219.8 L217.6 266 L177.4 270.2 L128.8 278 L89.2 284 L88.6 254 L92.2 230 L103 200 L113.8 173 L122.2 155.6 L112 146"/><path class="m-route " d="M270.4 224.6 L255.4 224 L240.4 216.8 L215.2 219.8 L217.6 266 L177.4 270.2 L128.8 278 L89.2 284 L88.6 254 L92.2 230 L103 200 L113.8 173 L122.2 155.6 L112 146"/><rect class="m-urbe" x="94" y="128" width="36" height="36" rx="12"/><use href="#i-graduation-cap" class="m-ic" x="102" y="136" width="20" height="20"/><text class="m-poi" x="136" y="150">URBE</text><circle class="m-stop " cx="270.4" cy="224.6" r="12"/><text class="m-stop-n " x="270.4" y="228.8">1</text><circle class="m-stop " cx="240.4" cy="216.8" r="12"/><text class="m-stop-n " x="240.4" y="221">2</text><circle class="m-stop skip" cx="177.4" cy="270.2" r="12"/><text class="m-stop-n skip" x="177.4" y="274.4">3</text><circle class="m-stop " cx="128.8" cy="278" r="12"/><text class="m-stop-n " x="128.8" y="282.2">4</text><circle class="m-stop " cx="92.2" cy="230" r="12"/><text class="m-stop-n " x="92.2" y="234.2">5</text></svg></div>
+    <div class="sb over"><span>11:58</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="greet" style="top:48px;left:16px;right:16px">
+      <div class="grow"><div class="t-meta">Martes 8 de diciembre</div><div class="t-title mt-2">Hola, Luis</div></div>
+      <span class="av lg">LC</span>
+    </div>
+    <span class="mbtn" style="top:132px;right:16px"><svg class="ic" aria-hidden="true"><use href="#i-scan"/></svg></span>
+    <div class="sheet abs" style="top:292px;bottom:0;padding:0 20px">
+      <div class="asa"></div>
+      <div class="row between"><span class="t-over">Turno de la tarde · sale 12:10 pm</span><span class="tag tag-brand">Por salir</span></div>
+      <div class="t-helper mt-4">Llegas a la URBE 12:52 pm · 4 paradas activas de 5</div>
+      <div class="row between mt-12"><span class="t-tm">Nómina de hoy</span><span class="t-helper">4 van · 1 por confirmar · 1 no va</span></div>
+      <div class="list mt-8">
+        <div class="lrow tight"><svg width="28" height="28" viewBox="0 0 28 28" style="flex:none" aria-hidden="true"><circle class="m-stop " cx="14" cy="14" r="12"/><text class="m-stop-n " x="14" y="18.2">1</text></svg><div class="grow"><div class="t-meta-strong">Andrés Urdaneta</div><div class="t-helper">12:10 pm · Av. 5 de Julio con Av. 3Y</div></div><span class="tag tag-success">Va</span></div>
+        <div class="lrow tight"><svg width="28" height="28" viewBox="0 0 28 28" style="flex:none" aria-hidden="true"><circle class="m-stop " cx="14" cy="14" r="12"/><text class="m-stop-n " x="14" y="18.2">2</text></svg><div class="grow"><div class="t-meta-strong">Génesis Materán</div><div class="t-helper">12:16 pm · Calle 72 con Av. 3E</div></div><span class="tag tag-success">Va</span></div>
+        <div class="lrow tight dim"><svg width="28" height="28" viewBox="0 0 28 28" style="flex:none" aria-hidden="true"><circle class="m-stop skip" cx="14" cy="14" r="12"/><text class="m-stop-n skip" x="14" y="18.2">3</text></svg><div class="grow"><div class="t-meta-strong">María Fernanda Paz</div><div class="t-helper">C.C. Galerías · no asiste hoy</div></div><span class="tag tag-muted">No va</span></div>
+        <div class="lrow tight"><svg width="28" height="28" viewBox="0 0 28 28" style="flex:none" aria-hidden="true"><circle class="m-stop " cx="14" cy="14" r="12"/><text class="m-stop-n " x="14" y="18.2">4</text></svg><div class="grow"><div class="t-meta-strong">Daniela Chirinos</div><div class="t-helper">12:31 pm · Av. La Limpia</div></div><span class="tag tag-warning">Por confirmar</span></div>
+        <div class="lrow tight"><svg width="28" height="28" viewBox="0 0 28 28" style="flex:none" aria-hidden="true"><circle class="m-stop " cx="14" cy="14" r="12"/><text class="m-stop-n " x="14" y="18.2">4</text></svg><div class="grow"><div class="t-meta-strong">Luis Ángel Rincón</div><div class="t-helper">12:31 pm · Av. La Limpia con Av. 28</div></div><span class="tag tag-success">Va</span></div>
+      </div>
+    </div>
+    <div class="actionbar" style="bottom:76px;padding:8px 20px"><div class="btn btn-primary"><span>Iniciar recorrido</span></div></div>
+    <nav class="nav abs"><span class="nav-item on"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg>Hoy</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg>Semana</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg>Ruta</span><span class="nav-item"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg>Cuentas</span></nav>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ============================================== 11 Aviso de contingencia -->
+<figure class="fig" data-n="11">
+  <figcaption class="fig-cap"><span class="fig-num">11</span><span class="fig-name">Aviso de contingencia</span><span class="fig-hu">HU-015</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>12:21</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></span><span class="sh-title">Turno de la tarde</span><span></span></div>
+      <h1 class="t-title mt-8">Avisa a tus pasajeros</h1>
+      <p class="t-body mt-4">Lo reciben los 5 estudiantes que viajan hoy.</p>
+      <label class="field-label mt-16">¿Qué pasó?</label>
+      <div class="grid2 g8">
+        <div class="tile sm on"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-wrench"/></svg></span><b>Avería</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-fuel"/></svg></span><b>Combustible</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-construction"/></svg></span><b>Vía cerrada</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-ellipsis"/></svg></span><b>Otro</b></div>
+      </div>
+      <label class="field-label mt-16">¿Cómo sigue el recorrido?</label>
+      <div class="tile stack on">
+        <div class="row g12"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-timer"/></svg></span><div class="grow"><div class="t-strong">Voy con retraso</div><div class="t-helper">Elige la demora estimada.</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+        <div class="chips mt-12"><span class="chip">10 min</span><span class="chip on">20 min</span><span class="chip">30 min</span><span class="chip">+45 min</span></div>
+      </div>
+      <div class="tile mt-8"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-ban"/></svg></span><div class="grow"><div class="t-strong">Cancelo el recorrido</div><div class="t-helper">El viaje de hoy queda cancelado.</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle"/></svg></div>
+      <label class="field-label mt-16">Detalle (opcional)</label>
+      <div class="input">Se me espichó un caucho.</div>
+    </div>
+    <div class="panel"><div class="btn btn-primary"><span>Enviar aviso</span></div></div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+<!-- ===================================================== 12 Registrar pago -->
+<figure class="fig" data-n="12">
+  <figcaption class="fig-cap"><span class="fig-num">12</span><span class="fig-name">Registrar pago</span><span class="fig-hu">HU-013</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>5:40</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span><span class="sh-title">Cuentas</span><span></span></div>
+      <h1 class="t-title mt-8">Registrar pago</h1>
+      <label class="field-label mt-16">Estudiante</label>
+      <div class="input tall"><span class="av sm">GM</span><div class="grow"><div class="t-meta-strong">Génesis Materán</div><div class="t-helper">Turno de la tarde · debe $5,00</div></div><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>
+      <label class="field-label mt-16">Monto</label>
+      <div class="input focus amount"><b>$ 5,00</b><span class="caret"></span><span class="grow"></span><span class="t-helper">tarifa semanal</span></div>
+      <label class="field-label mt-16">Método de pago</label>
+      <div class="grid2 g8">
+        <div class="tile sm on"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-banknote"/></svg></span><b>Dólares en efectivo</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-smartphone"/></svg></span><b>Pago Móvil</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-landmark"/></svg></span><b>Zelle</b></div>
+        <div class="tile sm"><span class="mosaic sm"><svg class="ic" aria-hidden="true"><use href="#i-coins"/></svg></span><b>Bolívares en efectivo</b></div>
+      </div>
+      <label class="field-label mt-16">Período que cubre</label>
+      <div class="tile on"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg></span><div class="grow"><div class="t-strong">7 al 11 dic</div><div class="t-helper">Pendiente · vence el viernes 11</div></div><svg class="ic check" style="width:20px;height:20px" aria-hidden="true"><use href="#i-circle-check"/></svg></div>
+      <div class="tile mt-8 off"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-calendar-check"/></svg></span><div class="grow"><div class="t-strong">30 nov al 4 dic</div><div class="t-helper">Ya registrada el 4 dic</div></div><span class="tag tag-success">Pagada</span></div>
+    </div>
+    <div class="panel"><div class="btn btn-primary"><span>Registrar pago</span></div></div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+  </div>
+
+  <h2 class="section-title">Administrador</h2>
+  <div class="grid">
+
+<!-- =============================================== 13 Revisión de conductor -->
+<figure class="fig" data-n="13">
+  <figcaption class="fig-cap"><span class="fig-num">13</span><span class="fig-name">Revisión de conductor</span><span class="fig-hu">HU-012</span></figcaption>
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>9:20</span><span class="sb-icons"><svg class="ic" aria-hidden="true"><use href="#i-signal"/></svg><svg class="ic" aria-hidden="true"><use href="#i-wifi"/></svg><span class="batt"></span></span></div>
+    <div class="px grow clip">
+      <div class="sh"><span class="back"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></span><span class="sh-title">Por revisar · 1 de 4</span><span></span></div>
+      <div class="row between mt-8"><span class="t-over">Recibida hoy, 9:12 am</span><span class="tag tag-warning"><svg class="ic" aria-hidden="true"><use href="#i-hourglass"/></svg>Pendiente</span></div>
+      <div class="row g12 mt-8">
+        <span class="foto c" style="width:56px;height:56px"><svg width="56" height="56" viewBox="0 0 48 48" aria-hidden="true"><rect class="f-bg" width="48" height="48"/><circle class="f-fg" cx="24" cy="19" r="8.5"/><path class="f-fg" d="M7 48c1.2-10 8-15.5 17-15.5S39.8 38 41 48z"/></svg></span>
+        <div class="grow"><h1 class="t-title">Wilmer Atencio</h1><div class="t-helper mt-2">C.I. V-12.964.581 · 0416-660 2318</div></div>
+      </div>
+      <div class="t-label mt-16">Documentos</div>
+      <div class="list mt-8">
+        <div class="lrow"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-id-card"/></svg></span><div class="grow"><div class="t-meta-strong">Licencia de conducir</div><div class="t-helper">Vence 15/03/2029</div></div><span class="tag tag-success">Vigente</span></div>
+        <div class="lrow"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-heart-pulse"/></svg></span><div class="grow"><div class="t-meta-strong">Certificado médico</div><div class="t-helper">Vence 02/10/2027</div></div><span class="tag tag-success">Vigente</span></div>
+      </div>
+      <div class="t-label mt-16">Vehículo</div>
+      <div class="list mt-8">
+        <div class="lrow"><span class="mosaic"><svg class="ic" aria-hidden="true"><use href="#i-car-front"/></svg></span><div class="grow"><div class="t-meta-strong">Ford Econoline 2008 · gris</div><div class="t-helper">Placa AF742KD · 12 puestos</div></div></div>
+        <div class="lrow"><div class="thumbs grow"><span class="thumb"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Frente</span><span class="thumb"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Lateral</span><span class="thumb"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Interior</span></div></div>
+      </div>
+      <label class="field-label mt-16">Motivo, si lo rechazas</label>
+      <div class="input"><span class="ph">Elige un motivo</span><span class="grow"></span><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>
+      <div class="helper">Obligatorio para rechazar; el conductor lo verá.</div>
+    </div>
+    <div class="panel"><div class="btn-row"><div class="btn btn-secondary"><span>Rechazar</span></div><div class="btn btn-primary"><span>Aprobar</span></div></div></div>
+    <div class="home-ind"></div>
+  </div></div>
+</figure>
+
+  </div>
+  <p class="page-foot">Fuente: Andrade, Espina y Ramírez (2026). Datos de ejemplo: nombres, cédulas, placas y montos son ficticios.</p>
+</main>
+</body>
+</html>

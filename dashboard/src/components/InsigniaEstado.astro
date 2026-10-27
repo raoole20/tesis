@@ -1,0 +1,13 @@
+---
+import { ESTADOS } from '../lib/catalogos';
+import type { EstadoCuenta } from '../lib/panel';
+
+interface Props {
+  estado: EstadoCuenta;
+}
+
+const { estado } = Astro.props;
+const { nombre, icono: Icono } = ESTADOS[estado];
+---
+
+<span class:list={['insignia', `insignia--${estado}`]}><Icono size={14} />{nombre}</span>

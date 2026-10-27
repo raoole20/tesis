@@ -1,0 +1,58 @@
+erDiagram
+    AUTH_USERS ||--|| USUARIOS : "origina"
+    USUARIOS ||--o| ESTUDIANTES : "es"
+    USUARIOS ||--o| CONDUCTORES : "es"
+    ZONAS |o--o{ ESTUDIANTES : "contiene el domicilio de"
+    CONDUCTORES ||--o{ CONDUCTOR_ZONAS : "trabaja en"
+    ZONAS ||--o{ CONDUCTOR_ZONAS : "es cubierta en"
+    USUARIOS ||--o{ ACCESOS : "registra"
+
+    AUTH_USERS {
+        uuid id PK
+        text email
+        text encrypted_password
+    }
+    USUARIOS {
+        uuid id PK "FK auth.users"
+        text email UK
+        text telefono UK
+        text cedula UK
+        text nombres
+        text apellidos
+        rol_usuario rol
+        estado_cuenta estado
+        text motivo_rechazo
+        boolean onboarding_completo
+        timestamptz ultimo_acceso
+    }
+    ESTUDIANTES {
+        uuid id PK "FK usuarios"
+        text universidad
+        text carrera
+        geography domicilio "Point 4326"
+        text domicilio_referencia
+        uuid zona_id FK "nulo si no hay cobertura"
+    }
+    CONDUCTORES {
+        uuid id PK "FK usuarios"
+        text licencia_numero
+        date licencia_vence_en
+        boolean verificado
+    }
+    ZONAS {
+        uuid id PK
+        text nombre
+        text municipio
+        geography poligono "Polygon 4326"
+        boolean activa
+    }
+    CONDUCTOR_ZONAS {
+        uuid conductor_id PK "FK conductores"
+        uuid zona_id PK "FK zonas"
+        timestamptz agregada_en
+    }
+    ACCESOS {
+        bigint id PK
+        uuid usuario_id FK
+        timestamptz ocurrido_en
+    }

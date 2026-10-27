@@ -1,0 +1,12 @@
+{
+  "actor": "Administrador",
+  "sistema": "Panel de administración Cupo",
+  "casos": [
+    "Iniciar sesión (HU-002)",
+    "Revisar expediente del conductor (HU-012)",
+    "Aprobar cuenta (HU-012)",
+    "Rechazar cuenta con motivo (HU-012)",
+    "Suspender o reactivar cuenta (HU-012)",
+    "Mantener catálogo de zonas (HU-012)"
+  ]
+}

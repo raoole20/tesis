@@ -1,0 +1,61 @@
+---
+import { CircleCheck, CirclePause } from '@lucide/astro';
+import type { Zona } from '../lib/panel';
+import { numero } from '../lib/formato';
+
+interface Props {
+  zonas: Zona[];
+}
+
+const { zonas } = Astro.props;
+// Las zonas con más gente arriba; empatadas, por nombre.
+const orden = [...zonas].sort((a, b) =>
+  b.estudiantes + b.conductores - (a.estudiantes + a.conductores) || a.nombre.localeCompare(b.nombre, 'es'));
+const maxE = Math.max(0, ...zonas.map((z) => z.estudiantes));
+const maxC = Math.max(0, ...zonas.map((z) => z.conductores));
+const ancho = (n: number, max: number) => `${max ? (n / max) * 100 : 0}%`;
+---
+
+<div class="tabla-envoltura">
+  <table class="tabla">
+    <thead>
+      <tr><th>Zona</th><th>Municipio</th><th>Estudiantes</th><th>Conductores</th><th>Estado</th></tr>
+    </thead>
+    <tbody>
+      {
+        orden.length ? (
+          orden.map((z) => (
+            <tr>
+              <td><strong>{z.nombre}</strong></td>
+              <td class="apoyo">{z.municipio ?? '—'}</td>
+              {[[z.estudiantes, maxE], [z.conductores, maxC]].map(([n, max]) => (
+                <td>
+                  <div class="mini">
+                    <span class="valor">{numero(n)}</span>
+                    <div class="pista"><div class="relleno" style={`width: ${ancho(n, max)}`} /></div>
+                  </div>
+                </td>
+              ))}
+              <td>
+                {z.activa ? (
+                  <span class="insignia insignia--aprobada"><CircleCheck size={14} />Activa</span>
+                ) : (
+                  <span class="insignia insignia--neutra"><CirclePause size={14} />Inactiva</span>
+                )}
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr><td class="vacia" colspan="5">No hay zonas cargadas.</td></tr>
+        )
+      }
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .mini { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+  .valor { width: 24px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pista { flex: 1; max-width: 120px; height: 8px; background: var(--background-muted); border-radius: 999px; }
+  .relleno { height: 100%; background: var(--primary); border-radius: 999px; }
+</style>

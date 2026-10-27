@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor E as Estudiante
+    participant AE as App del estudiante
+    participant BD as Supabase (PostgreSQL + PostGIS)
+    participant AC as App del conductor
+    actor C as Conductor
+    E->>AE: Abre «Buscar transporte» y elige bloque y días
+    AE->>BD: buscar_turnos(bloque, días)
+    BD->>BD: Zona del domicilio ∩ zonas del conductor,<br/>turnos activos de conductores aprobados con cupo libre
+    BD-->>AE: Turnos disponibles
+    E->>AE: Elige un turno y marca sus días
+    AE->>BD: solicitar_cupo(turno, días)
+    BD->>BD: Valida domicilio, días y que no tenga<br/>otra solicitud activa en el mismo bloque
+    BD->>BD: Crea la inscripción en estado «pendiente»
+    BD-->>AC: Realtime y notificación: nueva solicitud
+    C->>AC: Revisa el domicilio en el mapa y el perfil
+    AC->>BD: decidir_solicitud(inscripción, acepta)
+    BD->>BD: Bloquea el turno y cuenta las inscripciones aceptadas
+    alt Hay cupo libre
+        BD->>BD: Inscripción «aceptada»
+        BD-->>AE: Realtime y notificación: cupo aceptado
+        AE-->>E: «Tu cupo fue aceptado»
+    else El turno se llenó
+        BD-->>AC: Error: no quedan asientos disponibles
+        AC-->>C: Avisa que el turno está lleno
+    end

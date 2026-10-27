@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor C as Conductor
+    participant AC as App del conductor
+    participant BD as Supabase (PostgreSQL + PostGIS)
+    participant FN as Función de notificaciones
+    participant AE as App del estudiante
+    actor E as Estudiante
+    C->>AC: «Iniciar recorrido» del turno
+    AC->>BD: iniciar_viaje(turno, sentido)
+    BD-->>AC: Viaje «en curso» y nómina del día
+    AC->>AC: Activa el servicio de ubicación en primer plano
+    loop Cada 5 segundos hasta finalizar
+        AC->>BD: Inserta la posición del vehículo
+        BD-->>AE: Realtime: nueva posición del viaje
+        AE-->>E: Mueve la unidad en el mapa
+        BD->>BD: ¿Unidad dentro del radio de algún domicilio<br/>de la nómina sin aviso previo?
+        opt Unidad cerca de un domicilio
+            BD->>FN: Notificación de proximidad (una por viaje)
+            FN-->>E: Push: «Tu transporte está cerca»
+        end
+    end
+    C->>AC: «Finalizar recorrido»
+    AC->>BD: finalizar_viaje(viaje)
+    AC->>AC: Detiene la captura de ubicación

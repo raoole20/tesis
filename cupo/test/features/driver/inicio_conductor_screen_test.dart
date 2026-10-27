@@ -4,6 +4,7 @@ import 'package:cupo/features/driver/domain/turno_del_conductor.dart';
 import 'package:cupo/features/driver/domain/zona.dart';
 import 'package:cupo/features/driver/presentation/inicio_conductor_screen.dart';
 import 'package:cupo/features/driver/presentation/mapa_ruta_del_dia.dart';
+import 'package:cupo/features/spike_rastreo/presentation/prueba_rastreo_screen.dart';
 import 'package:cupo/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -125,6 +126,26 @@ void main() {
     await tester.scrollUntilVisible(find.text('Tus zonas de trabajo'), 200);
     expect(find.text('Las Delicias'), findsOneWidget);
     expect(find.text('Pomona'), findsNothing);
+  });
+
+  testWidgets('en modo debug, el inicio lleva a la prueba de rastreo', (
+    tester,
+  ) async {
+    await montar(tester);
+
+    // Las pruebas corren en modo debug: el botón existe. En una compilación
+    // de lanzamiento kDebugMode es false y no se construye.
+    final boton = find.text('Prueba de rastreo');
+    expect(boton, findsOneWidget);
+
+    await tester.tap(boton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PruebaRastreoScreen), findsOneWidget);
+    expect(
+      find.widgetWithText(CupoPrimaryButton, 'Empezar prueba'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('si las zonas no cargan, el inicio sigue sin esa sección', (

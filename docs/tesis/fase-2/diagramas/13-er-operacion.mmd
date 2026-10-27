@@ -1,0 +1,112 @@
+erDiagram
+    CONDUCTORES ||--|{ VEHICULOS : "posee"
+    CONDUCTORES ||--o{ TURNOS : "publica"
+    VEHICULOS ||--o{ TURNOS : "se usa en"
+    TURNOS ||--o{ INSCRIPCIONES : "recibe"
+    ESTUDIANTES ||--o{ INSCRIPCIONES : "solicita"
+    INSCRIPCIONES ||--o{ INASISTENCIAS : "registra"
+    INSCRIPCIONES ||--o{ PAGOS : "acumula"
+    TURNOS ||--o{ PERIODOS_RENOVACION : "abre"
+    PERIODOS_RENOVACION ||--o{ RENOVACIONES : "recibe"
+    INSCRIPCIONES ||--o{ RENOVACIONES : "se renueva en"
+    TURNOS ||--o{ VIAJES : "se recorre en"
+    VIAJES ||--o{ POSICIONES : "traza"
+    VIAJES ||--o{ AVISOS_CONTINGENCIA : "reporta"
+    USUARIOS ||--o{ NOTIFICACIONES : "recibe"
+    USUARIOS ||--o{ DISPOSITIVOS : "usa"
+
+    CONDUCTORES {
+        uuid id PK
+    }
+    ESTUDIANTES {
+        uuid id PK
+        geography domicilio
+    }
+    USUARIOS {
+        uuid id PK
+    }
+    VEHICULOS {
+        uuid id PK
+        uuid conductor_id FK
+        text placa UK
+        text marca
+        text modelo
+        smallint capacidad
+    }
+    TURNOS {
+        uuid id PK
+        uuid conductor_id FK
+        uuid vehiculo_id FK
+        bloque_turno bloque
+        time hora_ida
+        time hora_regreso
+        dias_semana dias
+        sentido_servicio sentido
+        smallint cupos
+        numeric tarifa
+        modalidad_cobro modalidad
+        boolean activo
+    }
+    INSCRIPCIONES {
+        uuid id PK
+        uuid turno_id FK
+        uuid estudiante_id FK
+        dias_semana dias
+        estado_inscripcion estado
+        time hora_recogida
+        timestamptz solicitada_en
+    }
+    INASISTENCIAS {
+        uuid inscripcion_id PK "FK"
+        date fecha PK
+    }
+    PERIODOS_RENOVACION {
+        uuid id PK
+        uuid turno_id FK
+        date inicia_en
+        date limite_en
+    }
+    RENOVACIONES {
+        uuid periodo_id PK "FK"
+        uuid inscripcion_id PK "FK"
+        dias_semana dias
+    }
+    VIAJES {
+        uuid id PK
+        uuid turno_id FK
+        date fecha
+        sentido_servicio sentido
+        estado_viaje estado
+    }
+    POSICIONES {
+        bigint id PK
+        uuid viaje_id FK
+        geography punto "Point 4326"
+        timestamptz capturada_en
+    }
+    AVISOS_CONTINGENCIA {
+        uuid id PK
+        uuid viaje_id FK
+        motivo_contingencia motivo
+        smallint demora_min
+        boolean cancela_recorrido
+    }
+    PAGOS {
+        uuid id PK
+        uuid inscripcion_id FK
+        numeric monto
+        metodo_pago metodo
+        date periodo_inicio
+        date periodo_fin
+    }
+    NOTIFICACIONES {
+        bigint id PK
+        uuid usuario_id FK
+        tipo_notificacion tipo
+        text titulo
+        timestamptz leida_en
+    }
+    DISPOSITIVOS {
+        text token PK
+        uuid usuario_id FK
+    }

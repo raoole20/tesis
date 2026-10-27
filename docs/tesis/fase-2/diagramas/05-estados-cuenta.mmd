@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> perfil_incompleto : se crea la cuenta
+    perfil_incompleto --> pendiente : completa el perfil y lo envía
+    pendiente --> aprobada : el administrador aprueba
+    pendiente --> rechazada : el administrador rechaza con motivo
+    rechazada --> pendiente : corrige los datos y reenvía
+    aprobada --> suspendida : el administrador la deshabilita
+    suspendida --> aprobada : el administrador la reactiva

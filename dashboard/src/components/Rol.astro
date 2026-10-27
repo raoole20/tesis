@@ -1,0 +1,12 @@
+---
+import { ROLES } from '../lib/catalogos';
+import type { Rol } from '../lib/panel';
+
+interface Props {
+  rol: Rol;
+}
+
+const { nombre, icono: Icono } = ROLES[Astro.props.rol];
+---
+
+<span class="con-icono"><Icono size={16} />{nombre}</span>

@@ -1,0 +1,139 @@
+classDiagram
+direction TB
+class Usuario {
+  +UUID id
+  +String email
+  +String nombres
+  +String apellidos
+  +String cedula
+  +String telefono
+  +RolUsuario rol
+  +EstadoCuenta estado
+  +bool onboardingCompleto
+  +enviarARevision()
+  +completarOnboarding()
+}
+class Estudiante {
+  +String universidad
+  +String carrera
+  +Punto domicilio
+  +String referencia
+  +fijarDomicilio(punto)
+  +solicitarCupo(turno, dias)
+  +marcarInasistencia(fecha)
+  +renovarCupo(periodo, dias)
+}
+class Conductor {
+  +String licenciaNumero
+  +Date licenciaVenceEn
+  +bool verificado
+  +elegirZonas(zonas)
+  +publicarTurno(datos)
+  +decidirSolicitud(inscripcion, acepta)
+  +iniciarRecorrido(turno, sentido)
+  +enviarContingencia(viaje, motivo)
+  +registrarPago(inscripcion, datos)
+}
+class Administrador {
+  +aprobarCuenta(usuario)
+  +rechazarCuenta(usuario, motivo)
+  +suspenderCuenta(usuario)
+  +mantenerZona(zona)
+}
+class Zona {
+  +String nombre
+  +String municipio
+  +Poligono poligono
+  +bool activa
+  +contiene(punto) bool
+}
+class Vehiculo {
+  +String placa
+  +String marca
+  +String modelo
+  +int capacidad
+}
+class Turno {
+  +BloqueTurno bloque
+  +Time horaIda
+  +Time horaRegreso
+  +int[] dias
+  +Sentido sentido
+  +int cupos
+  +Decimal tarifa
+  +ModalidadCobro modalidad
+  +cuposLibres() int
+  +nominaDel(fecha) List
+}
+class Inscripcion {
+  +int[] dias
+  +EstadoInscripcion estado
+  +Time horaRecogida
+  +DateTime solicitadaEn
+  +aceptar()
+  +rechazar(motivo)
+  +viajaEl(fecha) bool
+}
+class Inasistencia {
+  +Date fecha
+  +DateTime avisadaEn
+}
+class PeriodoRenovacion {
+  +Date iniciaEn
+  +Date limiteEn
+  +vencerNoRenovadas()
+}
+class Renovacion {
+  +int[] dias
+  +DateTime confirmadaEn
+}
+class Viaje {
+  +Date fecha
+  +Sentido sentido
+  +EstadoViaje estado
+  +iniciar()
+  +finalizar()
+  +cancelar()
+}
+class Posicion {
+  +Punto punto
+  +double precisionM
+  +DateTime capturadaEn
+}
+class AvisoContingencia {
+  +MotivoContingencia motivo
+  +int demoraMin
+  +bool cancelaRecorrido
+}
+class Pago {
+  +Decimal monto
+  +MetodoPago metodo
+  +Date periodoInicio
+  +Date periodoFin
+  +anular()
+}
+class Notificacion {
+  +TipoNotificacion tipo
+  +String titulo
+  +String cuerpo
+  +DateTime leidaEn
+}
+Usuario <|-- Estudiante
+Usuario <|-- Conductor
+Usuario <|-- Administrador
+Usuario "1" --> "0..*" Notificacion : recibe
+Estudiante "0..*" --> "0..1" Zona : reside en
+Conductor "0..*" -- "1..*" Zona : cubre
+Conductor "1" *-- "1..*" Vehiculo : posee
+Conductor "1" *-- "0..*" Turno : publica
+Turno "0..*" --> "1" Vehiculo : usa
+Estudiante "1" --> "0..*" Inscripcion : solicita
+Turno "1" *-- "0..*" Inscripcion : agrupa
+Inscripcion "1" *-- "0..*" Inasistencia
+Inscripcion "1" *-- "0..*" Pago
+Turno "1" *-- "0..*" PeriodoRenovacion
+PeriodoRenovacion "1" *-- "0..*" Renovacion
+Renovacion "0..*" --> "1" Inscripcion : conserva
+Turno "1" *-- "0..*" Viaje
+Viaje "1" *-- "0..*" Posicion
+Viaje "1" *-- "0..*" AvisoContingencia
