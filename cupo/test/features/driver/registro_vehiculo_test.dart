@@ -35,8 +35,16 @@ class _ConductorFalso extends ConductorRepository {
   String? licencia;
   DateTime? venceEn;
 
+  String? eliminado;
+
   @override
   Future<Vehiculo?> miVehiculo() async => vehiculo;
+
+  @override
+  Future<void> eliminarVehiculo(String id) async {
+    eliminado = id;
+    vehiculo = null;
+  }
 
   @override
   Future<({String? numero, DateTime? venceEn})> miLicencia() async =>
@@ -208,6 +216,67 @@ void main() {
       await tocar(tester, 'Registrar vehículo');
 
       expect(find.text('Esa placa ya está registrada.'), findsOneWidget);
+    });
+  });
+
+  group('VehiculoScreen: eliminar y onboarding', () {
+    testWidgets('elimina el vehículo después de confirmar', (tester) async {
+      final repo = _ConductorFalso(vehiculo: _hiace);
+      await montarPantalla(tester, VehiculoScreen(repositorio: repo, hoy: hoy));
+      await tester.pumpAndSettle();
+
+      final eliminar = find.widgetWithText(
+        CupoSecondaryButton,
+        'Eliminar vehículo',
+      );
+      await tester.ensureVisible(eliminar);
+      await tester.tap(eliminar);
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar tu vehículo?'), findsOneWidget);
+      // Cancelar no borra nada.
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(repo.eliminado, isNull);
+
+      await tester.tap(eliminar);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Eliminar'));
+      await tester.pumpAndSettle();
+      expect(repo.eliminado, 'v1');
+    });
+
+    testWidgets('sin vehículo no ofrece eliminar', (tester) async {
+      await montarPantalla(
+        tester,
+        VehiculoScreen(repositorio: _ConductorFalso(), hoy: hoy),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Eliminar vehículo'), findsNothing);
+    });
+
+    testWidgets('en el onboarding: paso 1 de 2, sin retroceso, y avisa al '
+        'guardar', (tester) async {
+      final repo = _ConductorFalso();
+      Vehiculo? recibido;
+      await montarPantalla(
+        tester,
+        VehiculoScreen(
+          repositorio: repo,
+          hoy: hoy,
+          onGuardado: (v) => recibido = v,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Primero, tu vehículo'), findsOneWidget);
+      expect(find.byType(CupoStepIndicator), findsOneWidget);
+      expect(find.byType(CupoBackButton), findsNothing);
+      expect(find.text('Eliminar vehículo'), findsNothing);
+
+      await llenarVehiculo(tester);
+      await tocar(tester, 'Continuar');
+      expect(recibido?.placa, 'AB123CD');
     });
   });
 

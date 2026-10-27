@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/env.dart';
+import 'features/auth/biometria/servicio_huella.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_gate.dart';
 import 'features/onboarding/presentation/map_spike_screen.dart';
@@ -16,12 +18,14 @@ Future<void> main() async {
   // flutter run --dart-define=SPIKE_MAP=true
   const spikeMap = bool.fromEnvironment('SPIKE_MAP', defaultValue: false);
   if (spikeMap) {
-    runApp(MaterialApp(
-      title: 'Cupo — Spike Mapa',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const MapSpikeScreen(),
-    ));
+    runApp(
+      MaterialApp(
+        title: 'Cupo — Spike Mapa',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const MapSpikeScreen(),
+      ),
+    );
     return;
   }
 
@@ -36,7 +40,13 @@ Future<void> main() async {
 
   // El AuthGate es la app: construye el MaterialApp y decide qué se ve según
   // haya sesión y en qué estado esté la cuenta.
-  runApp(AuthGate(repositorio: AuthRepository()));
+  runApp(
+    AuthGate(
+      repositorio: AuthRepository(),
+      // En el navegador no hay huella: sin servicio, no se ofrece.
+      huella: kIsWeb ? null : ServicioHuella.delDispositivo(),
+    ),
+  );
 }
 
 /// Pantalla de arranque cuando faltan `SUPABASE_URL` y `SUPABASE_ANON_KEY`.

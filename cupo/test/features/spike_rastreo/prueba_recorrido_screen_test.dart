@@ -362,7 +362,7 @@ void main() {
     expect(find.byType(MapaRecorrido), findsOneWidget);
     expect(find.text('De tu ubicación a la URBE'), findsOneWidget);
     expect(
-      find.text('5,4 km · ≈8 min sin tráfico (según OSRM)'),
+      find.text('4,9 km · ≈7 min sin tráfico (según OSRM)'),
       findsOneWidget,
     );
     expect(find.textContaining('Avenida 61 → Calle 44 A'), findsOneWidget);
@@ -539,7 +539,7 @@ void main() {
       expect(enVivo.texto, contains('enviadas'));
       expect(enVivo.progreso, isNotNull);
 
-      // La ruta mide 5,4 km: a 50 km/h son ~78 muestras.
+      // La ruta mide 4,9 km: a 50 km/h son ~71 muestras.
       await avanzar(tester, 70);
       await tester.pump();
       await tester.pump();

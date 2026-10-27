@@ -1,3 +1,4 @@
+import 'package:cupo/features/auth/biometria/servicio_huella.dart';
 import 'package:cupo/features/auth/data/auth_repository.dart';
 import 'package:cupo/features/auth/domain/estado_cuenta.dart';
 import 'package:cupo/features/auth/domain/rol_usuario.dart';
@@ -18,6 +19,7 @@ Future<void> montarPantalla(
   Widget pantalla, {
   Usuario? usuario,
   AuthRepository? repositorio,
+  ServicioHuella? huella,
 }) async {
   // El lienzo del diseño, para que las medidas de CupoScreen se ejerciten tal
   // como se verán en el teléfono.
@@ -34,8 +36,12 @@ Future<void> montarPantalla(
       home: pantalla,
       // El AuthScope va en `builder` y no envolviendo `home`: así alcanza
       // también a las pantallas que se empujen encima durante la prueba.
-      builder: (context, child) =>
-          AuthScope(repositorio: repo, usuario: usuario, child: child!),
+      builder: (context, child) => AuthScope(
+        repositorio: repo,
+        usuario: usuario,
+        huella: huella,
+        child: child!,
+      ),
     ),
   );
 }

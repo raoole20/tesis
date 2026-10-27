@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/vehiculo.dart';
@@ -23,6 +24,11 @@ class ConductorRepository {
   final SupabaseClient? _inyectado;
 
   SupabaseClient get _db => _inyectado ?? Supabase.instance.client;
+
+  /// Sube cada vez que se guarda o elimina un vehículo. El inicio del
+  /// conductor lo escucha para refrescar la tarjeta, aunque el cambio se haya
+  /// hecho desde «Tu cuenta» y no desde el inicio.
+  static final ValueNotifier<int> cambios = ValueNotifier(0);
 
   /// El vehículo del conductor, o `null` si todavía no registra ninguno.
   ///
@@ -53,7 +59,17 @@ class ConductorRepository {
       final fila = await consulta
           .select('id, placa, marca, modelo, anio, color, capacidad')
           .single();
+      cambios.value++;
       return Vehiculo.fromMap(fila);
+    });
+  }
+
+  /// Borra el vehículo. Cuando existan turnos, la FK `on delete restrict`
+  /// impedirá borrar una unidad en uso.
+  Future<void> eliminarVehiculo(String id) {
+    return _correr(() async {
+      await _db.from('vehiculos').delete().eq('id', id);
+      cambios.value++;
     });
   }
 

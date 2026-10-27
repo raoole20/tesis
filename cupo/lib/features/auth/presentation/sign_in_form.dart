@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
+import '../biometria/servicio_huella.dart';
 import '../data/auth_repository.dart';
 import 'auth_scope.dart';
 
@@ -37,6 +39,56 @@ class _SignInFormState extends State<SignInForm> {
 
   bool _enviando = false;
   String? _error;
+
+  /// El correo con huella activa en este teléfono, o `null` si no hay (o el
+  /// teléfono no tiene lector). Solo con él se muestra «Entrar con huella».
+  String? _correoConHuella;
+  bool _huellaConsultada = false;
+  bool _entrandoConHuella = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Aquí y no en initState: el AuthScope se lee del contexto, y eso no se
+    // puede antes de este punto. La bandera evita repetir la consulta.
+    if (!_huellaConsultada) {
+      _huellaConsultada = true;
+      _consultarHuella();
+    }
+  }
+
+  Future<void> _consultarHuella() async {
+    final huella = AuthScope.de(context).huella;
+    if (huella == null || !await huella.disponible()) return;
+    final correo = await huella.correoActivo();
+    if (mounted) setState(() => _correoConHuella = correo);
+  }
+
+  Future<void> _entrarConHuella() async {
+    final huella = AuthScope.de(context).huella;
+    if (huella == null) return;
+    final repositorio = AuthScope.de(context).repositorio;
+
+    setState(() {
+      _entrandoConHuella = true;
+      _error = null;
+    });
+
+    final resultado = await huella.entrar(
+      entrar: (email, clave) => repositorio.entrar(email: email, clave: clave),
+    );
+    if (!mounted) return;
+
+    // Si salió bien, el AuthGate ya cambió de pantalla: no hay nada que hacer.
+    // Si se canceló, tampoco: no es un error.
+    setState(() {
+      _entrandoConHuella = false;
+      if (resultado case HuellaRechazada(:final mensaje, :final seDesactivo)) {
+        _error = mensaje;
+        if (seDesactivo) _correoConHuella = null;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -97,6 +149,8 @@ class _SignInFormState extends State<SignInForm> {
   @override
   Widget build(BuildContext context) {
     final error = _error;
+    final correoConHuella = _correoConHuella;
+    final ocupado = _enviando || _entrandoConHuella;
 
     return CupoSheetBody(
       title: 'Iniciar sesión',
@@ -141,9 +195,28 @@ class _SignInFormState extends State<SignInForm> {
         const SizedBox(height: AppSpacing.xl),
         CupoPrimaryButton(
           label: 'Entrar',
-          onPressed: _enviando ? null : _entrar,
+          onPressed: ocupado ? null : _entrar,
           isLoading: _enviando,
         ),
+        if (correoConHuella != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          CupoSecondaryButton(
+            label: 'Entrar con huella',
+            leading: const Icon(LucideIcons.fingerprint, size: AppSizes.icon),
+            onPressed: ocupado ? null : _entrarConHuella,
+            isLoading: _entrandoConHuella,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          // El correo a la vista: si en el teléfono entró otra persona, sabe
+          // de quién es la huella antes de tocar el botón.
+          Text(
+            'Como $correoConHuella',
+            style: AppTypography.meta,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
   }

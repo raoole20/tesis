@@ -10,6 +10,5 @@ class CupoFieldHelper extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: AppTypography.helper);
+  Widget build(BuildContext context) => Text(text, style: AppTypography.helper);
 }

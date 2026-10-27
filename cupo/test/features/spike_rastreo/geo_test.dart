@@ -23,13 +23,13 @@ void main() {
       );
     });
 
-    test('en Maracaibo: la URBE queda al oeste-noroeste de la Av. 61', () {
+    test('en Maracaibo: la URBE queda al oeste-suroeste de la Av. 61', () {
       const av61 = PuntoGeo(10.702096062336127, -71.60399954232982);
-      const urbe = PuntoGeo(10.709200993030072, -71.62351346346288);
-      // Más al oeste que al norte: entre 270° y 315°.
-      expect(azimutGrados(av61, urbe), inInclusiveRange(285, 295));
-      // Y de vuelta, el opuesto.
-      expect(azimutGrados(urbe, av61), inInclusiveRange(105, 115));
+      const urbe = PuntoGeo(10.694066051261032, -71.6339425901966);
+      // Más al oeste que al sur: entre 225° y 270° (≈255°).
+      expect(azimutGrados(av61, urbe), inInclusiveRange(250, 260));
+      // Y de vuelta, el opuesto (≈75°).
+      expect(azimutGrados(urbe, av61), inInclusiveRange(70, 80));
     });
 
     test('siempre en [0, 360)', () {
@@ -42,13 +42,13 @@ void main() {
   test('distanciaMetros: un grado de latitud son unos 111,2 km', () {
     expect(distanciaMetros(origen, const PuntoGeo(1, 0)), closeTo(111195, 10));
     expect(distanciaMetros(origen, origen), 0);
-    // De la Av. 61 a la URBE en línea recta: unos 2,3 km.
+    // De la Av. 61 a la URBE en línea recta: unos 3,4 km.
     expect(
       distanciaMetros(
         const PuntoGeo(10.702096062336127, -71.60399954232982),
-        const PuntoGeo(10.709200993030072, -71.62351346346288),
+        const PuntoGeo(10.694066051261032, -71.6339425901966),
       ),
-      closeTo(2270, 30),
+      closeTo(3391, 30),
     );
   });
 

@@ -471,7 +471,9 @@ anterior y queda marcado en `rumbo_calculado`) y la **velocidad** del GPS.
 
 ### 13.2 La ruta: de tu ubicación a la URBE
 
-- **Llegada: fija, la URBE** — 10.709200993030072, −71.62351346346288.
+- **Llegada: fija, la URBE** — 10.694066051261032, −71.6339425901966
+  (Universidad Rafael Belloso Chacín, Av. 15P, La Trinidad; confirmado con
+  OpenStreetMap el 27-oct-2026).
 - **Salida: tu ubicación actual.** Al elegir «Recorrido real», la app pide la
   posición (en el navegador, el aviso «usar tu ubicación»; localhost cuenta
   como contexto seguro). Mientras la busca, el mapa se queda en la URBE y dice
@@ -483,9 +485,9 @@ anterior y queda marcado en `rumbo_calculado`) y la **velocidad** del GPS.
   ubicación actual» para volver a intentar. La simulación usa este respaldo
   por omisión, sin pedir la ubicación.
 
-Desde el respaldo, según OSRM (26-oct-2026): **5,39 km y ≈8 min sin
+Desde el respaldo, según OSRM (27-oct-2026): **4,92 km y ≈7 min sin
 tráfico**, por Avenida 61 → Calle 44 A → Avenida 2 → Calle N → Avenida 5 →
-Av. Circunvalación 2 → Av. Paúl René Moreno Camacho → URBE.
+Av. Circunvalación 2 → Avenida 16 → URBE.
 
 **Dónde se cambia:** es una sola constante, `RutaDePrueba.porOmision`, en
 `cupo/lib/features/spike_rastreo/domain/ruta_planificada.dart`: `llegada` es
@@ -657,7 +659,7 @@ select * from public.spike_reporte_ruta('PEGA-AQUÍ-EL-SESION-ID');
 -- Con otro domicilio de prueba, sin repetir el recorrido
 select dom_entrada_en, dom_entrada_m, dom_brecha_previa_s, dom_aviso_a_tiempo
   from public.spike_reporte_ruta('PEGA-AQUÍ-EL-SESION-ID',
-         'SRID=4326;POINT(-71.6235 10.7092)'::geography);
+         'SRID=4326;POINT(-71.6339 10.6941)'::geography);
 ```
 
 Para encontrar dónde ocurrió una brecha, la consulta «los diez silencios más
@@ -703,8 +705,8 @@ porque ese canal solo existe en Android.
    el mapa (por omisión desde la salida de respaldo, la Av. 61; «Salir desde
    mi ubicación actual» la cambia) y el domicilio opcional.
 2. Elige la **velocidad** (20, 30 o 50 km/h; 30 por omisión) y **qué tan
-   rápido verla**: ×1 (tiempo real), ×5 o ×20. A ×20 y 30 km/h, los 5,4 km
-   se ven en unos 32 s.
+   rápido verla**: ×1 (tiempo real), ×5 o ×20. A ×20 y 30 km/h, los 4,9 km
+   se ven en unos 30 s.
 3. Opcional: **«Simular un corte de señal»** salta unos 60 s de muestras a
    mitad de ruta (sale en rojo en el resultado) y **«Simular un desvío»**
    lleva la unidad 45 s por una paralela a 150 m (dispara el recálculo).

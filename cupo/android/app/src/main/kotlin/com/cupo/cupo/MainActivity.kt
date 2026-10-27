@@ -14,7 +14,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.WindowManager
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
@@ -29,8 +29,12 @@ import io.flutter.plugin.common.MethodChannel
  * cambio de fase. Lo
  * usa cupo/lib/features/spike_rastreo/data/canal_dispositivo.dart; al borrar
  * el spike se borra el canal entero.
+ *
+ * Hereda de [FlutterFragmentActivity] y no de `FlutterActivity` porque
+ * `local_auth` (entrar con huella) muestra el aviso biométrico del sistema,
+ * y en Android ese aviso necesita una `FragmentActivity`.
  */
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private var permisoPendiente: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

@@ -11,11 +11,19 @@
          apagada Android puede dormir el procesador entre ubicaciones. Es un
          permiso normal: se concede al instalar, sin preguntar. -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Entrar con huella (local_auth). Permiso normal: se concede al
+         instalar, sin preguntar. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
 
+    <!-- allowBackup="false": la clave de «Entrar con huella» se guarda cifrada
+         con una llave del Keystore que nunca sale del teléfono. El respaldo
+         automático copiaría el dato cifrado a Google Drive sin la llave: en
+         otro teléfono no se podría descifrar, y no tiene por qué viajar. -->
     <application
         android:label="Cupo"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

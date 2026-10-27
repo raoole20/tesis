@@ -18,10 +18,7 @@ void main() {
     expect(ruta.nombre, 'Prueba: tu ubicación → URBE');
     expect(ruta.etiquetaLlegada, 'URBE');
     expect(ruta.inicio, const PuntoGeo(10.702096062336127, -71.60399954232982));
-    expect(
-      ruta.llegada,
-      const PuntoGeo(10.709200993030072, -71.62351346346288),
-    );
+    expect(ruta.llegada, const PuntoGeo(10.694066051261032, -71.6339425901966));
     expect(ruta.paradas(idaYVuelta: false), [ruta.inicio, ruta.llegada]);
     expect(ruta.paradas(idaYVuelta: true), [
       ruta.inicio,
@@ -38,18 +35,18 @@ void main() {
       url.toString(),
       'https://router.project-osrm.org/route/v1/driving/'
       '-71.60399954232982,10.702096062336127;'
-      '-71.62351346346288,10.709200993030072'
+      '-71.6339425901966,10.694066051261032'
       '?overview=full&geometries=geojson&steps=true',
     );
   });
 
   group('desdeOsrm', () {
-    test('lee la ida: 129 puntos, 5,39 km, 8 min y las calles en orden', () {
+    test('lee la ida: 114 puntos, 4,92 km, 7 min y las calles en orden', () {
       final ruta = RutaPlanificada.desdeOsrm(_osrm('osrm_ida.json'));
 
-      expect(ruta.puntos, hasLength(129));
-      expect(ruta.distanciaM, closeTo(5386, 1));
-      expect(ruta.duracionS / 60, closeTo(8, 0.1));
+      expect(ruta.puntos, hasLength(114));
+      expect(ruta.distanciaM, closeTo(4921, 1));
+      expect(ruta.duracionS / 60, closeTo(7.4, 0.1));
       expect(ruta.calles, [
         'Avenida 61',
         'Calle 44 A',
@@ -57,12 +54,14 @@ void main() {
         'Calle N',
         'Avenida 5',
         'Avenida Circunvalación 2',
-        'Avenida Paúl René Moreno Camacho',
+        'Avenida 16',
       ]);
       // GeoJSON viene en [lng, lat]: el primer punto queda en Maracaibo.
       expect(ruta.puntos.first.lat, closeTo(10.70, 0.01));
       expect(ruta.puntos.first.lng, closeTo(-71.60, 0.01));
-      expect(ruta.puntos.last.lat, closeTo(10.709, 0.001));
+      // Llega a la URBE (Av. 15P, La Trinidad).
+      expect(ruta.puntos.last.lat, closeTo(10.694, 0.001));
+      expect(ruta.puntos.last.lng, closeTo(-71.634, 0.001));
     });
 
     test('la línea mide lo mismo que dice OSRM', () {
@@ -74,10 +73,10 @@ void main() {
       expect(suma, closeTo(ruta.distanciaM, ruta.distanciaM * 0.01));
     });
 
-    test('ida y vuelta: el doble de largo y vuelve por otras calles', () {
+    test('ida y vuelta: el doble de largo y vuelve al punto de salida', () {
       final ruta = RutaPlanificada.desdeOsrm(_osrm('osrm_ida_vuelta.json'));
-      expect(ruta.distanciaM, closeTo(10720, 1));
-      expect(ruta.calles, contains('Avenida Milagro Norte'));
+      expect(ruta.distanciaM, closeTo(10068, 1));
+      expect(ruta.calles, contains('Avenida 16'));
       expect(ruta.puntos.first.lat, closeTo(ruta.puntos.last.lat, 0.001));
     });
 

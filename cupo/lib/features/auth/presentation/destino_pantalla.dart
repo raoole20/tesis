@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../../../theme/theme.dart';
 import '../../driver/presentation/inicio_conductor_screen.dart';
+import '../../driver/presentation/onboarding_conductor_screen.dart';
 import '../../driver/presentation/perfil_conductor_screen.dart';
-import '../../driver/presentation/zonas_trabajo_screen.dart';
 import '../../onboarding/presentation/onboarding_estudiante_screen.dart';
 import '../../profile/presentation/perfil_estudiante_screen.dart';
 import '../../trip/presentation/student_home_screen.dart';
@@ -33,9 +33,10 @@ Widget destinoPantalla(DestinoAuth destino) {
     DestinoAuth.perfilConductor => const PerfilConductorScreen(),
     // Estudios y casa en el mapa. Todavía no guarda ni envía a revisión.
     DestinoAuth.perfilEstudiante => const PerfilEstudianteScreen(),
-    // Elige sus zonas en `conductor_zonas` y completa el onboarding; el
-    // stream del AuthGate lleva entonces a inicioConductor.
-    DestinoAuth.onboardingConductor => const ZonasTrabajoScreen(),
+    // Registra su vehículo y elige sus zonas en `conductor_zonas`; al
+    // completar el onboarding, el stream del AuthGate lleva a
+    // inicioConductor.
+    DestinoAuth.onboardingConductor => const OnboardingConductorScreen(),
     // Fija el domicilio en PostGIS y completa el onboarding; el stream del
     // AuthGate lleva entonces a inicioEstudiante.
     DestinoAuth.onboardingEstudiante => const OnboardingEstudianteScreen(),

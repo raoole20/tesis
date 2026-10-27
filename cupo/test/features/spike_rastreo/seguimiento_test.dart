@@ -163,7 +163,7 @@ void main() {
       expect(evento.recalcular, isFalse);
     });
 
-    test('sobre la ruta real de OSRM, al salir faltan 5,39 km', () {
+    test('sobre la ruta real de OSRM, al salir faltan 4,92 km', () {
       final ruta = RutaPlanificada.desdeOsrm(
         jsonDecode(
           File('test/features/spike_rastreo/datos/osrm_ida.json')

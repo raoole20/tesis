@@ -47,9 +47,7 @@ class CupoScreen extends StatelessWidget {
       backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.screenH,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

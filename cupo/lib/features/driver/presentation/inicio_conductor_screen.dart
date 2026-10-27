@@ -105,10 +105,13 @@ class _InicioConductorScreenState extends State<InicioConductorScreen> {
     super.initState();
     _cargarZonas();
     _cargarVehiculo();
+    // Si el vehículo cambia desde «Tu cuenta», la tarjeta se refresca.
+    ConductorRepository.cambios.addListener(_cargarVehiculo);
   }
 
   @override
   void dispose() {
+    ConductorRepository.cambios.removeListener(_cargarVehiculo);
     _mapa.dispose();
     super.dispose();
   }

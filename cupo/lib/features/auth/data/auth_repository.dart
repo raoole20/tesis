@@ -1,13 +1,19 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/env.dart';
 import '../domain/rol_usuario.dart';
 import '../domain/usuario.dart';
 
 /// Error de autenticación ya traducido a algo que se le puede mostrar a una
 /// persona. Las pantallas atrapan esto, no la `AuthException` cruda.
 class AuthFallo implements Exception {
-  const AuthFallo(this.mensaje);
+  const AuthFallo(this.mensaje, {this.credencialesInvalidas = false});
   final String mensaje;
+
+  /// `true` cuando Supabase rechazó el correo o la clave, y no por la red ni
+  /// por otra cosa. La entrada con huella lo usa para saber que la clave
+  /// guardada ya no sirve y hay que borrarla.
+  final bool credencialesInvalidas;
 
   @override
   String toString() => mensaje;
@@ -97,15 +103,9 @@ class AuthRepository {
   }
 
   /// Entra con correo y clave, y sella el último acceso.
-  Future<Usuario> entrar({
-    required String email,
-    required String clave,
-  }) async {
+  Future<Usuario> entrar({required String email, required String clave}) async {
     try {
-      await _db.auth.signInWithPassword(
-        email: email.trim(),
-        password: clave,
-      );
+      await _db.auth.signInWithPassword(email: email.trim(), password: clave);
 
       final usuario = await cargarUsuarioActual();
 
@@ -116,7 +116,54 @@ class AuthRepository {
 
       return usuario;
     } on AuthException catch (e) {
-      throw AuthFallo(_traducir(e));
+      throw AuthFallo(
+        _traducir(e),
+        credencialesInvalidas: _sonCredencialesInvalidas(e),
+      );
+    }
+  }
+
+  /// Comprueba que [clave] es la de [email] **sin tocar la sesión abierta**.
+  ///
+  /// Hace falta para activar la huella: antes de guardar la clave hay que
+  /// saber que es la buena. Llamar a [entrar] serviría, pero volver a firmar
+  /// emite un `signedIn` y el `AuthGate` recargaría la app entera, con la
+  /// hoja de la cuenta y el diálogo encima.
+  ///
+  /// Por eso se usa un cliente de Auth aparte, sin almacenamiento y sin
+  /// refresco automático: abre su propia sesión, se comprueba que es la misma
+  /// persona y se cierra en el acto con alcance local, que revoca solo esa
+  /// sesión y deja intacta la del teléfono.
+  Future<void> verificarClave({
+    required String email,
+    required String clave,
+  }) async {
+    final idActual = idUsuarioActual;
+    final aparte = GoTrueClient(
+      url: '${Env.supabaseUrl}/auth/v1',
+      headers: {
+        'apikey': Env.supabaseAnonKey,
+        'Authorization': 'Bearer ${Env.supabaseAnonKey}',
+      },
+      autoRefreshToken: false,
+    );
+    try {
+      final respuesta = await aparte.signInWithPassword(
+        email: email.trim(),
+        password: clave,
+      );
+      if (idActual != null && respuesta.user?.id != idActual) {
+        throw const AuthFallo('Esa clave es de otra cuenta.');
+      }
+    } on AuthException catch (e) {
+      throw AuthFallo(
+        _traducir(e),
+        credencialesInvalidas: _sonCredencialesInvalidas(e),
+      );
+    } finally {
+      // Que falle el cierre no cambia el resultado: la clave ya se comprobó.
+      await aparte.signOut().catchError((Object _) {});
+      aparte.dispose();
     }
   }
 
@@ -152,11 +199,7 @@ class AuthRepository {
       throw const AuthFallo('No hay sesión abierta.');
     }
 
-    final fila = await _db
-        .from('usuarios')
-        .select()
-        .eq('id', id)
-        .maybeSingle();
+    final fila = await _db.from('usuarios').select().eq('id', id).maybeSingle();
 
     if (fila == null) {
       throw const AuthFallo(
@@ -280,6 +323,12 @@ class AuthRepository {
   }
 
   // --- Errores --------------------------------------------------------------
+
+  /// Supabase responde `invalid_credentials` cuando el correo o la clave no
+  /// coinciden; las versiones viejas solo traían el mensaje.
+  static bool _sonCredencialesInvalidas(AuthException e) =>
+      e.code == 'invalid_credentials' ||
+      e.message.toLowerCase().contains('invalid login credentials');
 
   /// Traduce el error del backend a algo que se le pueda mostrar a alguien.
   ///

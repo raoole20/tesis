@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../theme/theme.dart';
+import '../biometria/servicio_huella.dart';
 import '../data/auth_repository.dart';
 import '../domain/resolver_destino.dart';
 import '../domain/usuario.dart';
@@ -37,9 +38,12 @@ import 'welcome_screen.dart';
 /// —registro, login— quedarían fuera de su alcance y no podrían llegar al
 /// repositorio.
 class AuthGate extends StatefulWidget {
-  const AuthGate({super.key, required this.repositorio});
+  const AuthGate({super.key, required this.repositorio, this.huella});
 
   final AuthRepository repositorio;
+
+  /// Entrar con huella; `null` donde no existe (la web).
+  final ServicioHuella? huella;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -209,6 +213,7 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, child) => AuthScope(
         repositorio: widget.repositorio,
         usuario: _usuario,
+        huella: widget.huella,
         child: child!,
       ),
     );

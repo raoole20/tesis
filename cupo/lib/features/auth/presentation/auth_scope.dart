@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../biometria/servicio_huella.dart';
 import '../data/auth_repository.dart';
 import '../domain/usuario.dart';
 
@@ -19,10 +20,15 @@ class AuthScope extends InheritedWidget {
     super.key,
     required this.repositorio,
     required this.usuario,
+    this.huella,
     required super.child,
   });
 
   final AuthRepository repositorio;
+
+  /// Entrar con huella. Es `null` donde no existe —en la web— y en las
+  /// pruebas que no la usan: las pantallas ocultan todo lo de huella.
+  final ServicioHuella? huella;
 
   /// La fila de `usuarios` de quien está adentro. Es `null` mientras nadie ha
   /// entrado: las pantallas del primer ingreso viven en ese caso.
@@ -44,5 +50,7 @@ class AuthScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AuthScope anterior) =>
-      anterior.usuario != usuario || anterior.repositorio != repositorio;
+      anterior.usuario != usuario ||
+      anterior.repositorio != repositorio ||
+      anterior.huella != huella;
 }

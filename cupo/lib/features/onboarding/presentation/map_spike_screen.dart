@@ -75,8 +75,7 @@ class _MapSpikeScreenState extends State<MapSpikeScreen> {
               children: [
                 // Tiles de OpenStreetMap
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.cupo.app',
                   // Máximo zoom de tiles de OSM
                   maxZoom: 19,
@@ -138,8 +137,7 @@ class _MapSpikeScreenState extends State<MapSpikeScreen> {
         color: esDetectada
             ? AppColors.primary.withValues(alpha: 0.25)
             : AppColors.primarySoft.withValues(alpha: 0.45),
-        borderColor:
-            esDetectada ? AppColors.primaryDeep : AppColors.primary,
+        borderColor: esDetectada ? AppColors.primaryDeep : AppColors.primary,
         borderStrokeWidth: esDetectada ? 2.5 : 1.5,
         label: zona.nombre,
         labelStyle: AppTypography.manrope(
@@ -214,9 +212,7 @@ class _MapSpikeScreenState extends State<MapSpikeScreen> {
         );
 
       case LocationPermissionDenied():
-        _mostrarSnackBar(
-          'Se necesita permiso de ubicación para esta función.',
-        );
+        _mostrarSnackBar('Se necesita permiso de ubicación para esta función.');
 
       case LocationPermissionDeniedForever():
         _mostrarSnackBar(
@@ -300,10 +296,7 @@ class _PinUbicacion extends StatelessWidget {
 
 /// Panel informativo inferior: muestra coordenadas y zona del pin.
 class _InfoPanel extends StatelessWidget {
-  const _InfoPanel({
-    required this.pinDomicilio,
-    required this.zonaDetectada,
-  });
+  const _InfoPanel({required this.pinDomicilio, required this.zonaDetectada});
 
   final LatLng? pinDomicilio;
   final ZonaCobertura? zonaDetectada;
@@ -333,15 +326,17 @@ class _InfoPanel extends StatelessWidget {
           if (pinDomicilio == null)
             Text(
               'Toca el mapa para colocar tu pin de domicilio',
-              style: textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.textSecondary),
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             )
           else ...[
             Text(
               '${pinDomicilio!.latitude.toStringAsFixed(5)}, '
               '${pinDomicilio!.longitude.toStringAsFixed(5)}',
-              style: textTheme.bodySmall
-                  ?.copyWith(color: AppColors.textSupport),
+              style: textTheme.bodySmall?.copyWith(
+                color: AppColors.textSupport,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             _ZonaChip(zona: zonaDetectada),

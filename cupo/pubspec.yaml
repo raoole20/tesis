@@ -23,6 +23,13 @@ dependencies:
   sqflite: ^2.4.3
   lucide_icons_flutter: ^3.1.24
 
+  # Entrar con huella (lib/features/auth/biometria/): el lector del teléfono,
+  # el almacén cifrado con el Keystore donde se guarda la clave, y la parte
+  # Android de local_auth solo para poner en español el aviso del sistema.
+  local_auth: ^3.0.2
+  flutter_secure_storage: ^11.2.0
+  local_auth_android: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

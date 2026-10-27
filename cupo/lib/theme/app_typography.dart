@@ -101,34 +101,22 @@ abstract final class AppTypography {
   static TextStyle get wordmark => logo(size: 46, color: AppColors.ink);
 
   /// Logotipo sobre la foto de la bienvenida.
-  static TextStyle get wordmarkHero => logo(
-    size: 36,
-    color: AppColors.onPrimary,
-  );
+  static TextStyle get wordmarkHero =>
+      logo(size: 36, color: AppColors.onPrimary);
 
   /// Logotipo sobre la cabecera compacta de registro, código e inicio de
   /// sesión.
-  static TextStyle get wordmarkHeroCompact => logo(
-    size: 30,
-    color: AppColors.onPrimary,
-  );
+  static TextStyle get wordmarkHeroCompact =>
+      logo(size: 30, color: AppColors.onPrimary);
 
   /// Titular de la bienvenida: «Tu puesto fijo hasta la URBE». Va sobre la
   /// foto, así que la pantalla le impone [AppColors.onPrimary].
-  static TextStyle get display => teko(
-    size: 48,
-    weight: FontWeight.w600,
-    height: 0.95,
-    letterSpacing: 0.2,
-  );
+  static TextStyle get display =>
+      teko(size: 48, weight: FontWeight.w600, height: 0.95, letterSpacing: 0.2);
 
   /// Título de pantalla: «Crea tu cuenta», «Qué bueno verte».
-  static TextStyle get title => teko(
-    size: 34,
-    weight: FontWeight.w600,
-    height: 1,
-    letterSpacing: 0.2,
-  );
+  static TextStyle get title =>
+      teko(size: 34, weight: FontWeight.w600, height: 1, letterSpacing: 0.2);
 
   /// Subtítulo de sección o tarjeta. Es el mismo de [textTheme], para que no
   /// haya dos versiones del estilo.
@@ -146,25 +134,16 @@ abstract final class AppTypography {
   static TextStyle get bodySmall => textTheme.bodySmall!;
 
   /// Igual que [body] pero en tinta plena, para el dato dentro de la frase.
-  static TextStyle get bodyStrong => manrope(
-    size: 16,
-    weight: FontWeight.w700,
-    height: 1.45,
-  );
+  static TextStyle get bodyStrong =>
+      manrope(size: 16, weight: FontWeight.w700, height: 1.45);
 
   /// Etiqueta sobre un campo: «Nombre y apellido».
-  static TextStyle get label => manrope(
-    size: 13,
-    weight: FontWeight.w700,
-    height: 1.3,
-  );
+  static TextStyle get label =>
+      manrope(size: 13, weight: FontWeight.w700, height: 1.3);
 
   /// Texto escrito por la persona dentro de un campo.
-  static TextStyle get input => manrope(
-    size: 15,
-    weight: FontWeight.w400,
-    height: 1.2,
-  );
+  static TextStyle get input =>
+      manrope(size: 15, weight: FontWeight.w400, height: 1.2);
 
   /// Texto de ejemplo dentro de un campo vacío.
   static TextStyle get inputHint => manrope(
@@ -183,26 +162,16 @@ abstract final class AppTypography {
   );
 
   /// Número dentro del círculo de un paso. El indicador le impone el color.
-  static TextStyle get stepNumber => manrope(
-    size: 12,
-    weight: FontWeight.w700,
-    height: 1,
-  );
+  static TextStyle get stepNumber =>
+      manrope(size: 12, weight: FontWeight.w700, height: 1);
 
   /// Dígito dentro de una casilla del código de verificación.
-  static TextStyle get otpDigit => manrope(
-    size: 20,
-    weight: FontWeight.w700,
-    height: 1.1,
-  );
+  static TextStyle get otpDigit =>
+      manrope(size: 20, weight: FontWeight.w700, height: 1.1);
 
   /// Rótulo dentro de un botón. El botón le impone el color.
-  static TextStyle get button => teko(
-    size: 22,
-    weight: FontWeight.w500,
-    height: 1,
-    letterSpacing: 0.6,
-  );
+  static TextStyle get button =>
+      teko(size: 22, weight: FontWeight.w500, height: 1, letterSpacing: 0.6);
 
   /// Enlace de texto: «Inicia sesión», «Créala».
   static TextStyle get link => manrope(
@@ -237,11 +206,8 @@ abstract final class AppTypography {
   );
 
   /// Igual que [meta] pero en negrita.
-  static TextStyle get metaStrong => manrope(
-    size: 14,
-    weight: FontWeight.w700,
-    height: 1.3,
-  );
+  static TextStyle get metaStrong =>
+      manrope(size: 14, weight: FontWeight.w700, height: 1.3);
 
   /// Aviso legal al pie de la bienvenida.
   static TextStyle get legal => manrope(

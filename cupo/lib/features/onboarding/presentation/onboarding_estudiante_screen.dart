@@ -109,8 +109,7 @@ class _OnboardingEstudianteScreenState
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.cupo.app',
                   maxZoom: 19,
                 ),
@@ -166,8 +165,7 @@ class _OnboardingEstudianteScreenState
         color: esDetectada
             ? AppColors.primary.withValues(alpha: 0.25)
             : AppColors.primarySoft.withValues(alpha: 0.45),
-        borderColor:
-            esDetectada ? AppColors.primaryDeep : AppColors.primary,
+        borderColor: esDetectada ? AppColors.primaryDeep : AppColors.primary,
         borderStrokeWidth: esDetectada ? 2.5 : 1.5,
         label: zona.nombre,
         labelStyle: AppTypography.manrope(
@@ -259,9 +257,7 @@ class _OnboardingEstudianteScreenState
         );
 
       case LocationPermissionDenied():
-        _mostrarSnackBar(
-          'Se necesita permiso de ubicación para esta función.',
-        );
+        _mostrarSnackBar('Se necesita permiso de ubicación para esta función.');
 
       case LocationPermissionDeniedForever():
         _mostrarSnackBar(
@@ -383,8 +379,9 @@ class _PanelConfirmacion extends StatelessWidget {
                 Text(
                   '${pinDomicilio!.latitude.toStringAsFixed(4)}, '
                   '${pinDomicilio!.longitude.toStringAsFixed(4)}',
-                  style: textTheme.bodySmall
-                      ?.copyWith(color: AppColors.textSupport),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSupport,
+                  ),
                 ),
               ],
             ],
@@ -393,8 +390,9 @@ class _PanelConfirmacion extends StatelessWidget {
           if (pinDomicilio == null) ...[
             Text(
               'Toca el mapa para colocar el pin donde vives o usa tu ubicación actual.',
-              style: textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.textSecondary),
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
           ] else ...[

@@ -9,6 +9,5 @@ class CupoFieldLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: AppTypography.label);
+  Widget build(BuildContext context) => Text(text, style: AppTypography.label);
 }

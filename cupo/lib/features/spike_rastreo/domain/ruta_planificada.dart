@@ -25,15 +25,17 @@ class RutaDePrueba {
   /// editar [llegada]; cambiar la salida de respaldo, [inicio] (ver
   /// docs/producto/spike-rastreo.md §13.2).
   ///
-  /// Desde la salida de respaldo (Av. 61), según OSRM (26-oct-2026): 5,39 km
-  /// y ≈8 min sin tráfico, por Avenida 61 → Calle 44 A → Avenida 2 → Calle N
-  /// → Avenida 5 → Av. Circunvalación 2 → Av. Paúl René Moreno Camacho → URBE.
+  /// La llegada es la URBE (Av. 15P, La Trinidad), confirmada con
+  /// OpenStreetMap. Desde la salida de respaldo (Av. 61), según OSRM
+  /// (27-oct-2026): 4,92 km y ≈7 min sin tráfico, por Avenida 61 → Calle 44 A
+  /// → Avenida 2 → Calle N → Avenida 5 → Av. Circunvalación 2 → Avenida 16 →
+  /// URBE.
   static const porOmision = RutaDePrueba(
     nombre: 'Prueba: tu ubicación → URBE',
     etiquetaLlegada: 'URBE',
     // Respaldo: Av. 61, solo si no hay ubicación actual.
     inicio: PuntoGeo(10.702096062336127, -71.60399954232982),
-    llegada: PuntoGeo(10.709200993030072, -71.62351346346288),
+    llegada: PuntoGeo(10.694066051261032, -71.6339425901966),
   );
 
   RutaDePrueba copyWith({PuntoGeo? inicio, PuntoGeo? llegada}) => RutaDePrueba(
